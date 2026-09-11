@@ -1,0 +1,152 @@
+@import "tailwindcss";
+
+@theme {
+  --font-serif: var(--font-cormorant), Georgia, "Times New Roman", serif;
+  --font-sans: var(--font-jakarta), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+
+  --color-ivory: #FBF9F5;
+  --color-sand: #F4F0E8;
+  --color-sand-light: #FAF7F2;
+  --color-sand-dark: #E2DBD0;
+  --color-noir: #111111;
+  --color-charcoal: #1C1B1A;
+  --color-stone: #6E6A64;
+  --color-stone-light: #9C968E;
+  --color-border-lux: #E8E2D9;
+  --color-gold: #C5A880;
+  --color-gold-light: #E2CEB2;
+  --color-gold-dark: #9E7D4E;
+  --color-emerald-lux: #245744;
+
+  --color-admin-bg: #0B0D11;
+  --color-admin-surface: #13171F;
+  --color-admin-card: #1A202C;
+  --color-admin-border: #252D3D;
+  --color-admin-muted: #8491A5;
+}
+
+:root {
+  --background: #FBF9F5;
+  --foreground: #111111;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+  letter-spacing: -0.01em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom luxury scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #F4F0E8;
+}
+::-webkit-scrollbar-thumb {
+  background: #D5CDC0;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #B8ADA0;
+}
+
+/* Luxury selection highlight */
+::selection {
+  background-color: #E2CEB2;
+  color: #111111;
+}
+
+/* Editorial typography utilities */
+.font-editorial {
+  font-family: var(--font-serif);
+  letter-spacing: -0.02em;
+}
+
+.text-gold-gradient {
+  background: linear-gradient(135deg, #DFCAAB 0%, #C5A880 50%, #9E7D4E 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Smooth transitions */
+* {
+  border-color: #E8E2D9;
+}
+
+/* ==============================================================================
+   MATTE BLACK NEUMORPHISM DESIGN SYSTEM (ADMIN)
+   ============================================================================== */
+.neu-flat {
+  background-color: #14171d;
+  box-shadow: 6px 6px 14px rgba(0, 0, 0, 0.65), -6px -6px 14px rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.neu-raised {
+  background: linear-gradient(145deg, #171b22, #12141a);
+  box-shadow: 8px 8px 20px rgba(0, 0, 0, 0.7), -6px -6px 16px rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.neu-raised-sm {
+  background: linear-gradient(145deg, #161920, #121419);
+  box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.65), -3px -3px 8px rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.neu-inset {
+  background-color: #0e1015;
+  box-shadow: inset 4px 4px 8px rgba(0, 0, 0, 0.75), inset -3px -3px 8px rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.025);
+}
+
+.neu-inset-sm {
+  background-color: #0e1015;
+  box-shadow: inset 2px 2px 6px rgba(0, 0, 0, 0.7), inset -2px -2px 6px rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.025);
+}
+
+.neu-btn {
+  background: linear-gradient(145deg, #181c24, #12141a);
+  box-shadow: 5px 5px 12px rgba(0, 0, 0, 0.65), -4px -4px 10px rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.neu-btn:hover {
+  background: linear-gradient(145deg, #1b2029, #13161d);
+  box-shadow: 7px 7px 16px rgba(0, 0, 0, 0.75), -5px -5px 12px rgba(255, 255, 255, 0.04);
+  transform: translateY(-1px);
+}
+
+.neu-btn:active {
+  background-color: #0e1015;
+  box-shadow: inset 3px 3px 6px rgba(0, 0, 0, 0.75), inset -2px -2px 6px rgba(255, 255, 255, 0.025);
+  transform: translateY(1px);
+}
+
+.neu-btn-gold {
+  background: linear-gradient(145deg, #d2b48c, #b39164);
+  box-shadow: 5px 5px 14px rgba(0, 0, 0, 0.65), -3px -3px 8px rgba(197, 168, 128, 0.25);
+  color: #0d0f12;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.neu-btn-gold:hover {
+  background: linear-gradient(145deg, #dec5a2, #c5a880);
+  box-shadow: 6px 6px 18px rgba(0, 0, 0, 0.75), -4px -4px 12px rgba(197, 168, 128, 0.35);
+  transform: translateY(-1px);
+}
+
+.neu-btn-gold:active {
+  background-color: #a48255;
+  box-shadow: inset 3px 3px 6px rgba(0, 0, 0, 0.6), inset -2px -2px 6px rgba(255, 255, 255, 0.2);
+  transform: translateY(1px);
+}
+
