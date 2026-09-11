@@ -60,7 +60,7 @@ export function CartDrawer() {
           <div className="px-6 py-5 border-b border-[#E8E2D9] bg-[#FAF7F2] flex items-center justify-between">
             <div className="flex items-center gap-2">
               <ShoppingBag className="w-4 h-4 text-[#C5A880]" />
-              <h2 className="font-serif text-lg tracking-wide uppercase text-[#111111]">
+              <h2 className="font-sans font-medium text-sm tracking-[0.15em] uppercase text-[#111111]">
                 Your Atelier Bag ({cart.items.reduce((s, i) => s + i.quantity, 0)})
               </h2>
             </div>
@@ -105,7 +105,7 @@ export function CartDrawer() {
                   <ShoppingBag className="w-7 h-7" />
                 </div>
                 <div className="space-y-1">
-                  <p className="font-serif text-lg text-[#111111]">Your Shopping Bag Is Empty</p>
+                  <p className="font-sans font-medium text-base text-[#111111] uppercase tracking-wider">Your Shopping Bag Is Empty</p>
                   <p className="text-xs text-[#8C7A6B] max-w-xs">
                     Explore our curated collection of handcrafted luxury handbags, noble perfumes, and fine jewellery.
                   </p>
@@ -139,7 +139,7 @@ export function CartDrawer() {
                         <Link
                           href={`/product/${item.product.slug}`}
                           onClick={closeCart}
-                          className="font-serif text-sm text-[#111111] hover:text-[#9E7D4E] transition-colors line-clamp-1"
+                          className="font-sans font-medium text-xs sm:text-sm text-[#111111] hover:text-[#9E7D4E] transition-colors line-clamp-1 uppercase tracking-wide"
                         >
                           {item.product.name}
                         </Link>
@@ -269,7 +269,7 @@ export function CartDrawer() {
                   <span>Estimated Tax (12% GST included)</span>
                   <span>{formatINR(cart.tax)}</span>
                 </div>
-                <div className="flex justify-between pt-2 border-t border-[#E8E2D9] text-sm font-serif font-bold text-[#111111]">
+                <div className="flex justify-between pt-2 border-t border-[#E8E2D9] text-sm font-sans font-semibold text-[#111111]">
                   <span>Total Amount</span>
                   <span className="font-sans font-semibold">{formatINR(cart.total)}</span>
                 </div>

@@ -44,7 +44,7 @@ export function PerfumeShowcase({ perfume }: PerfumeShowcaseProps) {
               <span className="text-[10px] uppercase tracking-[0.3em] text-[#C5A880]">
                 Pure Extrait Formulation
               </span>
-              <p className="font-serif text-lg italic text-[#E8E2D9]">
+              <p className="font-sans text-base text-[#E8E2D9] font-light tracking-wide">
                 &ldquo;A sensory hymn to royal Indian twilight gardens and aged Assamese agarwood.&rdquo;
               </p>
             </div>
@@ -58,7 +58,7 @@ export function PerfumeShowcase({ perfume }: PerfumeShowcaseProps) {
                 <span>The Scent of Sovereign Nobility</span>
               </div>
 
-              <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-light text-[#FBF9F5] tracking-wide uppercase leading-tight">
+              <h2 className="font-sans text-3xl sm:text-4xl lg:text-5xl font-light text-[#FBF9F5] tracking-[0.12em] uppercase leading-tight">
                 {perfume.name}
               </h2>
 
@@ -143,7 +143,7 @@ export function PerfumeShowcase({ perfume }: PerfumeShowcaseProps) {
                 </div>
 
                 <div className="text-right">
-                  <span className="font-serif text-2xl font-normal text-[#FBF9F5]">
+                  <span className="font-sans text-2xl font-semibold text-[#FBF9F5] tracking-tight">
                     {formatINR(price)}
                   </span>
                 </div>

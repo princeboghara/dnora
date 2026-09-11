@@ -94,7 +94,7 @@ export default function AdminCMSPage() {
           <span className="text-[10px] uppercase tracking-[0.3em] text-[#C5A880] font-semibold">
             Storefront Content Management
           </span>
-          <h1 className="font-serif text-3xl text-[#FBF9F5] uppercase tracking-wide">
+          <h1 className="font-sans text-2xl sm:text-3xl text-[#FBF9F5] uppercase tracking-[0.12em] font-medium">
             Homepage & Banner CMS
           </h1>
         </div>
@@ -109,7 +109,7 @@ export default function AdminCMSPage() {
       <form onSubmit={handleSave} className="space-y-8 text-xs">
         {/* Top Announcement Bar CMS */}
         <div className="bg-[#13171F] border border-[#252D3D] p-6 space-y-4">
-          <h2 className="font-serif text-lg text-[#FBF9F5] uppercase tracking-wider pb-2 border-b border-[#252D3D]">
+          <h2 className="font-sans font-medium text-xs text-[#FBF9F5] uppercase tracking-[0.15em] pb-2 border-b border-[#252D3D]">
             Global Announcement Ticker Bar
           </h2>
 
@@ -128,7 +128,7 @@ export default function AdminCMSPage() {
 
         {/* Hero Banner Section */}
         <div className="bg-[#13171F] border border-[#252D3D] p-6 sm:p-8 space-y-6">
-          <h2 className="font-serif text-lg text-[#FBF9F5] uppercase tracking-wider pb-2 border-b border-[#252D3D]">
+          <h2 className="font-sans font-medium text-xs text-[#FBF9F5] uppercase tracking-[0.15em] pb-2 border-b border-[#252D3D]">
             Main Editorial Hero Banner
           </h2>
 
@@ -141,7 +141,7 @@ export default function AdminCMSPage() {
                 type="text"
                 value={heroForm.title}
                 onChange={(e) => setHeroForm({ ...heroForm, title: e.target.value })}
-                className="w-full p-3 bg-[#1A202C] border border-[#252D3D] text-[#E4E8EE] font-serif text-base"
+                className="w-full p-3 bg-[#1A202C] border border-[#252D3D] text-[#E4E8EE] font-sans text-sm"
               />
             </div>
 
@@ -237,7 +237,7 @@ export default function AdminCMSPage() {
                       className="object-cover opacity-70"
                     />
                     <div className="absolute inset-0 p-4 flex flex-col justify-end bg-gradient-to-t from-black/80 to-transparent">
-                      <p className="font-serif text-sm text-[#FBF9F5] uppercase tracking-wide">
+                      <p className="font-sans font-medium text-xs text-[#FBF9F5] uppercase tracking-wide">
                         {heroForm.title}
                       </p>
                       <p className="text-[10px] text-[#C5A880]">{heroForm.cta_text} &rarr;</p>

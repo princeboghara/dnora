@@ -65,7 +65,7 @@ export function CategoryGrid({ categories }: CategoryGridProps) {
           <span className="text-[10px] uppercase tracking-[0.3em] text-[#8C7A6B] font-semibold">
             Explore Handcrafted Silhouettes
           </span>
-          <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl text-[#111111] font-light uppercase tracking-wider">
+          <h2 className="font-sans text-2xl sm:text-3xl lg:text-4xl text-[#111111] font-light uppercase tracking-[0.15em]">
             Shop By Category
           </h2>
           <div className="w-10 h-[1.5px] bg-[#C5A880] mx-auto mt-2" />
@@ -110,7 +110,7 @@ export function CategoryGrid({ categories }: CategoryGridProps) {
             <span className="text-[10px] uppercase tracking-[0.25em] text-[#8C7A6B] font-semibold">
               Signature Collections
             </span>
-            <h3 className="font-serif text-2xl sm:text-3xl text-[#111111] font-light uppercase tracking-wide">
+            <h3 className="font-sans text-2xl sm:text-3xl text-[#111111] font-light uppercase tracking-[0.12em]">
               Featured Categories
             </h3>
           </div>
@@ -150,7 +150,7 @@ export function CategoryGrid({ categories }: CategoryGridProps) {
                   </div>
                 </div>
 
-                <h4 className="font-serif text-xl sm:text-2xl font-normal text-[#FBF9F5] uppercase tracking-wide group-hover:text-[#DFCAAB] transition-colors">
+                <h4 className="font-sans text-xl sm:text-2xl font-medium text-[#FBF9F5] uppercase tracking-[0.1em] group-hover:text-[#DFCAAB] transition-colors">
                   {category.name}
                 </h4>
 

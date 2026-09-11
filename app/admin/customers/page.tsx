@@ -110,7 +110,7 @@ export default function AdminCustomersPage() {
           <span className="text-[10px] uppercase tracking-[0.3em] text-[#C5A880] font-semibold font-mono">
             Clientele Management
           </span>
-          <h1 className="font-serif text-3xl text-[#F5F7FA] uppercase tracking-wide mt-1">
+          <h1 className="font-sans text-2xl sm:text-3xl text-[#F5F7FA] uppercase tracking-[0.12em] font-medium mt-1">
             Patrons &amp; Collectors Directory
           </h1>
         </div>

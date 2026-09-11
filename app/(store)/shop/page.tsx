@@ -144,7 +144,7 @@ function ShopContent() {
 
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div>
-              <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl text-[#111111] font-light uppercase tracking-wide">
+              <h1 className="font-sans text-3xl sm:text-4xl lg:text-5xl text-[#111111] font-light uppercase tracking-[0.12em]">
                 Women&apos;s Handbags
               </h1>
               <p className="text-xs sm:text-sm text-[#736357] mt-2 max-w-2xl font-light leading-relaxed">
@@ -316,7 +316,7 @@ function ShopContent() {
         {/* Empty State */}
         {filteredProducts.length === 0 ? (
           <div className="text-center py-24 space-y-4 bg-white border border-[#EAE5DC] p-8 max-w-xl mx-auto">
-            <p className="font-serif text-2xl text-[#111111] uppercase tracking-wide">
+            <p className="font-sans font-medium text-xl text-[#111111] uppercase tracking-[0.1em]">
               No Handbags Found
             </p>
             <p className="text-xs text-[#736357] font-light leading-relaxed">
@@ -355,7 +355,7 @@ function ShopContent() {
           <div className="fixed inset-y-0 right-0 w-full max-w-md bg-white border-l border-[#EAE5DC] p-6 flex flex-col justify-between overflow-y-auto shadow-2xl">
             <div className="space-y-6">
               <div className="flex items-center justify-between pb-4 border-b border-[#EAE5DC]">
-                <h3 className="font-serif text-xl tracking-wide text-[#111111] uppercase">
+                <h3 className="font-sans font-medium text-lg tracking-[0.15em] text-[#111111] uppercase">
                   Refine Collection
                 </h3>
                 <button

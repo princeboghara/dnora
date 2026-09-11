@@ -60,7 +60,7 @@ export default function AdminLoginPage() {
             <span className="text-[10px] uppercase tracking-[0.3em] text-[#C5A880] font-semibold font-mono">
               Restricted Terminal
             </span>
-            <h1 className="font-serif text-2xl sm:text-3xl text-[#F5F7FA] tracking-[0.16em] uppercase font-light mt-1">
+            <h1 className="font-sans text-2xl sm:text-3xl text-[#F5F7FA] tracking-[0.16em] uppercase font-medium mt-1">
               D&apos;NORA CONTROL
             </h1>
           </div>

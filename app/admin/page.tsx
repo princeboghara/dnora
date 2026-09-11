@@ -56,7 +56,7 @@ export default function AdminDashboardPage() {
           <span className="text-[10px] uppercase tracking-[0.3em] text-[#C5A880] font-semibold font-mono">
             Executive Control Tower
           </span>
-          <h1 className="font-serif text-3xl sm:text-4xl text-[#F5F7FA] uppercase tracking-wide mt-1">
+          <h1 className="font-sans text-2xl sm:text-3xl text-[#F5F7FA] uppercase tracking-[0.12em] font-medium mt-1">
             Atelier Performance Overview
           </h1>
         </div>
@@ -89,7 +89,7 @@ export default function AdminDashboardPage() {
               <TrendingUp className="w-4 h-4" />
             </div>
           </div>
-          <p className="font-serif text-3xl font-medium text-[#F5F7FA]">
+          <p className="font-sans text-2xl sm:text-3xl font-semibold tracking-tight text-[#F5F7FA]">
             {formatINR(totalRevenue)}
           </p>
           <p className="text-[11px] text-[#8A95A5] flex items-center gap-1">
@@ -111,7 +111,7 @@ export default function AdminDashboardPage() {
               <ShoppingBag className="w-4 h-4" />
             </div>
           </div>
-          <p className="font-serif text-3xl font-medium text-[#F5F7FA]">
+          <p className="font-sans text-2xl sm:text-3xl font-semibold tracking-tight text-[#F5F7FA]">
             {totalOrdersCount}
           </p>
           <p className="text-[11px] text-[#8A95A5]">
@@ -129,7 +129,7 @@ export default function AdminDashboardPage() {
               <PackageCheck className="w-4 h-4" />
             </div>
           </div>
-          <p className="font-serif text-3xl font-medium text-[#F5F7FA]">
+          <p className="font-sans text-2xl sm:text-3xl font-semibold tracking-tight text-[#F5F7FA]">
             {formatINR(aov)}
           </p>
           <p className="text-[11px] text-[#8A95A5]">
@@ -147,7 +147,7 @@ export default function AdminDashboardPage() {
               <AlertTriangle className="w-4 h-4" />
             </div>
           </div>
-          <p className="font-serif text-3xl font-medium text-[#F59E0B]">
+          <p className="font-sans text-2xl sm:text-3xl font-semibold tracking-tight text-[#F59E0B]">
             {lowStockItems.length} SKUs
           </p>
           <p className="text-[11px] text-[#8A95A5]">
@@ -162,7 +162,7 @@ export default function AdminDashboardPage() {
         <div className="lg:col-span-8 p-6 rounded-3xl neu-raised space-y-6">
           <div className="flex items-center justify-between pb-4 border-b border-white/[0.04]">
             <div>
-              <h3 className="font-serif text-lg text-[#F5F7FA] uppercase tracking-wider">
+              <h3 className="font-sans font-medium text-xs text-[#F5F7FA] uppercase tracking-[0.15em]">
                 Monthly Revenue Performance
               </h3>
               <p className="text-xs text-[#8A95A5]">Historical trajectory over the last 6 months (in Lakhs)</p>
@@ -174,7 +174,7 @@ export default function AdminDashboardPage() {
 
           {totalRevenue === 0 ? (
             <div className="h-48 rounded-2xl neu-inset flex flex-col items-center justify-center text-center p-6 border border-white/[0.02]">
-              <p className="text-xs font-serif uppercase tracking-widest text-[#F5F7FA]">
+              <p className="text-xs font-sans font-medium uppercase tracking-widest text-[#F5F7FA]">
                 No Revenue Captured in Current Period
               </p>
               <p className="text-[11px] text-[#8A95A5] mt-1 max-w-sm">
@@ -212,13 +212,13 @@ export default function AdminDashboardPage() {
 
         {/* Category Share Panel */}
         <div className="lg:col-span-4 p-6 rounded-3xl neu-raised space-y-4">
-          <h3 className="font-serif text-lg text-[#F5F7FA] uppercase tracking-wider pb-4 border-b border-white/[0.04]">
+          <h3 className="font-sans font-medium text-xs text-[#F5F7FA] uppercase tracking-[0.15em] pb-4 border-b border-white/[0.04]">
             Revenue by Realm
           </h3>
 
           {totalRevenue === 0 ? (
             <div className="h-48 rounded-2xl neu-inset flex flex-col items-center justify-center text-center p-6 border border-white/[0.02]">
-              <p className="text-xs font-serif uppercase tracking-widest text-[#F5F7FA]">
+              <p className="text-xs font-sans font-medium uppercase tracking-widest text-[#F5F7FA]">
                 No Realm Sales Recorded
               </p>
               <p className="text-[11px] text-[#8A95A5] mt-1">
@@ -252,7 +252,7 @@ export default function AdminDashboardPage() {
       {/* Recent Orders Table - Neumorphic Cavity */}
       <div className="p-6 rounded-3xl neu-raised space-y-4">
         <div className="flex items-center justify-between pb-4 border-b border-white/[0.04]">
-          <h3 className="font-serif text-lg text-[#F5F7FA] uppercase tracking-wider">
+          <h3 className="font-sans font-medium text-xs text-[#F5F7FA] uppercase tracking-[0.15em]">
             Recent Client Orders &amp; Status Controls
           </h3>
           <span className="text-xs text-[#8A95A5] font-mono px-3 py-1 rounded-lg neu-inset-sm">

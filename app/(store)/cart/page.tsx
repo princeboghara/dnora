@@ -60,7 +60,7 @@ export default function CartPage() {
         <div className="w-20 h-20 mx-auto rounded-full bg-[#FAF7F2] border border-[#E8E2D9] flex items-center justify-center text-[#8C7A6B]">
           <ShoppingBag className="w-8 h-8" />
         </div>
-        <h1 className="font-serif text-3xl sm:text-4xl text-[#111111] uppercase tracking-wide">
+        <h1 className="font-sans font-medium text-2xl sm:text-3xl text-[#111111] uppercase tracking-[0.12em]">
           Your Shopping Bag Is Empty
         </h1>
         <p className="text-xs sm:text-sm text-[#6E6A64] max-w-md mx-auto leading-relaxed">
@@ -84,7 +84,7 @@ export default function CartPage() {
         <span className="text-[10px] uppercase tracking-[0.3em] text-[#8C7A6B] font-semibold">
           Review Your Acquisition
         </span>
-        <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl text-[#111111] font-light uppercase tracking-wide">
+        <h1 className="font-sans text-2xl sm:text-3xl lg:text-4xl text-[#111111] font-light uppercase tracking-[0.12em]">
           Your Atelier Bag ({cart.items.reduce((s, i) => s + i.quantity, 0)})
         </h1>
       </div>
@@ -145,7 +145,7 @@ export default function CartPage() {
                       <span className="text-[9px] uppercase tracking-widest text-[#8C7A6B]">
                         {item.product.category_slug}
                       </span>
-                      <h3 className="font-serif text-base sm:text-lg text-[#111111] line-clamp-1">
+                      <h3 className="font-sans font-medium text-xs sm:text-sm text-[#111111] line-clamp-1 uppercase tracking-wide">
                         <Link
                           href={`/product/${item.product.slug}`}
                           className="hover:text-[#9E7D4E] transition-colors"
@@ -203,7 +203,7 @@ export default function CartPage() {
                     </div>
 
                     <div className="text-right">
-                      <span className="font-serif text-lg font-semibold text-[#111111]">
+                      <span className="font-sans text-base sm:text-lg font-semibold text-[#111111] tracking-tight">
                         {formatINR(item.price * item.quantity)}
                       </span>
                     </div>
@@ -217,7 +217,7 @@ export default function CartPage() {
         {/* Right Column: Order Summary & Coupon */}
         <div className="lg:col-span-4 space-y-6">
           <div className="bg-[#FAF7F2] border border-[#E8E2D9] p-6 sm:p-8 space-y-6">
-            <h2 className="font-serif text-xl text-[#111111] uppercase tracking-wider pb-3 border-b border-[#E8E2D9]">
+            <h2 className="font-sans font-medium text-base text-[#111111] uppercase tracking-[0.15em] pb-3 border-b border-[#E8E2D9]">
               Order Summary
             </h2>
 
@@ -295,7 +295,7 @@ export default function CartPage() {
                 <span>{formatINR(cart.tax)}</span>
               </div>
 
-              <div className="flex justify-between pt-4 border-t border-[#E8E2D9] text-base font-serif font-bold text-[#111111]">
+              <div className="flex justify-between pt-4 border-t border-[#E8E2D9] text-base font-sans font-semibold text-[#111111]">
                 <span>Total Acquisition</span>
                 <span className="font-sans font-semibold">{formatINR(cart.total)}</span>
               </div>
@@ -324,7 +324,7 @@ export default function CartPage() {
           <span className="text-[10px] uppercase tracking-[0.3em] text-[#8C7A6B] font-semibold">
             Atelier Recommendations
           </span>
-          <h2 className="font-serif text-2xl sm:text-3xl text-[#111111] uppercase tracking-wide">
+          <h2 className="font-sans font-medium text-xl sm:text-2xl text-[#111111] uppercase tracking-[0.12em]">
             You May Also Admire
           </h2>
         </div>

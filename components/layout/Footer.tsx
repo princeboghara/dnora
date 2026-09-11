@@ -31,7 +31,7 @@ export function Footer() {
                 className="h-8 sm:h-9 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
               />
             </Link>
-            <p className="font-serif text-sm tracking-wider text-[#C5A880] uppercase">
+            <p className="font-sans text-xs tracking-[0.2em] text-[#C5A880] uppercase font-medium">
               Luxury Handbags & Lifestyle Accessories
             </p>
             <p className="text-xs text-[#A89F91] leading-relaxed max-w-md">
@@ -50,7 +50,7 @@ export function Footer() {
           {/* Newsletter Box */}
           <div className="lg:col-span-6 flex flex-col justify-center space-y-4">
             <div className="space-y-1">
-              <h3 className="font-serif text-xl text-[#F5F2EB] tracking-wide">
+              <h3 className="font-sans font-medium text-lg text-[#F5F2EB] tracking-[0.1em] uppercase">
                 Join The DNORA VIP Circle
               </h3>
               <p className="text-xs text-[#A89F91]">
@@ -89,7 +89,7 @@ export function Footer() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 py-12 border-b border-[#262626] text-xs">
           {/* Shop */}
           <div className="space-y-3">
-            <h4 className="font-serif text-sm uppercase tracking-[0.2em] text-[#F5F2EB] font-medium">
+            <h4 className="font-sans text-xs uppercase tracking-[0.2em] text-[#F5F2EB] font-semibold">
               Handbags & Totes
             </h4>
             <ul className="space-y-2 text-[#A89F91]">
@@ -128,7 +128,7 @@ export function Footer() {
 
           {/* Collections */}
           <div className="space-y-3">
-            <h4 className="font-serif text-sm uppercase tracking-[0.2em] text-[#F5F2EB] font-medium">
+            <h4 className="font-sans text-xs uppercase tracking-[0.2em] text-[#F5F2EB] font-semibold">
               Curated Edits
             </h4>
             <ul className="space-y-2 text-[#A89F91]">
@@ -162,7 +162,7 @@ export function Footer() {
 
           {/* Atelier Heritage */}
           <div className="space-y-3">
-            <h4 className="font-serif text-sm uppercase tracking-[0.2em] text-[#F5F2EB] font-medium">
+            <h4 className="font-sans text-xs uppercase tracking-[0.2em] text-[#F5F2EB] font-semibold">
               The Maison
             </h4>
             <ul className="space-y-2 text-[#A89F91]">
@@ -191,7 +191,7 @@ export function Footer() {
 
           {/* Concierge & Care */}
           <div className="space-y-3">
-            <h4 className="font-serif text-sm uppercase tracking-[0.2em] text-[#F5F2EB] font-medium">
+            <h4 className="font-sans text-xs uppercase tracking-[0.2em] text-[#F5F2EB] font-semibold">
               Client Concierge
             </h4>
             <ul className="space-y-2 text-[#A89F91]">

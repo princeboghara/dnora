@@ -31,7 +31,7 @@ export default function AccountOverviewPage() {
         <span className="text-[10px] uppercase tracking-[0.3em] text-[#C5A880] font-semibold">
           Client Dashboard
         </span>
-        <h1 className="font-serif text-3xl sm:text-4xl text-[#111111] font-light">
+        <h1 className="font-sans text-2xl sm:text-3xl text-[#111111] uppercase tracking-[0.1em] font-light">
           Welcome, {user?.fullName || "Distinguished Patron"}
         </h1>
         <p className="text-xs text-[#6E6A64] max-w-lg leading-relaxed">
@@ -45,21 +45,21 @@ export default function AccountOverviewPage() {
           <span className="text-[10px] uppercase tracking-widest text-[#8C7A6B]">
             Total Orders
           </span>
-          <p className="font-serif text-3xl text-[#111111] font-medium">{orders.length}</p>
+          <p className="font-sans text-2xl sm:text-3xl text-[#111111] font-semibold tracking-tight">{orders.length}</p>
         </div>
 
         <div className="p-5 bg-[#FAF7F2] border border-[#E8E2D9] space-y-1">
           <span className="text-[10px] uppercase tracking-widest text-[#8C7A6B]">
             Saved In Wishlist
           </span>
-          <p className="font-serif text-3xl text-[#111111] font-medium">{wishlistCount}</p>
+          <p className="font-sans text-2xl sm:text-3xl text-[#111111] font-semibold tracking-tight">{wishlistCount}</p>
         </div>
 
         <div className="p-5 bg-[#FAF7F2] border border-[#E8E2D9] space-y-1">
           <span className="text-[10px] uppercase tracking-widest text-[#8C7A6B]">
             Atelier Privilege Level
           </span>
-          <p className="font-serif text-lg text-[#9E7D4E] font-medium pt-1">
+          <p className="font-sans text-sm text-[#9E7D4E] font-semibold uppercase tracking-wider pt-1">
             Royal Circle Patron
           </p>
         </div>
@@ -69,7 +69,7 @@ export default function AccountOverviewPage() {
       {recentOrder && (
         <div className="bg-[#FAF7F2] border border-[#E8E2D9] p-6 space-y-4">
           <div className="flex items-center justify-between border-b border-[#E8E2D9] pb-3">
-            <h3 className="font-serif text-lg text-[#111111] uppercase tracking-wider">
+            <h3 className="font-sans font-medium text-xs text-[#111111] uppercase tracking-[0.15em]">
               Most Recent Acquisition
             </h3>
             <Link
@@ -95,7 +95,7 @@ export default function AccountOverviewPage() {
               <span className="px-3 py-1 bg-[#141414] text-[#C5A880] uppercase tracking-widest text-[10px] font-semibold">
                 Status: {recentOrder.status}
               </span>
-              <span className="font-serif text-base font-semibold text-[#111111]">
+              <span className="font-sans text-base font-semibold text-[#111111] tracking-tight">
                 {formatINR(recentOrder.total)}
               </span>
             </div>
@@ -112,7 +112,7 @@ export default function AccountOverviewPage() {
               Personal Atelier Advisor
             </span>
           </div>
-          <p className="text-sm font-serif">Have questions regarding a bespoke commission or delivery?</p>
+          <p className="text-sm font-sans">Have questions regarding a bespoke commission or delivery?</p>
           <p className="text-[#A89F91]">Your dedicated concierge is available Monday to Saturday.</p>
         </div>
 

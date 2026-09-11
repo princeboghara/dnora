@@ -288,7 +288,7 @@ export function ProductViewClient({ product, relatedProducts }: ProductViewClien
               </div>
 
               {/* Product Title */}
-              <h1 className="font-serif text-2xl sm:text-3xl lg:text-3xl font-normal text-[#111111] uppercase tracking-wide leading-tight">
+              <h1 className="font-sans text-2xl sm:text-3xl lg:text-3xl font-medium text-[#111111] uppercase tracking-[0.08em] leading-tight">
                 {product.name}
               </h1>
 
@@ -301,7 +301,7 @@ export function ProductViewClient({ product, relatedProducts }: ProductViewClien
             {/* Pricing */}
             <div className="pt-4 border-t border-[#EAE5DC]">
               <div className="flex items-baseline gap-3">
-                <span className="font-serif text-3xl font-semibold text-[#111111]">
+                <span className="font-sans text-3xl font-semibold text-[#111111] tracking-tight">
                   {formatINR(currentPrice)}
                 </span>
                 {hasDiscount && (
@@ -625,7 +625,7 @@ export function ProductViewClient({ product, relatedProducts }: ProductViewClien
             <span className="text-[10px] uppercase tracking-[0.25em] text-[#8C7A6B] font-semibold">
               Client Acclaim
             </span>
-            <h3 className="font-serif text-2xl sm:text-3xl text-[#111111] uppercase tracking-wide">
+            <h3 className="font-sans font-medium text-2xl sm:text-3xl text-[#111111] uppercase tracking-[0.1em]">
               Verified Client Impressions ({reviews.length})
             </h3>
           </div>
@@ -640,7 +640,7 @@ export function ProductViewClient({ product, relatedProducts }: ProductViewClien
 
         {reviews.length === 0 ? (
           <div className="text-center py-12 bg-white border border-[#EAE5DC] p-6 space-y-2">
-            <p className="font-serif text-base text-[#111111]">
+            <p className="font-sans font-medium text-base text-[#111111] uppercase tracking-wider">
               Be the debut patron to share an impression of this silhouette.
             </p>
             <button
@@ -666,7 +666,7 @@ export function ProductViewClient({ product, relatedProducts }: ProductViewClien
                   <span className="text-[10px] text-[#8C7A6B]">{formatDate(rev.created_at)}</span>
                 </div>
 
-                <h4 className="font-serif text-base text-[#111111] font-medium">{rev.title}</h4>
+                <h4 className="font-sans text-sm sm:text-base text-[#111111] font-semibold">{rev.title}</h4>
 
                 <p className="text-xs text-[#736357] leading-relaxed">&ldquo;{rev.comment}&rdquo;</p>
 
@@ -691,7 +691,7 @@ export function ProductViewClient({ product, relatedProducts }: ProductViewClien
             <span className="text-[10px] uppercase tracking-[0.25em] text-[#8C7A6B] font-semibold">
               Complete Your Look
             </span>
-            <h3 className="font-serif text-2xl sm:text-3xl text-[#111111] uppercase tracking-wide">
+            <h3 className="font-sans font-medium text-2xl sm:text-3xl text-[#111111] uppercase tracking-[0.1em]">
               You May Also Love
             </h3>
           </div>
@@ -744,7 +744,7 @@ export function ProductViewClient({ product, relatedProducts }: ProductViewClien
               <span className="text-[10px] uppercase tracking-[0.25em] text-[#8C7A6B] font-semibold">
                 Client Impression
               </span>
-              <h3 className="font-serif text-xl sm:text-2xl text-[#111111] uppercase tracking-wide mt-1">
+              <h3 className="font-sans font-medium text-xl sm:text-2xl text-[#111111] uppercase tracking-[0.1em] mt-1">
                 Share Your Experience
               </h3>
             </div>

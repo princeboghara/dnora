@@ -183,7 +183,7 @@ export function Header() {
                     </span>
                   )}
                 </div>
-                <span className="hidden xl:inline text-xs font-serif uppercase tracking-wider text-[#111111]">
+                <span className="hidden xl:inline text-xs font-sans uppercase tracking-[0.15em] text-[#111111]">
                   Bag
                 </span>
               </button>
@@ -288,7 +288,7 @@ export function Header() {
 
             <div className="pt-6 border-t border-[#E8E2D9] text-xs text-[#8C7A6B] text-center space-y-1">
               <p>Pan-India White Glove Shipping</p>
-              <p className="font-serif italic text-xs">Crafted with enduring Indian elegance.</p>
+              <p className="font-sans text-[11px] uppercase tracking-widest text-[#8C7A6B]">Crafted with enduring Indian elegance.</p>
             </div>
           </div>
         </div>

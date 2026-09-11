@@ -227,7 +227,7 @@ export default function AdminProductsPage() {
           <span className="text-[10px] uppercase tracking-[0.3em] text-[#C5A880] font-semibold">
             Catalog Management
           </span>
-          <h1 className="font-serif text-3xl text-[#FBF9F5] uppercase tracking-wide">
+          <h1 className="font-sans text-2xl sm:text-3xl text-[#FBF9F5] uppercase tracking-[0.12em] font-medium">
             Atelier Products Directory
           </h1>
         </div>
@@ -288,7 +288,7 @@ export default function AdminProductsPage() {
               {filtered.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="p-12 text-center text-[#8491A5]">
-                    <p className="font-serif text-lg text-[#FBF9F5]">No creations in your catalog yet.</p>
+                    <p className="font-sans font-medium text-base text-[#FBF9F5] uppercase tracking-wider">No creations in your catalog yet.</p>
                     <p className="text-xs text-[#8491A5] mt-1">Click &quot;+ Create Atelier Product&quot; to add your first luxury creation.</p>
                   </td>
                 </tr>
@@ -305,7 +305,7 @@ export default function AdminProductsPage() {
                       />
                     </div>
                     <div>
-                      <p className="font-serif text-[#FBF9F5] font-medium line-clamp-1">
+                      <p className="font-sans text-[#FBF9F5] font-medium uppercase tracking-wide text-xs line-clamp-1">
                         {prod.name}
                       </p>
                       <p className="text-[10px] text-[#8491A5] line-clamp-1">{prod.subtitle}</p>
@@ -386,7 +386,7 @@ export default function AdminProductsPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
           <div className="bg-[#13171F] border border-[#252D3D] p-6 sm:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto text-xs space-y-6">
             <div className="flex items-center justify-between pb-4 border-b border-[#252D3D]">
-              <h3 className="font-serif text-xl text-[#FBF9F5] uppercase tracking-wider">
+              <h3 className="font-sans font-medium text-base text-[#FBF9F5] uppercase tracking-[0.15em]">
                 Add New Atelier Creation
               </h3>
               <button

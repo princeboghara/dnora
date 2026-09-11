@@ -24,7 +24,7 @@ export default function WishlistPage() {
           <Heart className="w-7 h-7" />
         </div>
         <div className="space-y-1">
-          <h1 className="font-serif text-3xl text-[#111111] uppercase tracking-wide">
+          <h1 className="font-sans font-medium text-2xl sm:text-3xl text-[#111111] uppercase tracking-[0.12em]">
             Your Wishlist Is Empty
           </h1>
           <p className="text-xs text-[#6E6A64] max-w-sm mx-auto">
@@ -48,7 +48,7 @@ export default function WishlistPage() {
         <span className="text-[10px] uppercase tracking-[0.3em] text-[#8C7A6B] font-semibold">
           Saved Aspirations
         </span>
-        <h1 className="font-serif text-3xl sm:text-4xl text-[#111111] uppercase tracking-wide font-light">
+        <h1 className="font-sans text-2xl sm:text-3xl lg:text-4xl text-[#111111] uppercase tracking-[0.12em] font-light">
           Your Curated Wishlist ({wishlist.length})
         </h1>
       </div>
@@ -79,7 +79,7 @@ export default function WishlistPage() {
               <span className="text-[9px] uppercase tracking-widest text-[#8C7A6B]">
                 {product.category_slug}
               </span>
-              <h3 className="font-serif text-sm sm:text-base text-[#111111] line-clamp-1 mt-0.5">
+              <h3 className="font-sans font-medium text-xs sm:text-sm text-[#111111] line-clamp-1 mt-0.5 uppercase tracking-wide">
                 <Link href={`/product/${product.slug}`} className="hover:text-[#9E7D4E]">
                   {product.name}
                 </Link>

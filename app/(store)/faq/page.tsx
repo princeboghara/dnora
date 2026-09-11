@@ -39,7 +39,7 @@ export default function FAQPage() {
         <span className="text-[10px] uppercase tracking-[0.3em] text-[#8C7A6B] font-semibold">
           Client Advisory
         </span>
-        <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl text-[#111111] uppercase tracking-wide font-light">
+        <h1 className="font-sans text-2xl sm:text-3xl lg:text-4xl text-[#111111] uppercase tracking-[0.12em] font-light">
           Frequently Inquired
         </h1>
         <p className="text-xs sm:text-sm text-[#6E6A64] font-light max-w-lg mx-auto">
@@ -54,7 +54,7 @@ export default function FAQPage() {
             <div key={index} className="py-5">
               <button
                 onClick={() => setOpenIndex(isOpen ? null : index)}
-                className="w-full flex items-center justify-between text-left font-serif text-lg text-[#111111] uppercase tracking-wide hover:text-[#C5A880] transition-colors"
+                className="w-full flex items-center justify-between text-left font-sans font-medium text-sm sm:text-base text-[#111111] uppercase tracking-wide hover:text-[#C5A880] transition-colors"
               >
                 <span className="pr-4">{item.q}</span>
                 <ChevronDown

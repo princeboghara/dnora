@@ -110,14 +110,14 @@ export function QuickViewModal({ product, isOpen, onClose }: QuickViewModalProps
                 {product.category_slug} • Atelier Edition
               </span>
 
-              <h2 className="font-serif text-2xl sm:text-3xl text-[#111111] leading-tight">
+              <h2 className="font-sans font-medium text-xl sm:text-2xl text-[#111111] uppercase tracking-wide leading-tight">
                 {product.name}
               </h2>
 
               <p className="text-xs text-[#8C7A6B]">{product.subtitle}</p>
 
               <div className="flex items-baseline gap-3 pt-1">
-                <span className="font-serif text-2xl font-semibold text-[#111111]">
+                <span className="font-sans text-2xl font-semibold text-[#111111] tracking-tight">
                   {formatINR(displayPrice)}
                 </span>
                 {product.sale_price && (

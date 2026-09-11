@@ -43,7 +43,7 @@ export function CompleteTheLook({ products }: CompleteTheLookProps) {
           <Sparkles className="w-3.5 h-3.5" />
           <span>Curated Styling • The Ensemble</span>
         </div>
-        <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl text-[#111111] font-light uppercase tracking-wide">
+        <h2 className="font-sans text-3xl sm:text-4xl lg:text-5xl text-[#111111] font-light uppercase tracking-[0.15em]">
           Complete The Look
         </h2>
         <div className="w-12 h-[1.5px] bg-[#C5A880] mx-auto mt-2" />
@@ -77,7 +77,7 @@ export function CompleteTheLook({ products }: CompleteTheLookProps) {
                 <span className="text-[9px] uppercase tracking-widest text-[#8C7A6B]">
                   {item.category_slug}
                 </span>
-                <h4 className="font-serif text-xs sm:text-sm text-[#111111] line-clamp-1">
+                <h4 className="font-sans font-medium text-xs sm:text-sm text-[#111111] line-clamp-1">
                   <Link href={`/product/${item.slug}`} className="hover:text-[#9E7D4E]">
                     {item.name}
                   </Link>
@@ -96,7 +96,7 @@ export function CompleteTheLook({ products }: CompleteTheLookProps) {
             <span className="text-[10px] uppercase tracking-[0.25em] text-[#8C7A6B] font-semibold">
               The Grand Atelier Edit
             </span>
-            <h3 className="font-serif text-2xl text-[#111111] font-light leading-snug">
+            <h3 className="font-sans text-2xl text-[#111111] font-normal tracking-wide leading-snug">
               The Sovereign Trousseau Curation
             </h3>
             <p className="text-xs text-[#6E6A64] leading-relaxed">
@@ -109,7 +109,7 @@ export function CompleteTheLook({ products }: CompleteTheLookProps) {
               <span className="text-xs uppercase tracking-widest text-[#6E6A64]">
                 Total Ensemble (4 Creations)
               </span>
-              <span className="font-serif text-2xl font-semibold text-[#111111]">
+              <span className="font-sans text-2xl font-semibold text-[#111111] tracking-tight">
                 {formatINR(totalOriginal)}
               </span>
             </div>

@@ -51,7 +51,7 @@ export default function AdminInventoryPage() {
           <span className="text-[10px] uppercase tracking-[0.3em] text-[#C5A880] font-semibold font-mono">
             Stock Control
           </span>
-          <h1 className="font-serif text-3xl text-[#F5F7FA] uppercase tracking-wide mt-1">
+          <h1 className="font-sans text-2xl sm:text-3xl text-[#F5F7FA] uppercase tracking-[0.12em] font-medium mt-1">
             Inventory &amp; Threshold Alerts
           </h1>
         </div>
@@ -94,7 +94,7 @@ export default function AdminInventoryPage() {
               items.map((p) => (
                 <tr key={p.id} className="hover:bg-[#1A202C]/60 transition-colors">
                   <td className="p-4 font-mono font-medium text-[#C5A880]">{p.sku}</td>
-                  <td className="p-4 font-serif text-[#FBF9F5] font-medium">{p.name}</td>
+                  <td className="p-4 font-sans text-[#FBF9F5] font-medium">{p.name}</td>
                   <td className="p-4 uppercase text-[#8491A5]">{p.category_slug}</td>
                   <td className="p-4 font-mono font-bold text-sm text-[#FBF9F5]">
                     {p.stock_quantity ?? 0} units

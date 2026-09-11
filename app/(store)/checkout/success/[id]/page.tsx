@@ -72,7 +72,7 @@ export default function OrderSuccessPage() {
   if (!order) {
     return (
       <div className="py-24 text-center max-w-lg mx-auto px-4 space-y-4">
-        <h1 className="font-serif text-2xl text-[#111111]">Order Record Not Located</h1>
+        <h1 className="font-sans font-medium text-xl text-[#111111] uppercase tracking-[0.12em]">Order Record Not Located</h1>
         <p className="text-xs text-[#8C7A6B]">
           Please check your email confirmation for order details or contact our concierge.
         </p>
@@ -95,7 +95,7 @@ export default function OrderSuccessPage() {
           <span className="text-[10px] uppercase tracking-[0.3em] text-[#C5A880] font-semibold">
             Acquisition Confirmed
           </span>
-          <h1 className="font-serif text-3xl sm:text-4xl text-[#111111] uppercase tracking-wide">
+          <h1 className="font-sans text-2xl sm:text-3xl text-[#111111] uppercase tracking-[0.12em] font-medium">
             Thank You, {order.customer_name}
           </h1>
           <p className="text-xs sm:text-sm text-[#6E6A64] max-w-md mx-auto">
@@ -111,7 +111,7 @@ export default function OrderSuccessPage() {
 
       {/* Interactive Order Timeline */}
       <div className="bg-[#FAF7F2] border border-[#E8E2D9] p-6 sm:p-8 space-y-6">
-        <h2 className="font-serif text-lg text-[#111111] uppercase tracking-wider">
+        <h2 className="font-sans font-medium text-sm text-[#111111] uppercase tracking-[0.15em]">
           Fulfillment Timeline
         </h2>
 
@@ -143,7 +143,7 @@ export default function OrderSuccessPage() {
       {/* Order Details & Summary Card */}
       <div className="bg-[#FAF7F2] border border-[#E8E2D9] p-6 sm:p-8 space-y-6">
         <div className="flex items-center justify-between border-b border-[#E8E2D9] pb-4">
-          <h2 className="font-serif text-lg text-[#111111] uppercase tracking-wider">
+          <h2 className="font-sans font-medium text-sm text-[#111111] uppercase tracking-[0.15em]">
             Acquisition Receipt
           </h2>
           <button
@@ -194,7 +194,7 @@ export default function OrderSuccessPage() {
                   />
                 </div>
                 <div>
-                  <p className="font-serif text-[#111111] font-medium">{item.product_name}</p>
+                  <p className="font-sans text-[#111111] font-medium uppercase tracking-wide text-xs">{item.product_name}</p>
                   {item.variant_title && (
                     <p className="text-[11px] text-[#8C7A6B]">{item.variant_title}</p>
                   )}
@@ -228,7 +228,7 @@ export default function OrderSuccessPage() {
             <span>GST (12% Included)</span>
             <span>{formatINR(order.tax)}</span>
           </div>
-          <div className="flex justify-between pt-3 border-t border-[#E8E2D9] text-sm font-serif font-bold text-[#111111]">
+          <div className="flex justify-between pt-3 border-t border-[#E8E2D9] text-sm font-sans font-semibold text-[#111111]">
             <span>Total Paid</span>
             <span className="font-sans font-semibold">{formatINR(order.total)}</span>
           </div>

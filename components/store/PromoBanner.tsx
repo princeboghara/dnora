@@ -22,7 +22,7 @@ export function PromoBanner() {
           <span className="text-[10px] uppercase tracking-[0.3em] text-[#C5A880] font-semibold">
             Iconic Silhouette Debut
           </span>
-          <h2 className="font-serif text-2xl sm:text-4xl lg:text-5xl uppercase tracking-wider max-w-xl text-white mt-1">
+          <h2 className="font-sans font-medium text-2xl sm:text-4xl lg:text-5xl uppercase tracking-[0.12em] max-w-xl text-white mt-1">
             The Noane Bucket Bag
           </h2>
           <p className="text-xs sm:text-sm text-[#E2D8CC] max-w-md mt-2 line-clamp-2 font-light">

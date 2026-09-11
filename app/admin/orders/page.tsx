@@ -56,7 +56,7 @@ export default function AdminOrdersPage() {
           <span className="text-[10px] uppercase tracking-[0.3em] text-[#C5A880] font-semibold font-mono">
             Order Fulfillment Pipeline
           </span>
-          <h1 className="font-serif text-3xl text-[#F5F7FA] uppercase tracking-wide mt-1">
+          <h1 className="font-sans text-2xl sm:text-3xl text-[#F5F7FA] uppercase tracking-[0.12em] font-medium mt-1">
             Patron Orders &amp; Workflow
           </h1>
         </div>
@@ -258,7 +258,7 @@ export default function AdminOrdersPage() {
                         />
                       </div>
                       <div>
-                        <p className="font-serif text-[#FBF9F5] font-medium">{item.product_name}</p>
+                        <p className="font-sans text-[#FBF9F5] font-medium uppercase tracking-wide text-xs">{item.product_name}</p>
                         {item.variant_title && (
                           <p className="text-[10px] text-[#8491A5]">{item.variant_title}</p>
                         )}

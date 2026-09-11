@@ -53,7 +53,7 @@ export default async function CategoryPage({
             <span className="text-[#FBF9F5]">{category.name}</span>
           </nav>
 
-          <h1 className="font-serif text-4xl sm:text-5xl md:text-6xl text-[#FBF9F5] font-light uppercase tracking-wider">
+          <h1 className="font-sans text-4xl sm:text-5xl md:text-6xl text-[#FBF9F5] font-light uppercase tracking-[0.15em]">
             {category.name}
           </h1>
 
@@ -77,7 +77,7 @@ export default async function CategoryPage({
 
         {products.length === 0 ? (
           <div className="text-center py-20 space-y-3 bg-[#FAF7F2] p-8 border border-[#E8E2D9] my-8">
-            <p className="font-serif text-xl text-[#111111]">
+            <p className="font-sans font-medium text-lg text-[#111111] uppercase tracking-wide">
               New editions are presently being crafted in our atelier.
             </p>
             <p className="text-xs text-[#8C7A6B]">

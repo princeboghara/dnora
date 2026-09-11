@@ -121,7 +121,7 @@ export function HeroBanner() {
                 <span className="text-[10px] uppercase tracking-[0.3em] text-[#C5A880] font-semibold">
                   Atelier Campaign
                 </span>
-                <h2 className="font-serif text-2xl sm:text-4xl lg:text-5xl uppercase tracking-wider max-w-2xl text-white mt-1">
+                <h2 className="font-sans font-medium text-2xl sm:text-4xl lg:text-5xl uppercase tracking-[0.12em] max-w-2xl text-white mt-1">
                   {slide.title}
                 </h2>
                 {slide.subtitle && (
@@ -190,7 +190,7 @@ export function HeroBanner() {
           <span>Haute Maroquinerie & Fine Luxury</span>
         </div>
 
-        <h1 className="font-serif text-3xl sm:text-5xl lg:text-6xl text-[#FBF9F5] uppercase tracking-wider font-light leading-tight">
+        <h1 className="font-sans font-light text-3xl sm:text-5xl lg:text-6xl text-[#FBF9F5] uppercase tracking-[0.15em] leading-tight">
           D&apos;NORA LUXURY ATELIER
         </h1>
 

@@ -63,7 +63,7 @@ export default function AdminAuditLogsPage() {
           <span className="text-[10px] uppercase tracking-[0.3em] text-[#C5A880] font-semibold">
             Governance &amp; Security
           </span>
-          <h1 className="font-serif text-3xl text-[#FBF9F5] uppercase tracking-wide">
+          <h1 className="font-sans text-2xl sm:text-3xl text-[#FBF9F5] uppercase tracking-[0.12em] font-medium">
             Admin Activity Audit Trail
           </h1>
         </div>

@@ -33,7 +33,7 @@ export function AtelierStory() {
             <span className="text-[10px] uppercase tracking-[0.3em] text-[#8C7A6B] font-semibold">
               The Maison Heritage
             </span>
-            <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl text-[#111111] font-light uppercase tracking-wide leading-tight">
+            <h2 className="font-sans text-3xl sm:text-4xl lg:text-5xl text-[#111111] font-light uppercase tracking-[0.12em] leading-tight">
               Where Ancient Indian Grandeur Meets Modernity
             </h2>
             <div className="w-12 h-[1.5px] bg-[#C5A880]" />

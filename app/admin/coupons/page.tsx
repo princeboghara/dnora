@@ -156,7 +156,7 @@ export default function AdminCouponsPage() {
           <span className="text-[10px] uppercase tracking-[0.3em] text-[#C5A880] font-semibold">
             Promotions &amp; Privileges
           </span>
-          <h1 className="font-serif text-3xl text-[#FBF9F5] uppercase tracking-wide">
+          <h1 className="font-sans text-2xl sm:text-3xl text-[#FBF9F5] uppercase tracking-[0.12em] font-medium">
             Coupon Codes Manager
           </h1>
         </div>
@@ -247,7 +247,7 @@ export default function AdminCouponsPage() {
         <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
           <div className="bg-[#13171F] border border-[#252D3D] p-6 max-w-md w-full space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-[#252D3D]">
-              <h3 className="font-serif text-lg text-[#FBF9F5] uppercase tracking-wider">
+              <h3 className="font-sans font-medium text-sm text-[#FBF9F5] uppercase tracking-[0.15em]">
                 Create Privilege Code
               </h3>
               <button

@@ -161,7 +161,7 @@ export default function CheckoutPage() {
   if (cart.items.length === 0) {
     return (
       <div className="py-24 max-w-2xl mx-auto text-center px-4 space-y-4">
-        <h1 className="font-serif text-2xl text-[#111111]">Your Bag is Empty</h1>
+        <h1 className="font-sans font-medium text-xl text-[#111111] uppercase tracking-[0.12em]">Your Bag is Empty</h1>
         <p className="text-xs text-[#8C7A6B]">Please add items to your bag before proceeding to checkout.</p>
         <Link href="/shop" className="inline-block text-xs uppercase tracking-widest text-[#C5A880] underline">
           Return to Catalog &rarr;
@@ -175,7 +175,7 @@ export default function CheckoutPage() {
       {/* Checkout Header */}
       <div className="flex items-center justify-between pb-6 border-b border-[#E8E2D9] mb-8">
         <div>
-          <Link href="/" className="font-serif text-2xl tracking-[0.25em] font-light text-[#111111] uppercase">
+          <Link href="/" className="font-sans text-2xl tracking-[0.25em] font-light text-[#111111] uppercase">
             D&apos;NORA
           </Link>
           <span className="text-[9px] uppercase tracking-[0.3em] text-[#8C7A6B] block">
@@ -217,7 +217,7 @@ export default function CheckoutPage() {
             {/* Step 1: Contact Information */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h2 className="font-serif text-lg text-[#111111] uppercase tracking-wider">
+                <h2 className="font-sans font-medium text-sm text-[#111111] uppercase tracking-[0.15em]">
                   1. Contact Information
                 </h2>
                 {currentStep > 1 && (
@@ -283,7 +283,7 @@ export default function CheckoutPage() {
             {/* Step 2: Shipping Address */}
             <div className={`space-y-4 pt-6 border-t border-[#E8E2D9] ${currentStep < 2 ? "opacity-40 pointer-events-none" : ""}`}>
               <div className="flex items-center justify-between">
-                <h2 className="font-serif text-lg text-[#111111] uppercase tracking-wider">
+                <h2 className="font-sans font-medium text-sm text-[#111111] uppercase tracking-[0.15em]">
                   2. Shipping Destination
                 </h2>
                 {currentStep > 2 && (
@@ -396,7 +396,7 @@ export default function CheckoutPage() {
             {/* Step 3: Delivery Options */}
             <div className={`space-y-4 pt-6 border-t border-[#E8E2D9] ${currentStep < 3 ? "opacity-40 pointer-events-none" : ""}`}>
               <div className="flex items-center justify-between">
-                <h2 className="font-serif text-lg text-[#111111] uppercase tracking-wider">
+                <h2 className="font-sans font-medium text-sm text-[#111111] uppercase tracking-[0.15em]">
                   3. Delivery Protocol
                 </h2>
                 {currentStep > 3 && (
@@ -473,7 +473,7 @@ export default function CheckoutPage() {
 
             {/* Step 4: Payment Gateway */}
             <div className={`space-y-4 pt-6 border-t border-[#E8E2D9] ${currentStep < 4 ? "opacity-40 pointer-events-none" : ""}`}>
-              <h2 className="font-serif text-lg text-[#111111] uppercase tracking-wider">
+              <h2 className="font-sans font-medium text-sm text-[#111111] uppercase tracking-[0.15em]">
                 4. Payment Method
               </h2>
 
@@ -577,7 +577,7 @@ export default function CheckoutPage() {
         {/* Right Column: Order Summary & Review */}
         <div className="lg:col-span-5 space-y-6">
           <div className="bg-[#FAF7F2] border border-[#E8E2D9] p-6 sm:p-8 space-y-6 sticky top-24">
-            <h3 className="font-serif text-lg text-[#111111] uppercase tracking-wider pb-3 border-b border-[#E8E2D9]">
+            <h3 className="font-sans font-medium text-sm text-[#111111] uppercase tracking-[0.15em] pb-3 border-b border-[#E8E2D9]">
               Your Bag Items ({cart.items.reduce((s, i) => s + i.quantity, 0)})
             </h3>
 
@@ -595,7 +595,7 @@ export default function CheckoutPage() {
                       />
                     </div>
                     <div className="min-w-0">
-                      <p className="font-serif text-[#111111] line-clamp-1 font-medium">{item.product.name}</p>
+                      <p className="font-sans text-[#111111] line-clamp-1 font-medium uppercase tracking-wide text-xs">{item.product.name}</p>
                       <p className="text-[11px] text-[#8C7A6B]">Qty: {item.quantity}</p>
                     </div>
                   </div>
@@ -635,7 +635,7 @@ export default function CheckoutPage() {
                 <span>{formatINR(cart.tax)}</span>
               </div>
 
-              <div className="flex justify-between pt-4 border-t border-[#E8E2D9] text-base font-serif font-bold text-[#111111]">
+              <div className="flex justify-between pt-4 border-t border-[#E8E2D9] text-base font-sans font-semibold text-[#111111]">
                 <span>Total Amount</span>
                 <span className="font-sans font-semibold">{formatINR(finalTotal)}</span>
               </div>

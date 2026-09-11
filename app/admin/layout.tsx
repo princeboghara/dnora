@@ -101,7 +101,7 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
               className="w-full h-full object-contain"
             />
           </div>
-          <span className="font-serif text-lg tracking-[0.2em] text-[#F5F7FA] uppercase">
+          <span className="font-sans text-base tracking-[0.2em] text-[#F5F7FA] uppercase font-semibold">
             D&apos;NORA
           </span>
           <span className="text-[9px] uppercase tracking-wider text-[#C5A880] bg-[#C5A880]/10 px-2 py-0.5 rounded-md border border-[#C5A880]/30 font-semibold font-mono">
@@ -137,7 +137,7 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
                 />
               </div>
               <div>
-                <Link href="/admin" className="font-serif text-lg tracking-[0.18em] text-[#F5F7FA] uppercase font-medium">
+                <Link href="/admin" className="font-sans text-base tracking-[0.18em] text-[#F5F7FA] uppercase font-semibold">
                   D&apos;NORA
                 </Link>
                 <p className="text-[9px] uppercase tracking-[0.2em] text-[#8A95A5] font-mono">
@@ -188,7 +188,7 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
 
           <div className="p-3 rounded-2xl neu-flat flex items-center justify-between gap-2 border border-white/[0.02]">
             <div className="min-w-0 flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-lg neu-inset flex items-center justify-center text-[#C5A880] font-serif font-bold text-xs">
+              <div className="w-7 h-7 rounded-lg neu-inset flex items-center justify-center text-[#C5A880] font-sans font-bold text-xs">
                 {adminUser?.fullName?.charAt(0) || "A"}
               </div>
               <div className="min-w-0">

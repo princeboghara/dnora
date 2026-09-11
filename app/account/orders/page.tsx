@@ -33,7 +33,7 @@ export default function AccountOrdersPage() {
         <span className="text-[10px] uppercase tracking-[0.3em] text-[#8C7A6B] font-semibold">
           Acquisitions History
         </span>
-        <h1 className="font-serif text-3xl text-[#111111] uppercase tracking-wide font-light">
+        <h1 className="font-sans text-2xl sm:text-3xl text-[#111111] uppercase tracking-[0.12em] font-light">
           My Orders & Dispatch Tracking
         </h1>
       </div>
@@ -41,7 +41,7 @@ export default function AccountOrdersPage() {
       {orders.length === 0 ? (
         <div className="bg-[#FAF7F2] border border-[#E8E2D9] p-12 text-center space-y-4">
           <Package className="w-8 h-8 text-[#8C7A6B] mx-auto" />
-          <p className="font-serif text-lg text-[#111111]">No Orders On Record</p>
+          <p className="font-sans font-medium text-base text-[#111111] uppercase tracking-wider">No Orders On Record</p>
           <p className="text-xs text-[#6E6A64]">You have not yet made any acquisitions from our atelier.</p>
           <Link
             href="/shop"
@@ -87,7 +87,7 @@ export default function AccountOrdersPage() {
                     >
                       Status: {order.status}
                     </span>
-                    <span className="font-serif text-base font-semibold text-[#111111]">
+                    <span className="font-sans text-base font-semibold text-[#111111] tracking-tight">
                       {formatINR(order.total)}
                     </span>
                   </div>
@@ -143,7 +143,7 @@ export default function AccountOrdersPage() {
                           />
                         </div>
                         <div>
-                          <p className="font-serif text-[#111111] font-medium">
+                          <p className="font-sans text-[#111111] font-medium uppercase tracking-wide text-xs">
                             {item.product_name}
                           </p>
                           {item.variant_title && (

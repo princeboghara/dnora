@@ -96,7 +96,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search handbags, perfumes, jewellery, silks..."
-            className="flex-1 bg-transparent text-lg font-serif tracking-wide text-[#111111] placeholder:text-[#9C9488] placeholder:font-sans placeholder:text-sm focus:outline-none"
+            className="flex-1 bg-transparent text-base font-sans tracking-wide text-[#111111] placeholder:text-[#9C9488] placeholder:text-sm focus:outline-none"
           />
           {query && (
             <button
@@ -163,7 +163,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
 
               {results.length === 0 && !isSearching ? (
                 <div className="text-center py-10 space-y-3">
-                  <p className="font-serif text-lg text-[#1C1B1A]">
+                  <p className="font-sans font-medium text-base text-[#1C1B1A] uppercase tracking-wider">
                     No creations found matching &quot;{query}&quot;
                   </p>
                   <p className="text-xs text-[#8C7A6B] max-w-sm mx-auto">
@@ -198,7 +198,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
                         <span className="text-[10px] uppercase tracking-widest text-[#8C7A6B] truncate">
                           {product.category_slug}
                         </span>
-                        <h4 className="font-serif text-sm text-[#111111] truncate group-hover:text-[#9E7D4E] transition-colors">
+                        <h4 className="font-sans font-medium text-xs sm:text-sm text-[#111111] truncate group-hover:text-[#9E7D4E] transition-colors uppercase tracking-wide">
                           {product.name}
                         </h4>
                         <div className="flex items-center gap-2 mt-1">

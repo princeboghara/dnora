@@ -90,7 +90,7 @@ export default function AddressesPage() {
           <span className="text-[10px] uppercase tracking-[0.3em] text-[#8C7A6B] font-semibold">
             Delivery Destinations
           </span>
-          <h1 className="font-serif text-3xl text-[#111111] uppercase tracking-wide font-light">
+          <h1 className="font-sans text-2xl sm:text-3xl text-[#111111] uppercase tracking-[0.12em] font-light">
             Saved Addresses
           </h1>
         </div>
@@ -106,7 +106,7 @@ export default function AddressesPage() {
 
       {isAdding && (
         <form onSubmit={handleAdd} className="bg-[#FAF7F2] border border-[#E8E2D9] p-6 sm:p-8 space-y-4 text-xs">
-          <h3 className="font-serif text-lg text-[#111111] uppercase tracking-wider pb-2 border-b border-[#E8E2D9]">
+          <h3 className="font-sans font-medium text-xs text-[#111111] uppercase tracking-[0.15em] pb-2 border-b border-[#E8E2D9]">
             Add Destination Address
           </h3>
 

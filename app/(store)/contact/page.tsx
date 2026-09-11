@@ -25,7 +25,7 @@ export default function ContactPage() {
         <span className="text-[10px] uppercase tracking-[0.3em] text-[#8C7A6B] font-semibold">
           Personal Advisory
         </span>
-        <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl text-[#111111] uppercase tracking-wide font-light">
+        <h1 className="font-sans text-2xl sm:text-3xl lg:text-4xl text-[#111111] uppercase tracking-[0.12em] font-light">
           Client Concierge
         </h1>
         <p className="text-xs sm:text-sm text-[#6E6A64] font-light leading-relaxed">
@@ -37,7 +37,7 @@ export default function ContactPage() {
         {/* Contact Info Cards */}
         <div className="lg:col-span-5 space-y-6">
           <div className="bg-[#FAF7F2] border border-[#E8E2D9] p-6 space-y-4 text-xs">
-            <h3 className="font-serif text-base text-[#111111] uppercase tracking-wider">
+            <h3 className="font-sans font-medium text-xs text-[#111111] uppercase tracking-[0.15em]">
               Atelier Direct Contact
             </h3>
 
@@ -74,7 +74,7 @@ export default function ContactPage() {
             <span className="text-[10px] uppercase tracking-widest text-[#C5A880] font-semibold">
               Bespoke Trousseau
             </span>
-            <h4 className="font-serif text-base font-normal">Private Bridal Showroom Bookings</h4>
+            <h4 className="font-sans text-sm font-medium uppercase tracking-wide">Private Bridal Showroom Bookings</h4>
             <p className="text-[#A89F91] leading-relaxed">
               We offer exclusive private salon viewings for bridal parties and fine jewellery bespoke acquisitions.
             </p>
@@ -88,7 +88,7 @@ export default function ContactPage() {
               <div className="w-14 h-14 rounded-full bg-[#EAF2ED] border border-[#245744] text-[#245744] flex items-center justify-center mx-auto">
                 <Check className="w-6 h-6" />
               </div>
-              <h3 className="font-serif text-2xl text-[#111111]">
+              <h3 className="font-sans font-medium text-xl text-[#111111] uppercase tracking-wide">
                 Your Message Has Been Received
               </h3>
               <p className="text-xs text-[#6E6A64] max-w-sm mx-auto">
@@ -97,7 +97,7 @@ export default function ContactPage() {
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4 text-xs">
-              <h3 className="font-serif text-xl text-[#111111] uppercase tracking-wider pb-2 border-b border-[#E8E2D9]">
+              <h3 className="font-sans font-medium text-sm text-[#111111] uppercase tracking-[0.15em] pb-2 border-b border-[#E8E2D9]">
                 Initiate Concierge Enquiry
               </h3>
 

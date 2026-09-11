@@ -21,7 +21,7 @@ export default function AboutPage() {
           <span className="text-[10px] uppercase tracking-[0.3em] text-[#C5A880] font-semibold">
             The Atelier Chronicle
           </span>
-          <h1 className="font-serif text-4xl sm:text-5xl md:text-6xl text-[#FBF9F5] font-light uppercase tracking-wide">
+          <h1 className="font-sans text-3xl sm:text-5xl md:text-6xl text-[#FBF9F5] font-light uppercase tracking-[0.15em]">
             Heritage Reimagined
           </h1>
           <p className="text-xs sm:text-sm text-[#D5CDC0] font-light max-w-xl mx-auto leading-relaxed">
@@ -45,7 +45,7 @@ export default function AboutPage() {
             <span className="text-[10px] uppercase tracking-[0.25em] text-[#8C7A6B] font-semibold">
               The Genesis
             </span>
-            <h2 className="font-serif text-3xl sm:text-4xl text-[#111111] font-light uppercase tracking-wide">
+            <h2 className="font-sans text-2xl sm:text-3xl text-[#111111] font-light uppercase tracking-[0.12em]">
               An Antidote to Transient Fashion
             </h2>
             <div className="w-12 h-[1.5px] bg-[#C5A880]" />
@@ -66,7 +66,7 @@ export default function AboutPage() {
             <span className="text-[10px] uppercase tracking-[0.3em] text-[#8C7A6B] font-semibold">
               Foundational Principles
             </span>
-            <h2 className="font-serif text-3xl sm:text-4xl text-[#111111] uppercase tracking-wide font-light">
+            <h2 className="font-sans text-2xl sm:text-3xl text-[#111111] uppercase tracking-[0.12em] font-light">
               The Four Atelier Pillars
             </h2>
           </div>
@@ -76,7 +76,7 @@ export default function AboutPage() {
               <div className="w-12 h-12 mx-auto rounded-full bg-[#FAF7F2] flex items-center justify-center text-[#C5A880]">
                 <Feather className="w-6 h-6" />
               </div>
-              <h3 className="font-serif text-lg text-[#111111] uppercase">Noble Materials</h3>
+              <h3 className="font-sans font-medium text-sm text-[#111111] uppercase tracking-[0.12em]">Noble Materials</h3>
               <p className="text-xs text-[#6E6A64] leading-relaxed">
                 Full-grain Italian calfskin, BIS-hallmarked 22k gold vermeil, natural Basra pearls, and pure mulberry silk.
               </p>
@@ -86,7 +86,7 @@ export default function AboutPage() {
               <div className="w-12 h-12 mx-auto rounded-full bg-[#FAF7F2] flex items-center justify-center text-[#C5A880]">
                 <Sparkles className="w-6 h-6" />
               </div>
-              <h3 className="font-serif text-lg text-[#111111] uppercase">Slow Artisanship</h3>
+              <h3 className="font-sans font-medium text-sm text-[#111111] uppercase tracking-[0.12em]">Slow Artisanship</h3>
               <p className="text-xs text-[#6E6A64] leading-relaxed">
                 Strict limited-batch atelier releases allowing master craftsmen up to two weeks per completed creation.
               </p>
@@ -96,7 +96,7 @@ export default function AboutPage() {
               <div className="w-12 h-12 mx-auto rounded-full bg-[#FAF7F2] flex items-center justify-center text-[#C5A880]">
                 <ShieldCheck className="w-6 h-6" />
               </div>
-              <h3 className="font-serif text-lg text-[#111111] uppercase">Pure Extraits</h3>
+              <h3 className="font-sans font-medium text-sm text-[#111111] uppercase tracking-[0.12em]">Pure Extraits</h3>
               <p className="text-xs text-[#6E6A64] leading-relaxed">
                 Haute parfumerie concoctions matured over 180 days with up to 32% pure botanical oil concentrations.
               </p>
@@ -106,7 +106,7 @@ export default function AboutPage() {
               <div className="w-12 h-12 mx-auto rounded-full bg-[#FAF7F2] flex items-center justify-center text-[#C5A880]">
                 <HeartHandshake className="w-6 h-6" />
               </div>
-              <h3 className="font-serif text-lg text-[#111111] uppercase">White Glove Protocol</h3>
+              <h3 className="font-sans font-medium text-sm text-[#111111] uppercase tracking-[0.12em]">White Glove Protocol</h3>
               <p className="text-xs text-[#6E6A64] leading-relaxed">
                 Dedicated concierge advisors, insured door-to-door transit, and signature bespoke wax-sealed packaging.
               </p>
@@ -117,7 +117,7 @@ export default function AboutPage() {
 
       {/* CTA */}
       <div className="text-center max-w-xl mx-auto px-4 space-y-6">
-        <h3 className="font-serif text-2xl sm:text-3xl text-[#111111] uppercase tracking-wide">
+        <h3 className="font-sans font-medium text-xl sm:text-2xl text-[#111111] uppercase tracking-[0.12em]">
           Experience The Atelier Firsthand
         </h3>
         <Link

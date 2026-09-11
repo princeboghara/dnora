@@ -21,7 +21,7 @@ export default function AdminSettingsPage() {
           <span className="text-[10px] uppercase tracking-[0.3em] text-[#C5A880] font-semibold">
             System & Operations
           </span>
-          <h1 className="font-serif text-3xl text-[#FBF9F5] uppercase tracking-wide">
+          <h1 className="font-sans text-2xl sm:text-3xl text-[#FBF9F5] uppercase tracking-[0.12em] font-medium">
             Store Settings & Policies
           </h1>
         </div>
@@ -36,7 +36,7 @@ export default function AdminSettingsPage() {
       <form onSubmit={handleSubmit} className="space-y-6 text-xs">
         {/* General Store Identity */}
         <div className="bg-[#13171F] border border-[#252D3D] p-6 space-y-4">
-          <h3 className="font-serif text-base text-[#FBF9F5] uppercase tracking-wider pb-2 border-b border-[#252D3D]">
+          <h3 className="font-sans font-medium text-xs text-[#FBF9F5] uppercase tracking-[0.15em] pb-2 border-b border-[#252D3D]">
             Atelier Identity
           </h3>
 
@@ -65,7 +65,7 @@ export default function AdminSettingsPage() {
 
         {/* Shipping & Taxes */}
         <div className="bg-[#13171F] border border-[#252D3D] p-6 space-y-4">
-          <h3 className="font-serif text-base text-[#FBF9F5] uppercase tracking-wider pb-2 border-b border-[#252D3D]">
+          <h3 className="font-sans font-medium text-xs text-[#FBF9F5] uppercase tracking-[0.15em] pb-2 border-b border-[#252D3D]">
             Shipping & Fiscal Policies
           </h3>
 
@@ -110,7 +110,7 @@ export default function AdminSettingsPage() {
 
         {/* Client Advisory Concierge */}
         <div className="bg-[#13171F] border border-[#252D3D] p-6 space-y-4">
-          <h3 className="font-serif text-base text-[#FBF9F5] uppercase tracking-wider pb-2 border-b border-[#252D3D]">
+          <h3 className="font-sans font-medium text-xs text-[#FBF9F5] uppercase tracking-[0.15em] pb-2 border-b border-[#252D3D]">
             Concierge Support Channels
           </h3>
 

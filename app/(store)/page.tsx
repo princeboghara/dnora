@@ -47,7 +47,7 @@ export default async function HomePage() {
           <span className="text-[10px] uppercase tracking-[0.3em] text-[#8C7A6B] font-semibold">
             Haute Maroquinerie
           </span>
-          <h2 className="font-serif text-3xl sm:text-4xl text-[#111111] uppercase tracking-wider font-light">
+          <h2 className="font-sans text-3xl sm:text-4xl text-[#111111] uppercase tracking-[0.15em] font-light">
             The Atelier Capsule in Preparation
           </h2>
           <p className="text-xs sm:text-sm text-[#736357] leading-relaxed max-w-lg mx-auto font-light">
@@ -80,7 +80,7 @@ export default async function HomePage() {
                     <Sparkles className="w-3 h-3 text-[#C5A880]" />
                     <span>Most Coveted Silhouettes</span>
                   </div>
-                  <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl text-[#111111] font-light uppercase tracking-wide">
+                  <h2 className="font-sans text-2xl sm:text-3xl lg:text-4xl text-[#111111] font-light uppercase tracking-[0.12em]">
                     Best Sellers
                   </h2>
                 </div>
@@ -113,7 +113,7 @@ export default async function HomePage() {
                   <span className="text-[10px] uppercase tracking-[0.25em] text-[#8C7A6B] font-semibold">
                     Fresh In The Atelier
                   </span>
-                  <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl text-[#111111] font-light uppercase tracking-wide">
+                  <h2 className="font-sans text-2xl sm:text-3xl lg:text-4xl text-[#111111] font-light uppercase tracking-[0.12em]">
                     New Arrivals
                   </h2>
                 </div>
@@ -152,7 +152,7 @@ export default async function HomePage() {
             ))}
           </div>
 
-          <blockquote className="font-serif text-xl sm:text-2xl md:text-3xl text-[#111111] font-light italic leading-snug">
+          <blockquote className="font-sans text-xl sm:text-2xl md:text-3xl text-[#111111] font-light leading-snug tracking-wide">
             &ldquo;DNORA blends timeless Indian elegance with the sleek architectural poise of modern European luxury. The quality of vegan leather and fine finishing is second to none.&rdquo;
           </blockquote>
 

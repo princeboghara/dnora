@@ -27,7 +27,7 @@ export default function AdminCollectionsPage() {
           <span className="text-[10px] uppercase tracking-[0.3em] text-[#C5A880] font-semibold">
             Editorial Capsules
           </span>
-          <h1 className="font-serif text-3xl text-[#FBF9F5] uppercase tracking-wide">
+          <h1 className="font-sans text-2xl sm:text-3xl text-[#FBF9F5] uppercase tracking-[0.12em] font-medium">
             Curated Collections
           </h1>
         </div>
@@ -39,7 +39,7 @@ export default function AdminCollectionsPage() {
       {collections.length === 0 ? (
         <div className="p-16 text-center text-[#8491A5] border border-dashed border-[#252D3D] bg-[#13171F]">
           <Layers className="w-8 h-8 mx-auto text-[#C5A880]/50 mb-3" />
-          <p className="text-sm font-serif uppercase tracking-widest text-[#FBF9F5]">
+          <p className="text-xs font-sans font-medium uppercase tracking-widest text-[#FBF9F5]">
             {isLoading ? "Retrieving capsules..." : "No Curated Collections Found"}
           </p>
           <p className="text-[11px] text-[#8491A5] mt-1 max-w-sm mx-auto">
@@ -63,7 +63,7 @@ export default function AdminCollectionsPage() {
                   <span className="text-[10px] uppercase tracking-widest text-[#C5A880]">
                     {col.tagline}
                   </span>
-                  <h3 className="font-serif text-xl text-[#FBF9F5] uppercase">
+                  <h3 className="font-sans font-medium text-base text-[#FBF9F5] uppercase tracking-[0.12em]">
                     {col.name}
                   </h3>
                 </div>

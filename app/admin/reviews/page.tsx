@@ -83,7 +83,7 @@ export default function AdminReviewsPage() {
           <span className="text-[10px] uppercase tracking-[0.3em] text-[#C5A880] font-semibold">
             Reputation &amp; Acclaim
           </span>
-          <h1 className="font-serif text-3xl text-[#FBF9F5] uppercase tracking-wide">
+          <h1 className="font-sans text-2xl sm:text-3xl text-[#FBF9F5] uppercase tracking-[0.12em] font-medium">
             Client Reviews Moderation
           </h1>
         </div>
@@ -141,7 +141,7 @@ export default function AdminReviewsPage() {
                     </div>
                   </td>
                   <td className="p-4 max-w-md">
-                    <p className="font-serif font-medium text-[#FBF9F5]">{rev.title}</p>
+                    <p className="font-sans font-medium text-[#FBF9F5] uppercase tracking-wide text-xs">{rev.title}</p>
                     <p className="text-[11px] text-[#8491A5] line-clamp-2">{rev.comment}</p>
                   </td>
                   <td className="p-4 text-[#8491A5] whitespace-nowrap">

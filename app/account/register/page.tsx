@@ -28,7 +28,7 @@ export default function RegisterPage() {
         <span className="text-[10px] uppercase tracking-[0.3em] text-[#C5A880] font-semibold">
           Debut Circle Invitation
         </span>
-        <h1 className="font-serif text-3xl sm:text-4xl text-[#111111] uppercase tracking-wide font-light">
+        <h1 className="font-sans text-2xl sm:text-3xl text-[#111111] uppercase tracking-[0.12em] font-light">
           Create Account
         </h1>
         <p className="text-xs text-[#6E6A64]">

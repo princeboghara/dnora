@@ -34,7 +34,7 @@ function AccountNav() {
           <Sparkles className="w-3.5 h-3.5" />
           <span>Atelier Circle Patron</span>
         </div>
-        <h2 className="font-serif text-xl text-[#111111]">{user?.fullName || "Valued Patron"}</h2>
+        <h2 className="font-sans font-medium text-lg text-[#111111] uppercase tracking-wide">{user?.fullName || "Valued Patron"}</h2>
         <p className="text-xs text-[#8C7A6B]">{user?.email || "VIP Member"}</p>
       </div>
 

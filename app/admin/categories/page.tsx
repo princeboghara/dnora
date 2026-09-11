@@ -27,7 +27,7 @@ export default function AdminCategoriesPage() {
           <span className="text-[10px] uppercase tracking-[0.3em] text-[#C5A880] font-semibold">
             Taxonomy &amp; Curation
           </span>
-          <h1 className="font-serif text-3xl text-[#FBF9F5] uppercase tracking-wide">
+          <h1 className="font-sans text-2xl sm:text-3xl text-[#FBF9F5] uppercase tracking-[0.12em] font-medium">
             Category Realms
           </h1>
         </div>
@@ -39,7 +39,7 @@ export default function AdminCategoriesPage() {
       {categories.length === 0 ? (
         <div className="p-16 text-center text-[#8491A5] border border-dashed border-[#252D3D] bg-[#13171F]">
           <FolderTree className="w-8 h-8 mx-auto text-[#C5A880]/50 mb-3" />
-          <p className="text-sm font-serif uppercase tracking-widest text-[#FBF9F5]">
+          <p className="text-xs font-sans font-medium uppercase tracking-widest text-[#FBF9F5]">
             {isLoading ? "Loading category realms..." : "No Category Realms Configured"}
           </p>
           <p className="text-[11px] text-[#8491A5] mt-1 max-w-sm mx-auto">
@@ -65,7 +65,7 @@ export default function AdminCategoriesPage() {
               </div>
 
               <div className="space-y-1 text-xs">
-                <h3 className="font-serif text-lg text-[#FBF9F5] uppercase tracking-wider">
+                <h3 className="font-sans font-medium text-sm text-[#FBF9F5] uppercase tracking-[0.15em]">
                   {cat.name}
                 </h3>
                 <p className="text-[#8491A5] line-clamp-2">{cat.description}</p>
