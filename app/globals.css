@@ -156,30 +156,36 @@ h1, h2, h3, h4, h5, h6, .font-serif, [class*="font-serif"] {
 }
 
 /* ==============================================================================
-   PROFESSIONAL MODERN LOGO FILL ANIMATIONS (LUXURY ATELIER)
+   INDIVIDUAL CHARACTER FORMATION & LIQUID FILL ANIMATIONS (D N O R A)
    ============================================================================== */
 
-/* 1. Vertical Liquid Rise Fill (Bottom to Top) */
-@keyframes logoRiseFill {
+@keyframes charRiseFill {
   0% {
     clip-path: inset(100% 0 0 0);
     -webkit-clip-path: inset(100% 0 0 0);
+    opacity: 0.2;
+    transform: translateY(2px) scale(0.97);
+  }
+  15% {
+    opacity: 1;
   }
   100% {
     clip-path: inset(0% 0 0 0);
     -webkit-clip-path: inset(0% 0 0 0);
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
 
-@keyframes logoRiseMeniscus {
+@keyframes charMeniscus {
   0% {
     bottom: 0%;
     opacity: 0;
   }
-  8% {
+  10% {
     opacity: 1;
   }
-  90% {
+  85% {
     opacity: 1;
   }
   100% {
@@ -188,17 +194,17 @@ h1, h2, h3, h4, h5, h6, .font-serif, [class*="font-serif"] {
   }
 }
 
-@keyframes logoRiseGoldGleam {
+@keyframes charGoldSurface {
   0% {
     clip-path: inset(100% 0 0 0);
     -webkit-clip-path: inset(100% 0 0 0);
     opacity: 0;
   }
-  20% {
-    opacity: 0.85;
+  25% {
+    opacity: 0.9;
   }
-  80% {
-    opacity: 0.5;
+  75% {
+    opacity: 0.45;
   }
   100% {
     clip-path: inset(0% 0 0 0);
@@ -207,96 +213,34 @@ h1, h2, h3, h4, h5, h6, .font-serif, [class*="font-serif"] {
   }
 }
 
-/* 2. Horizontal Precision Flow Fill (Left to Right) */
-@keyframes logoFlowFill {
+@keyframes charPopLock {
   0% {
-    clip-path: polygon(0 0, 0% 0, 0% 100%, 0 100%);
-    -webkit-clip-path: polygon(0 0, 0% 0, 0% 100%, 0 100%);
+    filter: drop-shadow(0 0 0 rgba(197, 168, 128, 0));
+  }
+  80% {
+    filter: drop-shadow(0 0 4px rgba(197, 168, 128, 0.45));
   }
   100% {
-    clip-path: polygon(0 0, 115% 0, 100% 100%, 0 100%);
-    -webkit-clip-path: polygon(0 0, 115% 0, 100% 100%, 0 100%);
+    filter: drop-shadow(0 0 0 rgba(197, 168, 128, 0));
   }
 }
 
-@keyframes logoFlowMeniscus {
-  0% {
-    left: 0%;
-    opacity: 0;
-  }
-  8% {
-    opacity: 1;
-  }
-  90% {
-    opacity: 1;
-  }
-  100% {
-    left: 100%;
-    opacity: 0;
-  }
+.animate-char-fill {
+  animation: charRiseFill 1.5s cubic-bezier(0.65, 0, 0.35, 1) forwards;
 }
 
-@keyframes logoFlowGoldGleam {
-  0% {
-    clip-path: polygon(0 0, 0% 0, 0% 100%, 0 100%);
-    -webkit-clip-path: polygon(0 0, 0% 0, 0% 100%, 0 100%);
-    opacity: 0;
-  }
-  25% {
-    opacity: 0.85;
-  }
-  75% {
-    opacity: 0.45;
-  }
-  100% {
-    clip-path: polygon(0 0, 115% 0, 100% 100%, 0 100%);
-    -webkit-clip-path: polygon(0 0, 115% 0, 100% 100%, 0 100%);
-    opacity: 0;
-  }
+.animate-char-meniscus {
+  animation: charMeniscus 1.5s cubic-bezier(0.65, 0, 0.35, 1) forwards;
 }
 
-/* 3. Subtitle Elegant Fade & Tracking */
-@keyframes logoSubtitleReveal {
-  0% {
-    opacity: 0;
-    transform: translateY(2px);
-    letter-spacing: 0.28em;
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-    letter-spacing: 0.38em;
-  }
+.animate-char-gold {
+  animation: charGoldSurface 1.6s cubic-bezier(0.65, 0, 0.35, 1) forwards;
 }
 
-/* Utility Animation Classes */
-.animate-logo-rise-fill {
-  animation: logoRiseFill 1.8s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+.animate-char-lock {
+  animation: charPopLock 0.6s ease-out forwards;
 }
 
-.animate-logo-rise-meniscus {
-  animation: logoRiseMeniscus 1.8s cubic-bezier(0.65, 0, 0.35, 1) forwards;
-}
-
-.animate-logo-rise-gold {
-  animation: logoRiseGoldGleam 2.0s cubic-bezier(0.65, 0, 0.35, 1) forwards;
-}
-
-.animate-logo-flow-fill {
-  animation: logoFlowFill 1.8s cubic-bezier(0.65, 0, 0.35, 1) forwards;
-}
-
-.animate-logo-flow-meniscus {
-  animation: logoFlowMeniscus 1.8s cubic-bezier(0.65, 0, 0.35, 1) forwards;
-}
-
-.animate-logo-flow-gold {
-  animation: logoFlowGoldGleam 2.0s cubic-bezier(0.65, 0, 0.35, 1) forwards;
-}
-
-.animate-logo-subtitle {
-  animation: logoSubtitleReveal 1.2s cubic-bezier(0.25, 1, 0.5, 1) 0.8s forwards;
-}
 
 
 
