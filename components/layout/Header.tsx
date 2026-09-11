@@ -10,6 +10,7 @@ import { useAuth } from "@/lib/auth/auth-context";
 import { SearchModal } from "@/components/layout/SearchModal";
 import { CartDrawer } from "@/components/cart/CartDrawer";
 import { AnnouncementBar } from "@/components/layout/AnnouncementBar";
+import { AnimatedLogo } from "@/components/layout/AnimatedLogo";
 
 const NAV_LINKS = [
   {
@@ -108,18 +109,9 @@ export function Header() {
               </button>
             </div>
 
-            {/* Center: Brand Logo */}
-            <div className="text-center lg:w-2/4">
-              <Link href="/" className="inline-flex flex-col items-center group py-0.5">
-                <img
-                  src="/images/logo/dnora-logo-dark.png"
-                  alt="DNORA"
-                  className="h-7 sm:h-9 lg:h-10 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
-                />
-                <span className="text-[8px] sm:text-[9px] uppercase tracking-[0.38em] text-[#8C7A6B] font-medium mt-0.5 group-hover:text-[#C5A880] transition-colors">
-                  LUXURY ESSENTIALS
-                </span>
-              </Link>
+            {/* Center: Brand Logo with Cinematic Video-like Reveal Animation */}
+            <div className="text-center lg:w-2/4 flex justify-center">
+              <AnimatedLogo />
             </div>
 
             {/* Right: Actions (Search mobile, Wishlist, Account, Cart, Admin) */}
@@ -222,13 +214,9 @@ export function Header() {
           <div className="fixed inset-y-0 left-0 w-4/5 max-w-sm bg-[#FBF9F5] border-r border-[#E8E2D9] shadow-2xl p-6 flex flex-col justify-between overflow-y-auto">
             <div className="space-y-6">
               <div className="flex items-center justify-between pb-4 border-b border-[#E8E2D9]">
-                <Link href="/" onClick={() => setIsMobileMenuOpen(false)} className="inline-block">
-                  <img
-                    src="/images/logo/dnora-logo-dark.png"
-                    alt="DNORA"
-                    className="h-7 w-auto object-contain"
-                  />
-                </Link>
+                <div onClick={() => setIsMobileMenuOpen(false)}>
+                  <AnimatedLogo showSubtitle={false} />
+                </div>
                 <button
                   type="button"
                   onClick={() => setIsMobileMenuOpen(false)}
