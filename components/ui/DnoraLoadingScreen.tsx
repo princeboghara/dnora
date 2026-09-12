@@ -1,17 +1,18 @@
 "use client";
 
 import React, { useRef, useEffect, useState } from "react";
-import Link from "next/link";
 
-interface AnimatedLogoProps {
-  className?: string;
-  showSubtitle?: boolean;
+interface DnoraLoadingScreenProps {
+  fullScreen?: boolean;
+  text?: string;
+  subtitle?: string;
+  mode?: "light" | "admin" | "dark";
 }
 
 const LOGO_WIDTH = 728;
 const LOGO_HEIGHT = 170;
 
-// Letter X Bounds
+// Letter X Bounds for handwriting strokes
 const OX_D = 0;
 const OW_D = 142;
 const OX_N = 142;
@@ -35,18 +36,19 @@ function getBezierPoint(
   return [x, y];
 }
 
-export function AnimatedLogo({
-  className = "",
-  showSubtitle = true,
-}: AnimatedLogoProps) {
+export function DnoraLoadingScreen({
+  fullScreen = true,
+  text = "D'NORA LUXURY ESSENTIALS",
+  subtitle = "CRAFTING BESPOKE SILHOUETTES...",
+  mode = "light",
+}: DnoraLoadingScreenProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const maskCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const logoImageRef = useRef<HTMLImageElement | null>(null);
   const animFrameIdRef = useRef<number | null>(null);
 
   const [isImageLoaded, setIsImageLoaded] = useState(false);
-  const [isComplete, setIsComplete] = useState(false);
-  const [animTrigger, setAnimTrigger] = useState(0);
+  const [progressPercent, setProgressPercent] = useState(0);
 
   // Preload authentic DNORA logo
   useEffect(() => {
@@ -58,7 +60,7 @@ export function AnimatedLogo({
     };
   }, []);
 
-  // Continuous stroke-by-stroke handwriting loop
+  // Continuous loop handwriting animation
   useEffect(() => {
     if (!isImageLoaded || !canvasRef.current || !logoImageRef.current) return;
 
@@ -66,7 +68,6 @@ export function AnimatedLogo({
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // Create / configure offscreen mask canvas
     if (!maskCanvasRef.current) {
       maskCanvasRef.current = document.createElement("canvas");
     }
@@ -76,41 +77,40 @@ export function AnimatedLogo({
     const maskCtx = maskCanvas.getContext("2d");
     if (!maskCtx) return;
 
-    // Retina display scaling
     const dpr = typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1;
     canvas.width = LOGO_WIDTH * dpr;
     canvas.height = LOGO_HEIGHT * dpr;
     ctx.scale(dpr, dpr);
 
-    setIsComplete(false);
-    const durationMs = 1300; // Normal fast smooth stroke duration (1.3s)
-    let startTime: number | null = null;
+    const strokeDuration = 1250; // 1.25s handwriting stroke
+    const pauseDuration = 600;   // 0.6s hold on full logo
+    const totalCycle = strokeDuration + pauseDuration;
+    let cycleStart: number | null = null;
 
     const render = (timestamp: number) => {
-      if (!startTime) startTime = timestamp;
-      const elapsed = timestamp - startTime;
-      const p = Math.min(elapsed / durationMs, 1.0);
+      if (!cycleStart) cycleStart = timestamp;
+      const cycleElapsed = (timestamp - cycleStart) % totalCycle;
+      const p = Math.min(cycleElapsed / strokeDuration, 1.0);
 
-      // If animation reached 100%, render full authentic logo directly
+      setProgressPercent(Math.floor(p * 100));
+
+      // When stroke completes, show authentic logo directly
       if (p >= 1.0) {
         ctx.clearRect(0, 0, LOGO_WIDTH, LOGO_HEIGHT);
         ctx.drawImage(logoImageRef.current!, 0, 0, LOGO_WIDTH, LOGO_HEIGHT);
-        setIsComplete(true);
+        animFrameIdRef.current = requestAnimationFrame(render);
         return;
       }
 
-      // 1. Draw all cumulative strokes onto the offscreen mask with source-over (additive)
+      // Draw strokes onto mask canvas
       maskCtx.clearRect(0, 0, LOGO_WIDTH, LOGO_HEIGHT);
       maskCtx.fillStyle = "#FFFFFF";
       maskCtx.strokeStyle = "#FFFFFF";
       maskCtx.lineCap = "round";
       maskCtx.lineJoin = "round";
 
-      // -------------------------------------------------------------
-      // LETTER 1: D (Timeline: 0.00 -> 0.20)
-      // -------------------------------------------------------------
+      // LETTER 1: D (0.00 -> 0.20)
       if (p >= 0.2) {
-        // D is fully completed
         maskCtx.fillRect(OX_D, 0, OW_D, LOGO_HEIGHT);
       } else if (p > 0.0) {
         maskCtx.save();
@@ -118,7 +118,6 @@ export function AnimatedLogo({
         maskCtx.rect(OX_D, 0, OW_D, LOGO_HEIGHT);
         maskCtx.clip();
 
-        // Stroke 1: Front vertical straight line (Agalno lito: 0.00 -> 0.08)
         const lp1 = Math.min(1.0, p / 0.08);
         maskCtx.beginPath();
         maskCtx.moveTo(OX_D + 32, 5);
@@ -126,7 +125,6 @@ export function AnimatedLogo({
         maskCtx.lineWidth = 65;
         maskCtx.stroke();
 
-        // Stroke 2: Half-round curve (Half round D no: 0.08 -> 0.20)
         if (p > 0.08) {
           const lp2 = Math.min(1.0, (p - 0.08) / 0.12);
           maskCtx.beginPath();
@@ -140,7 +138,7 @@ export function AnimatedLogo({
               pt = getBezierPoint([OX_D + 32, 15], [OX_D + 130, 20], [OX_D + 138, 85], u);
             } else {
               const u = (t - 0.5) * 2;
-              pt = getBezierPoint([OX_D + 138, 85], [OX_D + 130, 150], [OX_D + 32, 155], u);
+              pt = getBezierPoint([OX_R + 0, 85], [OX_D + 130, 150], [OX_D + 32, 155], u);
             }
             maskCtx.lineTo(pt[0], pt[1]);
           }
@@ -150,11 +148,8 @@ export function AnimatedLogo({
         maskCtx.restore();
       }
 
-      // -------------------------------------------------------------
-      // LETTER 2: N (Timeline: 0.20 -> 0.42, Zero Gap after D!)
-      // -------------------------------------------------------------
+      // LETTER 2: N (0.20 -> 0.42)
       if (p >= 0.42) {
-        // N is fully completed
         maskCtx.fillRect(OX_N, 0, OW_N, LOGO_HEIGHT);
       } else if (p > 0.2) {
         maskCtx.save();
@@ -162,7 +157,6 @@ export function AnimatedLogo({
         maskCtx.rect(OX_N, 0, OW_N, LOGO_HEIGHT);
         maskCtx.clip();
 
-        // N Stroke 1: Left vertical line (0.20 -> 0.27)
         const lp1 = Math.min(1.0, (p - 0.2) / 0.07);
         maskCtx.beginPath();
         maskCtx.moveTo(OX_N + 18, 165);
@@ -170,7 +164,6 @@ export function AnimatedLogo({
         maskCtx.lineWidth = 56;
         maskCtx.stroke();
 
-        // N Stroke 2: Diagonal line (0.27 -> 0.35)
         if (p > 0.27) {
           const lp2 = Math.min(1.0, (p - 0.27) / 0.08);
           maskCtx.beginPath();
@@ -180,7 +173,6 @@ export function AnimatedLogo({
           maskCtx.stroke();
         }
 
-        // N Stroke 3: Right vertical line (0.35 -> 0.42)
         if (p > 0.35) {
           const lp3 = Math.min(1.0, (p - 0.35) / 0.07);
           maskCtx.beginPath();
@@ -192,11 +184,8 @@ export function AnimatedLogo({
         maskCtx.restore();
       }
 
-      // -------------------------------------------------------------
-      // LETTER 3: O (Timeline: 0.42 -> 0.60, Zero Gap after N!)
-      // -------------------------------------------------------------
+      // LETTER 3: O (0.42 -> 0.60)
       if (p >= 0.6) {
-        // O is fully completed
         maskCtx.fillRect(OX_O, 0, OW_O, LOGO_HEIGHT);
       } else if (p > 0.42) {
         maskCtx.save();
@@ -225,11 +214,8 @@ export function AnimatedLogo({
         maskCtx.restore();
       }
 
-      // -------------------------------------------------------------
-      // LETTER 4: R (Timeline: 0.60 -> 0.83, Zero Gap after O!)
-      // -------------------------------------------------------------
+      // LETTER 4: R (0.60 -> 0.83)
       if (p >= 0.83) {
-        // R is fully completed
         maskCtx.fillRect(OX_R, 0, OW_R, LOGO_HEIGHT);
       } else if (p > 0.6) {
         maskCtx.save();
@@ -237,7 +223,6 @@ export function AnimatedLogo({
         maskCtx.rect(OX_R, 0, OW_R, LOGO_HEIGHT);
         maskCtx.clip();
 
-        // R Stroke 1: Vertical stem (0.60 -> 0.67)
         const lp1 = Math.min(1.0, (p - 0.6) / 0.07);
         maskCtx.beginPath();
         maskCtx.moveTo(OX_R + 20, 5);
@@ -245,7 +230,6 @@ export function AnimatedLogo({
         maskCtx.lineWidth = 56;
         maskCtx.stroke();
 
-        // R Stroke 2: Upper rounded bowl (0.67 -> 0.76)
         if (p > 0.67) {
           const lp2 = Math.min(1.0, (p - 0.67) / 0.09);
           maskCtx.beginPath();
@@ -267,7 +251,6 @@ export function AnimatedLogo({
           maskCtx.stroke();
         }
 
-        // R Stroke 3: Graceful curved leg (0.76 -> 0.83)
         if (p > 0.76) {
           const lp3 = Math.min(1.0, (p - 0.76) / 0.07);
           maskCtx.beginPath();
@@ -284,11 +267,8 @@ export function AnimatedLogo({
         maskCtx.restore();
       }
 
-      // -------------------------------------------------------------
-      // LETTER 5: A (Timeline: 0.83 -> 1.00, Zero Gap after R!)
-      // -------------------------------------------------------------
+      // LETTER 5: A (0.83 -> 1.00)
       if (p >= 1.0) {
-        // A is fully completed
         maskCtx.fillRect(OX_A, 0, OW_A, LOGO_HEIGHT);
       } else if (p > 0.83) {
         maskCtx.save();
@@ -296,7 +276,6 @@ export function AnimatedLogo({
         maskCtx.rect(OX_A, 0, OW_A, LOGO_HEIGHT);
         maskCtx.clip();
 
-        // A Stroke 1: Left diagonal (0.83 -> 0.89)
         const lp1 = Math.min(1.0, (p - 0.83) / 0.06);
         maskCtx.beginPath();
         maskCtx.moveTo(OX_A + 65, 5);
@@ -304,7 +283,6 @@ export function AnimatedLogo({
         maskCtx.lineWidth = 58;
         maskCtx.stroke();
 
-        // A Stroke 2: Right diagonal (0.89 -> 0.95)
         if (p > 0.89) {
           const lp2 = Math.min(1.0, (p - 0.89) / 0.06);
           maskCtx.beginPath();
@@ -314,7 +292,6 @@ export function AnimatedLogo({
           maskCtx.stroke();
         }
 
-        // A Stroke 3: Horizontal crossbar (0.95 -> 1.00)
         if (p > 0.95) {
           const lp3 = Math.min(1.0, (p - 0.95) / 0.05);
           maskCtx.beginPath();
@@ -326,7 +303,7 @@ export function AnimatedLogo({
         maskCtx.restore();
       }
 
-      // 2. Draw authentic logo on canvas, then mask with cumulative strokes ONCE
+      // Draw authentic logo through mask
       ctx.clearRect(0, 0, LOGO_WIDTH, LOGO_HEIGHT);
       ctx.save();
       ctx.drawImage(logoImageRef.current!, 0, 0, LOGO_WIDTH, LOGO_HEIGHT);
@@ -334,7 +311,6 @@ export function AnimatedLogo({
       ctx.drawImage(maskCanvas, 0, 0, LOGO_WIDTH, LOGO_HEIGHT);
       ctx.restore();
 
-      // Continue animation loop
       animFrameIdRef.current = requestAnimationFrame(render);
     };
 
@@ -345,64 +321,55 @@ export function AnimatedLogo({
         cancelAnimationFrame(animFrameIdRef.current);
       }
     };
-  }, [isImageLoaded, animTrigger]);
+  }, [isImageLoaded]);
 
-  // Replay handwriting on hover
-  const handleMouseEnter = () => {
-    if (isComplete) {
-      setAnimTrigger((prev) => prev + 1);
-    }
-  };
+  const bgStyles =
+    mode === "admin"
+      ? "bg-[#F8FAFC]"
+      : mode === "dark"
+      ? "bg-[#111111]"
+      : "bg-[#FAF8F5]";
 
-  const replayWriting = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setAnimTrigger((prev) => prev + 1);
-  };
+  const containerClasses = fullScreen
+    ? `fixed inset-0 z-50 flex flex-col items-center justify-center ${bgStyles} select-none`
+    : `w-full py-16 flex flex-col items-center justify-center ${bgStyles} select-none`;
 
   return (
-    <Link
-      href="/"
-      onMouseEnter={handleMouseEnter}
-      className={`inline-flex flex-col items-center group py-0.5 relative select-none cursor-pointer ${className}`}
-      aria-label="D'NORA Home"
-    >
-      {/* High-Resolution Logo Container */}
-      <div
-        className="relative flex items-center justify-center h-7 sm:h-9 lg:h-10 overflow-visible"
-        style={{
-          aspectRatio: `${LOGO_WIDTH} / ${LOGO_HEIGHT}`,
-        }}
-      >
-        {/* Dynamic Stroke Handwriting Canvas */}
-        <canvas
-          ref={canvasRef}
-          className="w-full h-full object-contain pointer-events-none"
-          style={{ width: "100%", height: "100%" }}
-        />
-      </div>
+    <div className={containerClasses} aria-label="Loading DNORA Atelier">
+      {/* Subtle luxury ambient glow */}
+      <div className="absolute w-72 h-72 rounded-full bg-[#C5A880]/10 blur-3xl pointer-events-none -translate-y-4" />
 
-      {/* Subtitle: "LUXURY ESSENTIALS" */}
-      {showSubtitle && (
-        <div className="flex items-center gap-1.5 mt-0.5">
-          <span
-            className={`text-[8px] sm:text-[9px] uppercase tracking-[0.38em] text-[#8C7A6B] font-medium transition-all duration-700 group-hover:text-[#C5A880] group-hover:tracking-[0.44em] ${
-              !isComplete ? "opacity-40" : "opacity-100"
-            }`}
-          >
-            LUXURY ESSENTIALS
-          </span>
-
-          {/* Micro Replay Trigger Dot */}
-          <button
-            type="button"
-            onClick={replayWriting}
-            title="Click to replay calligraphy writing animation"
-            className="w-1.5 h-1.5 rounded-full bg-[#C5A880]/30 hover:bg-[#C5A880] transition-colors ml-0.5 cursor-pointer opacity-30 hover:opacity-100"
-            aria-label="Replay logo writing animation"
+      <div className="relative flex flex-col items-center text-center space-y-5 px-6 max-w-sm">
+        {/* Animated Handwriting Canvas Logo */}
+        <div
+          className="relative w-48 sm:w-56 h-12 sm:h-14 flex items-center justify-center"
+          style={{ aspectRatio: `${LOGO_WIDTH} / ${LOGO_HEIGHT}` }}
+        >
+          <canvas
+            ref={canvasRef}
+            className="w-full h-full object-contain pointer-events-none drop-shadow-xs"
+            style={{ width: "100%", height: "100%" }}
           />
         </div>
-      )}
-    </Link>
+
+        {/* Delicate Gold Shimmer Progress Bar */}
+        <div className="w-36 sm:w-44 h-[1.5px] bg-[#E5DCD0] overflow-hidden rounded-full relative">
+          <div
+            className="h-full bg-gradient-to-r from-[#C5A880] via-[#9E7D4E] to-[#C5A880] transition-all duration-150 ease-out"
+            style={{ width: `${Math.max(15, progressPercent)}%` }}
+          />
+        </div>
+
+        {/* Luxury Typography */}
+        <div className="space-y-1">
+          <p className="text-[10px] sm:text-[11px] uppercase tracking-[0.35em] text-[#111111] font-medium font-sans">
+            {text}
+          </p>
+          <p className="text-[9px] uppercase tracking-[0.25em] text-[#8C7A6B] font-mono font-light">
+            {subtitle}
+          </p>
+        </div>
+      </div>
+    </div>
   );
 }

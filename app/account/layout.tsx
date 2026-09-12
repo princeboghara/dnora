@@ -72,36 +72,70 @@ function AccountNav() {
   );
 }
 
-export default function AccountLayout({
+function AccountLayoutInner({
   children,
 }: {
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, isLoading } = useAuth();
   const isAuthPage = pathname.includes("/login") || pathname.includes("/register") || pathname.includes("/forgot");
 
+  // Protect member pages: if not authenticated and not on login/register, redirect to login
+  React.useEffect(() => {
+    if (!isAuthPage && !isLoading && !user) {
+      router.push(`/account/login?redirect=${encodeURIComponent(pathname)}`);
+    }
+  }, [isAuthPage, isLoading, user, pathname, router]);
+
+  return (
+    <div className="flex flex-col min-h-screen bg-[#FBF9F5]">
+      <Header />
+      <main className="flex-1">
+        {isAuthPage ? (
+          children
+        ) : isLoading ? (
+          <div className="py-24 max-w-md mx-auto text-center space-y-3">
+            <div className="w-8 h-8 mx-auto border-2 border-[#C5A880] border-t-transparent rounded-full animate-spin" />
+            <p className="text-xs uppercase tracking-widest text-[#8C7A6B]">
+              Accessing Patron Sanctuary...
+            </p>
+          </div>
+        ) : !user ? (
+          <div className="py-24 max-w-md mx-auto text-center space-y-3">
+            <p className="text-xs uppercase tracking-widest text-[#8C7A6B]">
+              Redirecting to Member Sign In...
+            </p>
+          </div>
+        ) : (
+          <div className="py-12 sm:py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
+              <aside className="lg:col-span-4">
+                <AccountNav />
+              </aside>
+              <section className="lg:col-span-8">
+                {children}
+              </section>
+            </div>
+          </div>
+        )}
+      </main>
+      <Footer />
+    </div>
+  );
+}
+
+export default function AccountLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <Providers>
-      <div className="flex flex-col min-h-screen bg-[#FBF9F5]">
-        <Header />
-        <main className="flex-1">
-          {isAuthPage ? (
-            children
-          ) : (
-            <div className="py-12 sm:py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
-                <aside className="lg:col-span-4">
-                  <AccountNav />
-                </aside>
-                <section className="lg:col-span-8">
-                  {children}
-                </section>
-              </div>
-            </div>
-          )}
-        </main>
-        <Footer />
-      </div>
+      <AccountLayoutInner>{children}</AccountLayoutInner>
     </Providers>
   );
 }
+
+

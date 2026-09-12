@@ -75,6 +75,23 @@ export function Header() {
     setIsMobileMenuOpen(false);
   }, [pathname]);
 
+  // Lock body scroll and handle Escape key for smooth sidebar drawer
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = "hidden";
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === "Escape") setIsMobileMenuOpen(false);
+      };
+      window.addEventListener("keydown", handleKeyDown);
+      return () => {
+        document.body.style.overflow = "";
+        window.removeEventListener("keydown", handleKeyDown);
+      };
+    } else {
+      document.body.style.overflow = "";
+    }
+  }, [isMobileMenuOpen]);
+
   return (
     <>
       <AnnouncementBar />
@@ -88,21 +105,24 @@ export function Header() {
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between gap-4">
-            {/* Left: Mobile menu toggle / Desktop search */}
-            <div className="flex items-center gap-4 lg:w-1/4">
+            {/* Left: Sidebar Menu Toggle (Mobile, Tablet, Laptop, Desktop) & Search Atelier */}
+            <div className="flex items-center gap-3 sm:gap-4 lg:w-1/4">
               <button
                 type="button"
                 onClick={() => setIsMobileMenuOpen(true)}
-                className="lg:hidden p-1.5 text-[#111111] hover:text-[#C5A880] transition-colors"
-                aria-label="Open Navigation Menu"
+                className="flex items-center gap-2 p-1.5 text-[#111111] hover:text-[#C5A880] transition-colors cursor-pointer group"
+                aria-label="Open Navigation Sidebar"
               >
-                <Menu className="w-5 h-5" />
+                <Menu className="w-5 h-5 transition-transform group-hover:scale-110" />
+                <span className="text-[11px] uppercase tracking-[0.2em] font-semibold text-[#111111] group-hover:text-[#C5A880]">
+                  Menu
+                </span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setIsSearchOpen(true)}
-                className="hidden lg:flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-[#6E6A64] hover:text-[#111111] transition-colors group"
+                className="hidden lg:flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-[#6E6A64] hover:text-[#111111] transition-colors group cursor-pointer"
               >
                 <Search className="w-4 h-4 text-[#8C7A6B] group-hover:text-[#111111]" />
                 <span className="font-medium">Search Atelier</span>
@@ -204,83 +224,110 @@ export function Header() {
         </div>
       </header>
 
-      {/* Mobile Slide-Out Navigation Drawer */}
-      {isMobileMenuOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden">
-          <div
-            className="fixed inset-0 bg-[#111111]/70 backdrop-blur-sm"
-            onClick={() => setIsMobileMenuOpen(false)}
-          />
-          <div className="fixed inset-y-0 left-0 w-4/5 max-w-sm bg-[#FBF9F5] border-r border-[#E8E2D9] shadow-2xl p-6 flex flex-col justify-between overflow-y-auto">
-            <div className="space-y-6">
-              <div className="flex items-center justify-between pb-4 border-b border-[#E8E2D9]">
-                <div onClick={() => setIsMobileMenuOpen(false)}>
-                  <AnimatedLogo showSubtitle={false} />
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="p-1.5 text-[#8C7A6B] hover:text-[#111111]"
-                  aria-label="Close menu"
-                >
-                  <X className="w-5 h-5" />
-                </button>
+      {/* Slide-Out Navigation Drawer for Laptop, Desktop, Tablet, and Mobile */}
+      <div
+        className={`fixed inset-0 z-50 transition-opacity duration-400 ease-out ${
+          isMobileMenuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+        }`}
+        aria-hidden={!isMobileMenuOpen}
+      >
+        <div
+          className="absolute inset-0 bg-[#111111]/60 backdrop-blur-sm transition-opacity duration-400"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+        <div
+          className={`absolute inset-y-0 left-0 w-full max-w-sm sm:max-w-md bg-[#FBF9F5] border-r border-[#E8E2D9] shadow-2xl p-6 sm:p-8 flex flex-col justify-between overflow-y-auto transform transition-transform duration-400 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+            isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
+        >
+          <div className="space-y-6">
+            <div className="flex items-center justify-between pb-4 border-b border-[#E8E2D9]">
+              <div onClick={() => setIsMobileMenuOpen(false)}>
+                <AnimatedLogo showSubtitle={false} />
               </div>
-
-              <div className="space-y-1">
-                {NAV_LINKS.map((link) => (
-                  <Link
-                    key={link.name}
-                    href={link.href}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="block py-2.5 text-sm uppercase tracking-[0.2em] font-medium text-[#111111] hover:text-[#C5A880] border-b border-[#E8E2D9]/40"
-                  >
-                    {link.name}
-                  </Link>
-                ))}
-              </div>
-
-              <div className="pt-2 space-y-2 text-xs uppercase tracking-widest text-[#6E6A64]">
-                <Link
-                  href="/about"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="block py-1.5 hover:text-[#111111]"
-                >
-                  Atelier Heritage
-                </Link>
-                <Link
-                  href="/contact"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="block py-1.5 hover:text-[#111111]"
-                >
-                  Client Concierge
-                </Link>
-                <Link
-                  href="/faq"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="block py-1.5 hover:text-[#111111]"
-                >
-                  Shipping & Authenticity
-                </Link>
-                {isAdmin && (
-                  <Link
-                    href="/admin"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="block py-2 text-[#C5A880] font-semibold"
-                  >
-                    Go To Admin Panel &rarr;
-                  </Link>
-                )}
-              </div>
+              <button
+                type="button"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="p-1.5 text-[#8C7A6B] hover:text-[#111111] transition-colors cursor-pointer"
+                aria-label="Close navigation sidebar"
+              >
+                <X className="w-5 h-5" />
+              </button>
             </div>
 
-            <div className="pt-6 border-t border-[#E8E2D9] text-xs text-[#8C7A6B] text-center space-y-1">
-              <p>Pan-India White Glove Shipping</p>
-              <p className="font-sans text-[11px] uppercase tracking-widest text-[#8C7A6B]">Crafted with enduring Indian elegance.</p>
+            {/* Quick Search inside Drawer */}
+            <button
+              type="button"
+              onClick={() => {
+                setIsMobileMenuOpen(false);
+                setIsSearchOpen(true);
+              }}
+              className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-[#F4F0E8] border border-[#E8E2D9] text-xs text-[#6E6A64] hover:text-[#111111] transition-colors cursor-pointer"
+            >
+              <span className="uppercase tracking-[0.16em] font-mono text-[11px]">Search Atelier Catalog...</span>
+              <Search className="w-3.5 h-3.5 text-[#8C7A6B]" />
+            </button>
+
+            <div className="space-y-1">
+              <p className="text-[10px] uppercase tracking-[0.25em] text-[#8C7A6B] font-mono px-1">
+                Atelier Collections
+              </p>
+              {NAV_LINKS.map((link) => (
+                <Link
+                  key={link.name}
+                  href={link.href}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex items-center justify-between py-2.5 px-2 text-sm uppercase tracking-[0.2em] font-medium text-[#111111] hover:text-[#C5A880] hover:bg-[#F4F0E8]/60 rounded-lg transition-colors border-b border-[#E8E2D9]/40"
+                >
+                  <span>{link.name}</span>
+                  <span className="text-[#8C7A6B] text-xs">&rarr;</span>
+                </Link>
+              ))}
+            </div>
+
+            <div className="pt-2 space-y-2 text-xs uppercase tracking-widest text-[#6E6A64]">
+              <p className="text-[10px] uppercase tracking-[0.25em] text-[#8C7A6B] font-mono px-1">
+                Concierge &amp; Heritage
+              </p>
+              <Link
+                href="/about"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="block py-1.5 px-1 hover:text-[#111111] transition-colors"
+              >
+                Atelier Heritage
+              </Link>
+              <Link
+                href="/contact"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="block py-1.5 px-1 hover:text-[#111111] transition-colors"
+              >
+                Client Concierge
+              </Link>
+              <Link
+                href="/faq"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="block py-1.5 px-1 hover:text-[#111111] transition-colors"
+              >
+                Shipping & Authenticity
+              </Link>
+              {isAdmin && (
+                <Link
+                  href="/admin"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="block py-2.5 px-3 bg-[#111111] text-[#C5A880] rounded-xl text-center font-semibold tracking-wider transition-colors hover:bg-[#C5A880] hover:text-[#111111]"
+                >
+                  Go To Admin Control Tower &rarr;
+                </Link>
+              )}
             </div>
           </div>
+
+          <div className="pt-6 border-t border-[#E8E2D9] text-xs text-[#8C7A6B] text-center space-y-1">
+            <p className="font-medium text-[#111111]">Pan-India White Glove Shipping</p>
+            <p className="font-sans text-[11px] uppercase tracking-widest text-[#8C7A6B]">Crafted with enduring modern elegance.</p>
+          </div>
         </div>
-      )}
+      </div>
 
       {/* Global Modals */}
       <SearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />

@@ -38,15 +38,15 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0c10] text-[#EDEDED] flex flex-col justify-center items-center p-4 selection:bg-[#C5A880] selection:text-[#0a0c10] relative overflow-hidden font-sans">
-      {/* Ambient background glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[radial-gradient(circle,rgba(197,168,128,0.06),transparent_70%)] pointer-events-none" />
+    <div className="admin-light min-h-screen bg-[#EEF2F6] text-[#1E293B] flex flex-col justify-center items-center p-4 selection:bg-[#C5A880] selection:text-white relative overflow-hidden font-sans">
+      {/* Ambient background soft light glow */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[radial-gradient(circle,rgba(197,168,128,0.12),transparent_70%)] pointer-events-none" />
 
-      {/* Neumorphic Matte Black Card */}
-      <div className="w-full max-w-md neu-raised rounded-3xl p-8 sm:p-10 relative z-10 space-y-7 border border-white/[0.04]">
+      {/* White Neumorphic Card */}
+      <div className="w-full max-w-md neu-card bg-white rounded-3xl p-8 sm:p-10 relative z-10 space-y-7 border border-slate-200/80 shadow-2xl">
         {/* Brand & Security Header */}
         <div className="text-center space-y-3">
-          <div className="w-16 h-16 mx-auto rounded-2xl neu-inset p-3 flex items-center justify-center border border-white/[0.03]">
+          <div className="w-16 h-16 mx-auto rounded-2xl neu-inset bg-[#F1F5F9] p-3 flex items-center justify-center border border-slate-200/60">
             <Image
               src="/images/logo/dnora-d-icon.png"
               alt="D'NORA"
@@ -57,21 +57,21 @@ export default function AdminLoginPage() {
           </div>
 
           <div className="pt-1">
-            <span className="text-[10px] uppercase tracking-[0.3em] text-[#C5A880] font-semibold font-mono">
+            <span className="text-[10px] uppercase tracking-[0.3em] text-[#9E7D4E] font-semibold font-mono">
               Restricted Terminal
             </span>
-            <h1 className="font-sans text-2xl sm:text-3xl text-[#F5F7FA] tracking-[0.16em] uppercase font-medium mt-1">
+            <h1 className="font-sans text-2xl sm:text-3xl text-[#0F172A] tracking-[0.16em] uppercase font-bold mt-1">
               D&apos;NORA CONTROL
             </h1>
           </div>
 
-          <p className="text-xs text-[#8A95A5] font-light max-w-xs mx-auto">
+          <p className="text-xs text-[#64748B] font-normal max-w-xs mx-auto">
             Authorized personnel only. Direct access point for catalog curation, inventory, orders, and CMS.
           </p>
         </div>
 
         {errorMsg && (
-          <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-400 text-xs text-center rounded-xl neu-inset-sm">
+          <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-600 text-xs text-center rounded-xl neu-inset-sm">
             {errorMsg}
           </div>
         )}
@@ -79,8 +79,8 @@ export default function AdminLoginPage() {
         {/* Login Form */}
         <form onSubmit={handleSubmit} className="space-y-4 text-xs">
           <div className="space-y-1.5">
-            <label className="text-[10px] uppercase tracking-widest text-[#8A95A5] font-semibold flex items-center gap-1.5 font-mono">
-              <Mail className="w-3.5 h-3.5 text-[#C5A880]" />
+            <label className="text-[10px] uppercase tracking-widest text-[#64748B] font-semibold flex items-center gap-1.5 font-mono">
+              <Mail className="w-3.5 h-3.5 text-[#9E7D4E]" />
               <span>Executive Email</span>
             </label>
             <input
@@ -89,13 +89,13 @@ export default function AdminLoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="admin@dnora.luxury"
-              className="w-full p-3.5 rounded-xl neu-inset text-[#F5F7FA] focus:outline-none focus:ring-1 focus:ring-[#C5A880]/50 transition-all font-sans"
+              className="w-full p-3.5 rounded-xl neu-inset bg-[#F1F5F9] text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#C5A880]/50 transition-all font-sans"
             />
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[10px] uppercase tracking-widest text-[#8A95A5] font-semibold flex items-center gap-1.5 font-mono">
-              <Lock className="w-3.5 h-3.5 text-[#C5A880]" />
+            <label className="text-[10px] uppercase tracking-widest text-[#64748B] font-semibold flex items-center gap-1.5 font-mono">
+              <Lock className="w-3.5 h-3.5 text-[#9E7D4E]" />
               <span>Security Passkey</span>
             </label>
             <input
@@ -104,7 +104,7 @@ export default function AdminLoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••••••"
-              className="w-full p-3.5 rounded-xl neu-inset text-[#F5F7FA] focus:outline-none focus:ring-1 focus:ring-[#C5A880]/50 transition-all font-mono"
+              className="w-full p-3.5 rounded-xl neu-inset bg-[#F1F5F9] text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#C5A880]/50 transition-all font-mono"
             />
           </div>
 
@@ -128,14 +128,14 @@ export default function AdminLoginPage() {
         </form>
 
         {/* Quick Credentials Info */}
-        <div className="pt-4 border-t border-white/[0.04] text-center space-y-3">
-          <p className="text-[11px] text-[#6E7B8E] font-mono">
+        <div className="pt-4 border-t border-slate-200 text-center space-y-3">
+          <p className="text-[11px] text-[#64748B] font-mono">
             Preset executive credentials prefilled for instant entry.
           </p>
 
           <Link
             href="/"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl neu-btn text-xs text-[#8A95A5] hover:text-[#C5A880] uppercase tracking-wider transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl neu-btn text-xs text-[#475569] hover:text-[#9E7D4E] uppercase tracking-wider transition-colors"
           >
             <span>Return to Public Storefront</span>
             <ExternalLink className="w-3.5 h-3.5" />

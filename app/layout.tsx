@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Outfit, Plus_Jakarta_Sans } from "next/font/google";
+import { Suspense } from "react";
+import { GlobalPreloader } from "@/components/ui/GlobalPreloader";
 import "./globals.css";
 
 const outfit = Outfit({
@@ -66,11 +68,20 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${outfit.variable} ${jakarta.variable} antialiased scroll-smooth`}
+      className={`${outfit.variable} ${jakarta.variable} antialiased`}
+      suppressHydrationWarning
     >
-      <body className="min-h-screen flex flex-col bg-[#FBF9F5] text-[#111111] selection:bg-[#E2CEB2] font-sans">
+      <body
+        className="min-h-screen flex flex-col bg-[#FBF9F5] text-[#111111] selection:bg-[#E2CEB2] font-sans"
+        suppressHydrationWarning
+      >
+        <Suspense fallback={null}>
+          <GlobalPreloader />
+        </Suspense>
         {children}
       </body>
     </html>
   );
 }
+
+

@@ -7,6 +7,7 @@ import { Filter, X, SlidersHorizontal, ChevronDown, Check, LayoutGrid, Grid2X2 }
 import { ProductCard } from "@/components/product/ProductCard";
 import { INITIAL_CATEGORIES, INITIAL_PRODUCTS } from "@/lib/seed/catalog-data";
 import { Product } from "@/types";
+import { DnoraLoadingScreen } from "@/components/ui/DnoraLoadingScreen";
 
 const PRICE_RANGES = [
   { label: "All Prices", min: 0, max: Infinity },
@@ -38,6 +39,23 @@ function ShopContent() {
   const [searchQuery, setSearchQuery] = useState(initialSearch);
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
   const [gridColumns, setGridColumns] = useState<2 | 4>(4);
+
+  // Lock body scroll and handle Escape key for smooth filter drawer
+  useEffect(() => {
+    if (isMobileFilterOpen) {
+      document.body.style.overflow = "hidden";
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === "Escape") setIsMobileFilterOpen(false);
+      };
+      window.addEventListener("keydown", handleKeyDown);
+      return () => {
+        document.body.style.overflow = "";
+        window.removeEventListener("keydown", handleKeyDown);
+      };
+    } else {
+      document.body.style.overflow = "";
+    }
+  }, [isMobileFilterOpen]);
 
   // Sync with searchParams
   useEffect(() => {
@@ -345,119 +363,127 @@ function ShopContent() {
         )}
       </div>
 
-      {/* Filter Drawer (Slide out from Right) */}
-      {isMobileFilterOpen && (
-        <div className="fixed inset-0 z-50">
-          <div
-            className="fixed inset-0 bg-[#111111]/70 backdrop-blur-xs transition-opacity"
-            onClick={() => setIsMobileFilterOpen(false)}
-          />
-          <div className="fixed inset-y-0 right-0 w-full max-w-md bg-white border-l border-[#EAE5DC] p-6 flex flex-col justify-between overflow-y-auto shadow-2xl">
-            <div className="space-y-6">
-              <div className="flex items-center justify-between pb-4 border-b border-[#EAE5DC]">
-                <h3 className="font-sans font-medium text-lg tracking-[0.15em] text-[#111111] uppercase">
-                  Refine Collection
-                </h3>
-                <button
-                  onClick={() => setIsMobileFilterOpen(false)}
-                  className="p-1 text-[#8C7A6B] hover:text-[#111111]"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              {/* Category Filter */}
-              <div className="space-y-2">
-                <span className="text-xs uppercase tracking-[0.2em] text-[#8C7A6B] font-semibold block">
-                  Silhouette / Category
-                </span>
-                <div className="space-y-1.5">
-                  <button
-                    onClick={() => setSelectedCategory("all")}
-                    className={`w-full text-left py-2 px-3 text-xs uppercase tracking-wider flex items-center justify-between border transition-colors ${
-                      selectedCategory === "all"
-                        ? "border-[#111111] bg-[#111111] text-white"
-                        : "border-[#EAE5DC] text-[#736357] hover:border-[#111111]"
-                    }`}
-                  >
-                    <span>All Handbags</span>
-                    <span>{INITIAL_PRODUCTS.length}</span>
-                  </button>
-                  {INITIAL_CATEGORIES.map((cat) => {
-                    const isSelected = selectedCategory === cat.slug;
-                    return (
-                      <button
-                        key={cat.id}
-                        onClick={() => setSelectedCategory(cat.slug)}
-                        className={`w-full text-left py-2 px-3 text-xs uppercase tracking-wider flex items-center justify-between border transition-colors ${
-                          isSelected
-                            ? "border-[#111111] bg-[#111111] text-white"
-                            : "border-[#EAE5DC] text-[#736357] hover:border-[#111111]"
-                        }`}
-                      >
-                        <span>{cat.name}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Price Range */}
-              <div className="space-y-2">
-                <span className="text-xs uppercase tracking-[0.2em] text-[#8C7A6B] font-semibold block">
-                  Price (INR)
-                </span>
-                <div className="space-y-2 text-xs">
-                  {PRICE_RANGES.map((range, idx) => (
-                    <label
-                      key={range.label}
-                      className="flex items-center gap-3 cursor-pointer py-1 text-[#736357] hover:text-[#111111]"
-                    >
-                      <input
-                        type="radio"
-                        name="drawerPrice"
-                        checked={selectedPriceRange === idx}
-                        onChange={() => setSelectedPriceRange(idx)}
-                        className="accent-[#111111] w-4 h-4"
-                      />
-                      <span>{range.label}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              {/* Availability */}
-              <div className="pt-2">
-                <label className="flex items-center gap-3 text-xs uppercase tracking-wider text-[#111111] cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={inStockOnly}
-                    onChange={(e) => setInStockOnly(e.target.checked)}
-                    className="accent-[#111111] w-4 h-4"
-                  />
-                  <span>In Stock Only</span>
-                </label>
-              </div>
-            </div>
-
-            {/* Bottom Actions */}
-            <div className="pt-6 border-t border-[#EAE5DC] space-y-2">
+      {/* Filter Drawer (Slide out smoothly from Right) */}
+      <div
+        className={`fixed inset-0 z-50 transition-opacity duration-400 ease-out ${
+          isMobileFilterOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+        }`}
+        aria-hidden={!isMobileFilterOpen}
+      >
+        <div
+          className="absolute inset-0 bg-[#111111]/70 backdrop-blur-xs transition-opacity duration-400"
+          onClick={() => setIsMobileFilterOpen(false)}
+        />
+        <div
+          className={`absolute inset-y-0 right-0 w-full max-w-md bg-white border-l border-[#EAE5DC] p-6 flex flex-col justify-between overflow-y-auto shadow-2xl transform transition-transform duration-400 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+            isMobileFilterOpen ? "translate-x-0" : "translate-x-full"
+          }`}
+        >
+          <div className="space-y-6">
+            <div className="flex items-center justify-between pb-4 border-b border-[#EAE5DC]">
+              <h3 className="font-sans font-medium text-lg tracking-[0.15em] text-[#111111] uppercase">
+                Refine Collection
+              </h3>
               <button
                 onClick={() => setIsMobileFilterOpen(false)}
-                className="w-full py-4 bg-[#111111] text-white text-xs uppercase tracking-[0.25em] font-medium hover:bg-[#C5A880] hover:text-[#111111] transition-all"
+                className="p-1 text-[#8C7A6B] hover:text-[#111111] transition-colors"
+                aria-label="Close Filter Drawer"
               >
-                Show {filteredProducts.length} Handbags
-              </button>
-              <button
-                onClick={resetFilters}
-                className="w-full py-2.5 text-xs uppercase tracking-[0.2em] text-[#8C7A6B] hover:text-[#111111] underline text-center block"
-              >
-                Reset All Filters
+                <X className="w-5 h-5" />
               </button>
             </div>
+
+            {/* Category Filter */}
+            <div className="space-y-2">
+              <span className="text-xs uppercase tracking-[0.2em] text-[#8C7A6B] font-semibold block">
+                Silhouette / Category
+              </span>
+              <div className="space-y-1.5">
+                <button
+                  onClick={() => setSelectedCategory("all")}
+                  className={`w-full text-left py-2 px-3 text-xs uppercase tracking-wider flex items-center justify-between border transition-colors ${
+                    selectedCategory === "all"
+                      ? "border-[#111111] bg-[#111111] text-white"
+                      : "border-[#EAE5DC] text-[#736357] hover:border-[#111111]"
+                  }`}
+                >
+                  <span>All Handbags</span>
+                  <span>{INITIAL_PRODUCTS.length}</span>
+                </button>
+                {INITIAL_CATEGORIES.map((cat) => {
+                  const isSelected = selectedCategory === cat.slug;
+                  return (
+                    <button
+                      key={cat.id}
+                      onClick={() => setSelectedCategory(cat.slug)}
+                      className={`w-full text-left py-2 px-3 text-xs uppercase tracking-wider flex items-center justify-between border transition-colors ${
+                        isSelected
+                          ? "border-[#111111] bg-[#111111] text-white"
+                          : "border-[#EAE5DC] text-[#736357] hover:border-[#111111]"
+                      }`}
+                    >
+                      <span>{cat.name}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Price Range */}
+            <div className="space-y-2">
+              <span className="text-xs uppercase tracking-[0.2em] text-[#8C7A6B] font-semibold block">
+                Price (INR)
+              </span>
+              <div className="space-y-2 text-xs">
+                {PRICE_RANGES.map((range, idx) => (
+                  <label
+                    key={range.label}
+                    className="flex items-center gap-3 cursor-pointer py-1 text-[#736357] hover:text-[#111111]"
+                  >
+                    <input
+                      type="radio"
+                      name="drawerPrice"
+                      checked={selectedPriceRange === idx}
+                      onChange={() => setSelectedPriceRange(idx)}
+                      className="accent-[#111111] w-4 h-4"
+                    />
+                    <span>{range.label}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {/* Availability */}
+            <div className="pt-2">
+              <label className="flex items-center gap-3 text-xs uppercase tracking-wider text-[#111111] cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={inStockOnly}
+                  onChange={(e) => setInStockOnly(e.target.checked)}
+                  className="accent-[#111111] w-4 h-4"
+                />
+                <span>In Stock Only</span>
+              </label>
+            </div>
+          </div>
+
+          {/* Bottom Actions */}
+          <div className="pt-6 border-t border-[#EAE5DC] space-y-2">
+            <button
+              onClick={() => setIsMobileFilterOpen(false)}
+              className="w-full py-4 bg-[#111111] text-white text-xs uppercase tracking-[0.25em] font-medium hover:bg-[#C5A880] hover:text-[#111111] transition-all"
+            >
+              Show {filteredProducts.length} Handbags
+            </button>
+            <button
+              onClick={resetFilters}
+              className="w-full py-2.5 text-xs uppercase tracking-[0.2em] text-[#8C7A6B] hover:text-[#111111] underline text-center block"
+            >
+              Reset All Filters
+            </button>
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }
@@ -466,9 +492,11 @@ export default function ShopPage() {
   return (
     <Suspense
       fallback={
-        <div className="p-20 text-center text-xs tracking-widest uppercase text-[#8C7A6B]">
-          Loading Handbag Collection...
-        </div>
+        <DnoraLoadingScreen
+          fullScreen
+          text="D'NORA ATELIER"
+          subtitle="RETRIEVING ATELIER SILHOUETTES..."
+        />
       }
     >
       <ShopContent />

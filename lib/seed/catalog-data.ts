@@ -685,12 +685,12 @@ export const INITIAL_COLLECTIONS: Collection[] = [
 export const INITIAL_BANNERS: Banner[] = [
   {
     id: "banner_1",
-    title: "The Autumn Handbag Capsule",
-    subtitle: "Explore the new sculptural Noane bucket bag and quilted leather silhouettes crafted for timeless distinction.",
-    cta_text: "Shop The Collection",
+    title: "More Than a Bag, It's a Feeling.",
+    subtitle: "Elegant designs, premium craftsmanship for every chapter of your life.",
+    cta_text: "SHOP NOW",
     cta_link: "/shop",
-    desktop_image_url: "https://www.charleskeith.in/dw/image/v2/BCWJ_PRD/on/demandware.static/-/Sites-in-products/default/dw76953c89/images/hi-res/2026-L6-CK2-10160273-A-29-3.jpg?sw=1920&q=85",
-    mobile_image_url: "https://www.charleskeith.in/dw/image/v2/BCWJ_PRD/on/demandware.static/-/Sites-in-products/default/dw76953c89/images/hi-res/2026-L6-CK2-10160273-A-29-3.jpg?sw=800&q=85",
+    desktop_image_url: "/images/banners/hero-feeling.png",
+    mobile_image_url: "/images/banners/hero-feeling.png",
     display_order: 1,
     is_active: true,
     type: "hero",

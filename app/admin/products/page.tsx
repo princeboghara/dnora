@@ -14,19 +14,32 @@ import {
   Sparkles,
   Upload,
   Loader2,
+  RefreshCw,
+  X,
+  AlertCircle,
+  Package,
 } from "lucide-react";
 import { Product } from "@/types";
 import { formatINR } from "@/lib/utils";
 import { uploadImageToStorage } from "@/lib/supabase/storage";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase/client";
-import { invalidateCatalogCache } from "@/lib/services/catalog-service";
+import {
+  getAllAdminProducts,
+  saveAdminProductsOverride,
+  invalidateCatalogCache,
+  getCategories,
+} from "@/lib/services/catalog-service";
+import { INITIAL_PRODUCTS } from "@/lib/seed/catalog-data";
 
 const DEFAULT_REALMS = [
   { slug: "handbags", name: "Handbags & Clutches" },
+  { slug: "bucket-bags", name: "Bucket Bags" },
+  { slug: "shoulder-bags", name: "Shoulder Bags" },
+  { slug: "tote-bags", name: "Tote & Bowling Bags" },
+  { slug: "hobo-bags", name: "Hobo Bags" },
+  { slug: "crossbody-bags", name: "Crossbody Bags" },
   { slug: "fragrance", name: "Haute Parfumerie" },
   { slug: "jewellery", name: "Fine Jewellery" },
-  { slug: "apparel", name: "Artisanal Apparel" },
-  { slug: "purse-charms", name: "Purse Charms & Accessories" },
 ];
 
 export default function AdminProductsPage() {
@@ -34,38 +47,16 @@ export default function AdminProductsPage() {
   const [categories, setCategories] = useState<{ slug: string; name: string }[]>(DEFAULT_REALMS);
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [notification, setNotification] = useState<string | null>(null);
 
-  useEffect(() => {
-    async function loadProducts() {
-      if (isSupabaseConfigured() && supabase) {
-        try {
-          const [{ data: prodData }, { data: catData }] = await Promise.all([
-            supabase.from("products").select("*, categories(slug)").order("created_at", { ascending: false }),
-            supabase.from("categories").select("slug, name").order("display_order", { ascending: true })
-          ]);
-          if (prodData) {
-            setProducts(
-              prodData.map((p: any) => ({
-                ...p,
-                category_slug: p.categories?.slug || "handbags",
-                stock_quantity: p.stock_quantity ?? 0,
-                images: p.images || [],
-                variants: p.variants || [],
-                details: p.details || [],
-              }))
-            );
-          }
-          if (catData && catData.length > 0) {
-            setCategories(catData);
-          }
-        } catch {
-          // Ignored
-        }
-      }
-    }
-    loadProducts();
-  }, []);
+  // Modals state
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+
+  // Upload states
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   // New Product Form state
   const [formData, setFormData] = useState({
@@ -84,54 +75,200 @@ export default function AdminProductsPage() {
     is_featured: true,
   });
 
-  const [isUploading, setIsUploading] = useState(false);
-  const [uploadError, setUploadError] = useState<string | null>(null);
+  // Edit Product Form state
+  const [editFormData, setEditFormData] = useState({
+    name: "",
+    slug: "",
+    subtitle: "",
+    category_slug: "handbags",
+    base_price: 0,
+    sale_price: 0,
+    sku: "",
+    primary_image: "",
+    stock_quantity: 0,
+    short_description: "",
+    is_new: false,
+    is_bestseller: false,
+    is_featured: false,
+    is_published: true,
+  });
 
-  const handleProductImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setIsUploading(true);
-    setUploadError(null);
-    const { url, error } = await uploadImageToStorage("products", file, formData.category_slug);
-    setIsUploading(false);
-    if (error) {
-      setUploadError(error);
-    } else if (url) {
-      setFormData((prev) => ({ ...prev, primary_image: url }));
-    }
+  const showNotification = (msg: string) => {
+    setNotification(msg);
+    setTimeout(() => {
+      setNotification(null);
+    }, 3500);
   };
 
+  useEffect(() => {
+    async function load() {
+      setIsLoading(true);
+      try {
+        const [prods, cats] = await Promise.all([
+          getAllAdminProducts(),
+          getCategories(),
+        ]);
+        setProducts(prods);
+        if (cats && cats.length > 0) {
+          setCategories(cats.map((c) => ({ slug: c.slug, name: c.name })));
+        }
+      } catch (err) {
+        console.error("Failed to load catalog:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    load();
+  }, []);
+
+  // Filtered list
   const filtered = products.filter((p) => {
     const matchesSearch =
       p.name.toLowerCase().includes(search.toLowerCase()) ||
-      p.sku.toLowerCase().includes(search.toLowerCase());
+      p.sku.toLowerCase().includes(search.toLowerCase()) ||
+      p.category_slug.toLowerCase().includes(search.toLowerCase());
     const matchesCat =
       categoryFilter === "all" || p.category_slug === categoryFilter;
     return matchesSearch && matchesCat;
   });
 
-  const handleTogglePublish = (id: string) => {
-    setProducts(
-      products.map((p) =>
-        p.id === id ? { ...p, is_published: !p.is_published } : p
-      )
+  // Open Edit Modal
+  const handleOpenEdit = (product: Product) => {
+    setEditingProduct(product);
+    setEditFormData({
+      name: product.name,
+      slug: product.slug,
+      subtitle: product.subtitle || "",
+      category_slug: product.category_slug || "handbags",
+      base_price: product.base_price,
+      sale_price: product.sale_price || 0,
+      sku: product.sku,
+      primary_image: product.primary_image,
+      stock_quantity: product.stock_quantity ?? 15,
+      short_description: product.short_description || "",
+      is_new: Boolean(product.is_new),
+      is_bestseller: Boolean(product.is_bestseller),
+      is_featured: Boolean(product.is_featured),
+      is_published: product.is_published !== false,
+    });
+    setUploadError(null);
+  };
+
+  // Save Edit
+  const handleSaveEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingProduct) return;
+
+    const updatedProduct: Product = {
+      ...editingProduct,
+      name: editFormData.name,
+      slug: editFormData.slug || editFormData.name.toLowerCase().replace(/\s+/g, "-"),
+      subtitle: editFormData.subtitle,
+      category_slug: editFormData.category_slug as any,
+      base_price: Number(editFormData.base_price),
+      sale_price: editFormData.sale_price ? Number(editFormData.sale_price) : undefined,
+      sku: editFormData.sku,
+      primary_image: editFormData.primary_image,
+      stock_quantity: Number(editFormData.stock_quantity),
+      short_description: editFormData.short_description,
+      is_new: editFormData.is_new,
+      is_bestseller: editFormData.is_bestseller,
+      is_featured: editFormData.is_featured,
+      is_published: editFormData.is_published,
+    };
+
+    const newProducts = products.map((p) =>
+      p.id === editingProduct.id ? updatedProduct : p
+    );
+
+    setProducts(newProducts);
+    saveAdminProductsOverride(newProducts);
+
+    // Sync to Supabase in background
+    if (isSupabaseConfigured() && supabase) {
+      try {
+        await supabase
+          .from("products")
+          .update({
+            name: updatedProduct.name,
+            slug: updatedProduct.slug,
+            subtitle: updatedProduct.subtitle,
+            short_description: updatedProduct.short_description,
+            base_price: updatedProduct.base_price,
+            sale_price: updatedProduct.sale_price,
+            primary_image: updatedProduct.primary_image,
+            is_new: updatedProduct.is_new,
+            is_bestseller: updatedProduct.is_bestseller,
+            is_featured: updatedProduct.is_featured,
+            is_published: updatedProduct.is_published,
+            sku: updatedProduct.sku,
+          })
+          .eq("id", editingProduct.id);
+      } catch (err) {
+        console.warn("Supabase update notice:", err);
+      }
+    }
+
+    invalidateCatalogCache();
+    setEditingProduct(null);
+    showNotification(`"${updatedProduct.name}" updated successfully.`);
+  };
+
+  // Toggle Published / Draft status
+  const handleTogglePublish = async (id: string) => {
+    let targetName = "";
+    let nextStatus = false;
+
+    const newProducts = products.map((p) => {
+      if (p.id === id) {
+        targetName = p.name;
+        nextStatus = !p.is_published;
+        return { ...p, is_published: nextStatus };
+      }
+      return p;
+    });
+
+    setProducts(newProducts);
+    saveAdminProductsOverride(newProducts);
+
+    if (isSupabaseConfigured() && supabase) {
+      try {
+        await supabase
+          .from("products")
+          .update({ is_published: nextStatus })
+          .eq("id", id);
+      } catch {
+        // Fallback handled
+      }
+    }
+
+    invalidateCatalogCache();
+    showNotification(
+      `${targetName} is now ${nextStatus ? "Published (Live)" : "Draft (Hidden)"}.`
     );
   };
 
-  const handleDelete = async (id: string) => {
-    if (confirm("Are you certain you wish to delete this atelier creation?")) {
+  // Delete product
+  const handleDelete = async (id: string, name: string) => {
+    if (confirm(`Are you certain you wish to delete "${name}" from the atelier catalog?`)) {
+      const newProducts = products.filter((p) => p.id !== id);
+      setProducts(newProducts);
+      saveAdminProductsOverride(newProducts);
+
       if (isSupabaseConfigured() && supabase) {
         try {
           await supabase.from("products").delete().eq("id", id);
-          invalidateCatalogCache();
-        } catch (err) {
-          console.error("Failed to delete product from Supabase", err);
+        } catch {
+          // Handled
         }
       }
-      setProducts(products.filter((p) => p.id !== id));
+
+      invalidateCatalogCache();
+      showNotification(`"${name}" has been removed from catalog.`);
     }
   };
 
+  // Duplicate product
   const handleDuplicate = (product: Product) => {
     const copy: Product = {
       ...product,
@@ -141,9 +278,28 @@ export default function AdminProductsPage() {
       sku: `${product.sku}-CP`,
       created_at: new Date().toISOString(),
     };
-    setProducts([copy, ...products]);
+    const newProducts = [copy, ...products];
+    setProducts(newProducts);
+    saveAdminProductsOverride(newProducts);
+    invalidateCatalogCache();
+    showNotification(`Duplicate of "${product.name}" created.`);
   };
 
+  // Reset / Sync to Live Store Default Catalog
+  const handleResetToDefaultLive = () => {
+    if (
+      confirm(
+        "Reset catalog to the 8 official live store atelier creations? Any local overrides will be refreshed to default."
+      )
+    ) {
+      setProducts(INITIAL_PRODUCTS);
+      saveAdminProductsOverride(INITIAL_PRODUCTS);
+      invalidateCatalogCache();
+      showNotification("Catalog successfully synced to live store atelier creations.");
+    }
+  };
+
+  // Create Product
   const handleCreateProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     const newProd: Product = {
@@ -184,7 +340,7 @@ export default function AdminProductsPage() {
           in_stock: true,
         },
       ],
-      details: ["Handcrafted by master artisans", "Finished with brushed champagne gold"],
+      details: ["Handcrafted by master artisans", "Finished with brushed champagne gold hardware"],
       stock_quantity: Number(formData.stock_quantity),
       sku: formData.sku,
       created_at: new Date().toISOString(),
@@ -209,272 +365,428 @@ export default function AdminProductsPage() {
           secondary_image: newProd.secondary_image,
           details: newProd.details,
         });
-        invalidateCatalogCache();
       } catch (err) {
-        console.error("Failed to insert product into Supabase", err);
+        console.warn("Supabase insert notice:", err);
       }
     }
 
-    setProducts([newProd, ...products]);
+    const newProducts = [newProd, ...products];
+    setProducts(newProducts);
+    saveAdminProductsOverride(newProducts);
+    invalidateCatalogCache();
     setIsCreateModalOpen(false);
+    showNotification(`New creation "${newProd.name}" added to catalog.`);
+  };
+
+  // Image Upload handler
+  const handleProductImageUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+    isEdit = false
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsUploading(true);
+    setUploadError(null);
+    const category = isEdit ? editFormData.category_slug : formData.category_slug;
+    const { url, error } = await uploadImageToStorage("products", file, category);
+    setIsUploading(false);
+    if (error) {
+      setUploadError(error);
+    } else if (url) {
+      if (isEdit) {
+        setEditFormData((prev) => ({ ...prev, primary_image: url }));
+      } else {
+        setFormData((prev) => ({ ...prev, primary_image: url }));
+      }
+    }
   };
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto">
+      {/* Toast Notification */}
+      {notification && (
+        <div className="fixed bottom-6 right-6 z-50 px-4 py-3 bg-[#C5A880] text-[#111111] text-xs font-semibold uppercase tracking-wider shadow-lg flex items-center gap-2 animate-bounce">
+          <Check className="w-4 h-4" />
+          <span>{notification}</span>
+        </div>
+      )}
+
       {/* Top Title & CTA */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-[#252D3D]">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-slate-200/80">
         <div>
-          <span className="text-[10px] uppercase tracking-[0.3em] text-[#C5A880] font-semibold">
-            Catalog Management
-          </span>
-          <h1 className="font-sans text-2xl sm:text-3xl text-[#FBF9F5] uppercase tracking-[0.12em] font-medium">
-            Atelier Products Directory
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] uppercase tracking-[0.3em] text-[#9E7D4E] font-semibold font-mono">
+              Catalog Management
+            </span>
+            <span className="text-[9px] uppercase tracking-wider text-[#9E7D4E] bg-[#C5A880]/15 px-2 py-0.5 rounded-full border border-[#C5A880]/30 font-mono font-medium">
+              Atelier Vault
+            </span>
+          </div>
+          <h1 className="font-sans text-2xl sm:text-3xl text-[#0F172A] uppercase tracking-[0.14em] font-bold mt-1">
+            Products Directory
           </h1>
+          <p className="text-xs text-[#64748B] mt-1">
+            Curate live store items, update pricing, restock inventory units, and toggle visibility.
+          </p>
         </div>
 
-        <button
-          onClick={() => setIsCreateModalOpen(true)}
-          className="px-5 py-2.5 bg-[#C5A880] text-[#111111] text-xs uppercase tracking-widest font-semibold hover:bg-[#DFCAAB] transition-colors flex items-center gap-2"
-        >
-          <Plus className="w-4 h-4" />
-          <span>New Atelier Creation</span>
-        </button>
+        <div className="flex items-center gap-3 flex-wrap">
+          <button
+            onClick={handleResetToDefaultLive}
+            title="Sync to Default Live Store Products"
+            className="px-4 py-2.5 rounded-xl neu-btn text-[#475569] hover:text-[#9E7D4E] text-xs font-semibold uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+            <span>Sync Live Items</span>
+          </button>
+
+          <button
+            onClick={() => setIsCreateModalOpen(true)}
+            className="px-5 py-2.5 rounded-xl neu-btn-gold text-xs uppercase tracking-widest font-bold text-white transition-all flex items-center gap-2 cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            <span>New Creation</span>
+          </button>
+        </div>
       </div>
 
       {/* Filter and Search Bar */}
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="flex-1 relative">
-          <Search className="w-4 h-4 text-[#8491A5] absolute left-3 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-[#64748B] absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by product name, SKU..."
-            className="w-full pl-9 pr-4 py-2.5 bg-[#13171F] border border-[#252D3D] text-xs text-[#E4E8EE] placeholder:text-[#8491A5] focus:outline-none focus:border-[#C5A880]"
+            placeholder="Search by product name, SKU, or category..."
+            className="w-full pl-10 pr-4 py-3 rounded-xl neu-inset bg-[#F1F5F9] text-xs text-[#0F172A] placeholder-[#94A3B8] focus:outline-none focus:ring-1 focus:ring-[#C5A880]/50 transition-all font-mono"
           />
         </div>
 
         <select
           value={categoryFilter}
           onChange={(e) => setCategoryFilter(e.target.value)}
-          className="px-4 py-2.5 bg-[#13171F] border border-[#252D3D] text-xs text-[#E4E8EE] uppercase tracking-wider focus:outline-none focus:border-[#C5A880]"
+          className="px-4 py-3 rounded-xl neu-inset bg-[#F1F5F9] text-xs text-[#0F172A] uppercase tracking-wider focus:outline-none focus:ring-1 focus:ring-[#C5A880]/50 font-mono cursor-pointer"
         >
-          <option value="all">All Realms ({products.length})</option>
+          <option value="all" className="bg-white text-[#0F172A]">All Realms ({products.length})</option>
           {categories.map((c) => (
-            <option key={c.slug} value={c.slug}>
+            <option key={c.slug} value={c.slug} className="bg-white text-[#0F172A]">
               {c.name}
             </option>
           ))}
         </select>
       </div>
 
-      {/* Products Data Table */}
-      <div className="bg-[#13171F] border border-[#252D3D] overflow-hidden">
+      {/* Products Data Table inside neu-card */}
+      <div className="rounded-2xl neu-card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="text-[10px] uppercase tracking-widest text-[#8491A5] bg-[#1A202C] border-b border-[#252D3D]">
+            <thead className="text-[10px] uppercase tracking-widest text-[#64748B] font-mono bg-slate-50 border-b border-slate-200">
               <tr>
                 <th className="p-4">Creation</th>
                 <th className="p-4">Category</th>
                 <th className="p-4">SKU</th>
                 <th className="p-4">Price (INR)</th>
-                <th className="p-4">Stock Level</th>
+                <th className="p-4">Stock</th>
                 <th className="p-4">Badges</th>
                 <th className="p-4">Status</th>
                 <th className="p-4 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#252D3D] text-[#E4E8EE]">
-              {filtered.length === 0 ? (
+            <tbody className="divide-y divide-slate-100 text-[#1E293B]">
+              {isLoading ? (
                 <tr>
-                  <td colSpan={7} className="p-12 text-center text-[#8491A5]">
-                    <p className="font-sans font-medium text-base text-[#FBF9F5] uppercase tracking-wider">No creations in your catalog yet.</p>
-                    <p className="text-xs text-[#8491A5] mt-1">Click &quot;+ Create Atelier Product&quot; to add your first luxury creation.</p>
+                  <td colSpan={8} className="p-12 text-center text-[#64748B]">
+                    <Loader2 className="w-6 h-6 mx-auto animate-spin text-[#9E7D4E] mb-2" />
+                    <p className="text-xs uppercase tracking-wider font-mono">Accessing Atelier Catalog...</p>
                   </td>
                 </tr>
-              ) :
+              ) : filtered.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="p-12 text-center text-[#64748B]">
+                    <Package className="w-8 h-8 mx-auto text-[#9E7D4E]/60 mb-2" />
+                    <p className="font-sans font-semibold text-base text-[#0F172A] uppercase tracking-wider">
+                      No matching creations found.
+                    </p>
+                    <p className="text-xs text-[#64748B] mt-1">
+                      Click &quot;Sync Live Store Items&quot; above to reload the 8 official store creations.
+                    </p>
+                  </td>
+                </tr>
+              ) : (
                 filtered.map((prod) => (
-                <tr key={prod.id} className="hover:bg-[#1A202C]/60 transition-colors">
-                  <td className="p-4 flex items-center gap-3">
-                    <div className="relative w-12 h-14 bg-[#1A202C] overflow-hidden flex-shrink-0 border border-[#252D3D]">
-                      <Image
-                        src={prod.primary_image}
-                        alt={prod.name}
-                        fill
-                        className="object-cover"
-                      />
-                    </div>
-                    <div>
-                      <p className="font-sans text-[#FBF9F5] font-medium uppercase tracking-wide text-xs line-clamp-1">
-                        {prod.name}
-                      </p>
-                      <p className="text-[10px] text-[#8491A5] line-clamp-1">{prod.subtitle}</p>
-                    </div>
-                  </td>
-                  <td className="p-4 uppercase tracking-wider text-[11px] text-[#C5A880]">
-                    {prod.category_slug}
-                  </td>
-                  <td className="p-4 font-mono text-[#8491A5]">{prod.sku}</td>
-                  <td className="p-4 font-semibold text-[#FBF9F5]">
-                    {formatINR(prod.sale_price ?? prod.base_price)}
-                  </td>
-                  <td className="p-4">
-                    <span
-                      className={`px-2 py-0.5 text-[10px] font-mono font-bold ${
-                        prod.stock_quantity <= 5
-                          ? "bg-[#EF4444]/20 text-[#EF4444]"
-                          : prod.stock_quantity <= 10
-                          ? "bg-[#F59E0B]/20 text-[#F59E0B]"
-                          : "bg-[#10B981]/20 text-[#10B981]"
-                      }`}
-                    >
-                      {prod.stock_quantity} units
-                    </span>
-                  </td>
-                  <td className="p-4">
-                    <div className="flex gap-1 flex-wrap">
-                      {prod.is_bestseller && (
-                        <span className="px-1.5 py-0.5 bg-[#C5A880]/20 text-[#C5A880] text-[9px] uppercase font-bold">
-                          Best
+                  <tr key={prod.id} className="hover:bg-slate-50/80 transition-colors">
+                    <td className="p-4 flex items-center gap-3">
+                      <div className="relative w-12 h-14 rounded-lg neu-inset bg-[#F1F5F9] p-0.5 overflow-hidden flex-shrink-0">
+                        <Image
+                          src={prod.primary_image}
+                          alt={prod.name}
+                          fill
+                          className="object-cover rounded"
+                        />
+                      </div>
+                      <div>
+                        <p className="font-sans text-[#0F172A] font-semibold uppercase tracking-wide text-xs line-clamp-1">
+                          {prod.name}
+                        </p>
+                        <p className="text-[10px] text-[#64748B] line-clamp-1">
+                          {prod.subtitle || prod.slug}
+                        </p>
+                      </div>
+                    </td>
+                    <td className="p-4 uppercase tracking-wider text-[11px] text-[#9E7D4E] font-mono font-medium">
+                      {prod.category_slug}
+                    </td>
+                    <td className="p-4 font-mono text-[#64748B] text-[11px]">{prod.sku}</td>
+                    <td className="p-4 font-mono">
+                      <div className="space-y-0.5">
+                        <span className="font-bold text-[#0F172A]">
+                          {formatINR(prod.sale_price ?? prod.base_price)}
                         </span>
-                      )}
-                      {prod.is_new && (
-                        <span className="px-1.5 py-0.5 bg-[#3B82F6]/20 text-[#3B82F6] text-[9px] uppercase font-bold">
-                          New
-                        </span>
-                      )}
-                    </div>
-                  </td>
-                  <td className="p-4">
-                    <button
-                      onClick={() => handleTogglePublish(prod.id)}
-                      className={`flex items-center gap-1 text-[10px] uppercase tracking-wider font-semibold ${
-                        prod.is_published ? "text-[#10B981]" : "text-[#8491A5]"
-                      }`}
-                    >
-                      {prod.is_published ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
-                      <span>{prod.is_published ? "Published" : "Draft"}</span>
-                    </button>
-                  </td>
-                  <td className="p-4 text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <button
-                        onClick={() => handleDuplicate(prod)}
-                        title="Duplicate Creation"
-                        className="p-1.5 text-[#8491A5] hover:text-[#C5A880] transition-colors"
+                        {prod.sale_price && prod.sale_price < prod.base_price && (
+                          <span className="block text-[10px] line-through text-[#94A3B8]">
+                            {formatINR(prod.base_price)}
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <span
+                        className={`px-2.5 py-1 rounded-full text-[10px] font-mono font-bold neu-inset ${
+                          (prod.stock_quantity ?? 0) <= 5
+                            ? "text-[#EF4444]"
+                            : (prod.stock_quantity ?? 0) <= 15
+                            ? "text-[#F59E0B]"
+                            : "text-[#10B981]"
+                        }`}
                       >
-                        <Copy className="w-3.5 h-3.5" />
-                      </button>
+                        {prod.stock_quantity ?? 0} units
+                      </span>
+                    </td>
+                    <td className="p-4">
+                      <div className="flex gap-1 flex-wrap">
+                        {prod.is_bestseller && (
+                          <span className="px-2 py-0.5 neu-inset rounded-md text-[#C5A880] text-[9px] uppercase font-mono font-bold">
+                            Best
+                          </span>
+                        )}
+                        {prod.is_new && (
+                          <span className="px-2 py-0.5 neu-inset rounded-md text-[#3B82F6] text-[9px] uppercase font-mono font-bold">
+                            New
+                          </span>
+                        )}
+                        {prod.is_featured && (
+                          <span className="px-2 py-0.5 neu-inset rounded-md text-[#8B5CF6] text-[9px] uppercase font-mono font-bold">
+                            Featured
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="p-4">
                       <button
-                        onClick={() => handleDelete(prod.id)}
-                        title="Delete"
-                        className="p-1.5 text-[#8491A5] hover:text-[#EF4444] transition-colors"
+                        onClick={() => handleTogglePublish(prod.id)}
+                        className={`flex items-center gap-1.5 text-[10px] uppercase tracking-wider font-semibold font-mono px-3 py-1 rounded-full transition-all ${
+                          prod.is_published !== false
+                            ? "neu-inset text-[#10B981]"
+                            : "neu-btn text-[#8A95A5]"
+                        }`}
                       >
-                        <Trash2 className="w-3.5 h-3.5" />
+                        {prod.is_published !== false ? (
+                          <Eye className="w-3.5 h-3.5" />
+                        ) : (
+                          <EyeOff className="w-3.5 h-3.5" />
+                        )}
+                        <span>{prod.is_published !== false ? "Live" : "Draft"}</span>
                       </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                    <td className="p-4 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => handleOpenEdit(prod)}
+                          title="Edit Creation"
+                          className="p-2 rounded-xl neu-btn text-[#8A95A5] hover:text-[#C5A880] transition-all"
+                        >
+                          <Edit2 className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => handleDuplicate(prod)}
+                          title="Duplicate Creation"
+                          className="p-2 rounded-xl neu-btn text-[#8A95A5] hover:text-[#C5A880] transition-all"
+                        >
+                          <Copy className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(prod.id, prod.name)}
+                          title="Delete Creation"
+                          className="p-2 rounded-xl neu-btn text-[#8A95A5] hover:text-[#FF6B6B] transition-all"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
       </div>
 
-      {/* Create Product Modal */}
-      {isCreateModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="bg-[#13171F] border border-[#252D3D] p-6 sm:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto text-xs space-y-6">
-            <div className="flex items-center justify-between pb-4 border-b border-[#252D3D]">
-              <h3 className="font-sans font-medium text-base text-[#FBF9F5] uppercase tracking-[0.15em]">
-                Add New Atelier Creation
-              </h3>
+      {/* EDIT PRODUCT MODAL */}
+      {editingProduct && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md">
+          <div className="rounded-3xl neu-glass p-6 sm:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto text-xs space-y-6 shadow-2xl">
+            <div className="flex items-center justify-between pb-4 border-b border-white/[0.06]">
+              <div>
+                <span className="text-[10px] uppercase tracking-[0.25em] text-[#C5A880] font-mono font-semibold">
+                  Catalog Studio
+                </span>
+                <h3 className="font-sans font-medium text-lg text-[#F5F7FA] uppercase tracking-wider mt-0.5">
+                  Edit Creation: {editingProduct.name}
+                </h3>
+              </div>
               <button
-                onClick={() => setIsCreateModalOpen(false)}
-                className="text-[#8491A5] hover:text-[#FBF9F5]"
+                onClick={() => setEditingProduct(null)}
+                className="p-2 rounded-xl neu-btn text-[#8A95A5] hover:text-[#F5F7FA] transition-all"
               >
-                ✕
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            <form onSubmit={handleCreateProduct} className="space-y-4">
+            <form onSubmit={handleSaveEdit} className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="text-[10px] uppercase tracking-widest text-[#8491A5]">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] uppercase tracking-widest text-[#8A95A5] font-mono">
                     Product Title
                   </label>
                   <input
                     type="text"
                     required
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    placeholder="e.g. The Devi Sculpted Satchel"
-                    className="w-full p-2.5 bg-[#1A202C] border border-[#252D3D] text-[#E4E8EE]"
+                    value={editFormData.name}
+                    onChange={(e) =>
+                      setEditFormData({ ...editFormData, name: e.target.value })
+                    }
+                    className="w-full px-4 py-3 rounded-xl neu-inset text-xs text-[#F5F7FA] placeholder-[#4B5565] focus:outline-none focus:ring-1 focus:ring-[#C5A880]/40 transition-all"
                   />
                 </div>
 
-                <div className="space-y-1">
-                  <label className="text-[10px] uppercase tracking-widest text-[#8491A5]">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] uppercase tracking-widest text-[#8A95A5] font-mono">
                     Category Realm
                   </label>
                   <select
-                    value={formData.category_slug}
-                    onChange={(e) => setFormData({ ...formData, category_slug: e.target.value })}
-                    className="w-full p-2.5 bg-[#1A202C] border border-[#252D3D] text-[#E4E8EE]"
+                    value={editFormData.category_slug}
+                    onChange={(e) =>
+                      setEditFormData({
+                        ...editFormData,
+                        category_slug: e.target.value,
+                      })
+                    }
+                    className="w-full px-4 py-3 rounded-xl neu-inset text-xs text-[#F5F7FA] focus:outline-none focus:ring-1 focus:ring-[#C5A880]/40 transition-all"
                   >
                     {categories.map((c) => (
-                      <option key={c.slug} value={c.slug}>{c.name}</option>
+                      <option key={c.slug} value={c.slug} className="bg-[#12151b] text-[#EDEDED]">
+                        {c.name}
+                      </option>
                     ))}
                   </select>
                 </div>
               </div>
 
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] uppercase tracking-widest text-[#8A95A5] font-mono">
+                    Subtitle / Style Code
+                  </label>
+                  <input
+                    type="text"
+                    value={editFormData.subtitle}
+                    onChange={(e) =>
+                      setEditFormData({ ...editFormData, subtitle: e.target.value })
+                    }
+                    className="w-full px-4 py-3 rounded-xl neu-inset text-xs text-[#F5F7FA] focus:outline-none focus:ring-1 focus:ring-[#C5A880]/40 transition-all"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[10px] uppercase tracking-widest text-[#8A95A5] font-mono">
+                    SKU Identifier
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={editFormData.sku}
+                    onChange={(e) =>
+                      setEditFormData({ ...editFormData, sku: e.target.value })
+                    }
+                    className="w-full px-4 py-3 rounded-xl neu-inset text-xs text-[#F5F7FA] font-mono focus:outline-none focus:ring-1 focus:ring-[#C5A880]/40 transition-all"
+                  />
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="space-y-1">
-                  <label className="text-[10px] uppercase tracking-widest text-[#8491A5]">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] uppercase tracking-widest text-[#8A95A5] font-mono">
                     Base Price (INR ₹)
                   </label>
                   <input
                     type="number"
                     required
-                    value={formData.base_price}
-                    onChange={(e) => setFormData({ ...formData, base_price: Number(e.target.value) })}
-                    className="w-full p-2.5 bg-[#1A202C] border border-[#252D3D] text-[#E4E8EE]"
+                    value={editFormData.base_price}
+                    onChange={(e) =>
+                      setEditFormData({
+                        ...editFormData,
+                        base_price: Number(e.target.value),
+                      })
+                    }
+                    className="w-full px-4 py-3 rounded-xl neu-inset text-xs text-[#F5F7FA] font-mono focus:outline-none focus:ring-1 focus:ring-[#C5A880]/40 transition-all"
                   />
                 </div>
 
-                <div className="space-y-1">
-                  <label className="text-[10px] uppercase tracking-widest text-[#8491A5]">
-                    Sale Price (Optional)
+                <div className="space-y-1.5">
+                  <label className="text-[10px] uppercase tracking-widest text-[#8A95A5] font-mono">
+                    Sale Price (₹)
                   </label>
                   <input
                     type="number"
-                    value={formData.sale_price || ""}
-                    onChange={(e) => setFormData({ ...formData, sale_price: Number(e.target.value) })}
-                    className="w-full p-2.5 bg-[#1A202C] border border-[#252D3D] text-[#E4E8EE]"
+                    value={editFormData.sale_price || ""}
+                    onChange={(e) =>
+                      setEditFormData({
+                        ...editFormData,
+                        sale_price: Number(e.target.value),
+                      })
+                    }
+                    placeholder="Optional"
+                    className="w-full px-4 py-3 rounded-xl neu-inset text-xs text-[#F5F7FA] font-mono focus:outline-none focus:ring-1 focus:ring-[#C5A880]/40 transition-all"
                   />
                 </div>
 
-                <div className="space-y-1">
-                  <label className="text-[10px] uppercase tracking-widest text-[#8491A5]">
-                    Stock Inventory Units
+                <div className="space-y-1.5">
+                  <label className="text-[10px] uppercase tracking-widest text-[#8A95A5] font-mono">
+                    Stock Units
                   </label>
                   <input
                     type="number"
                     required
-                    value={formData.stock_quantity}
-                    onChange={(e) => setFormData({ ...formData, stock_quantity: Number(e.target.value) })}
-                    className="w-full p-2.5 bg-[#1A202C] border border-[#252D3D] text-[#E4E8EE]"
+                    value={editFormData.stock_quantity}
+                    onChange={(e) =>
+                      setEditFormData({
+                        ...editFormData,
+                        stock_quantity: Number(e.target.value),
+                      })
+                    }
+                    className="w-full px-4 py-3 rounded-xl neu-inset text-xs text-[#F5F7FA] font-mono font-bold focus:outline-none focus:ring-1 focus:ring-[#C5A880]/40 transition-all"
                   />
                 </div>
               </div>
 
-              <div className="space-y-1.5">
+              {/* Image Input & Preview */}
+              <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <label className="text-[10px] uppercase tracking-widest text-[#8491A5]">
-                    Primary Image URL (High-Res or Supabase Storage)
+                  <label className="text-[10px] uppercase tracking-widest text-[#8A95A5] font-mono">
+                    Primary Image
                   </label>
-                  <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1 bg-[#252D3D] hover:bg-[#323B4E] text-[#E4E8EE] text-[10px] uppercase tracking-wider font-semibold transition-colors border border-[#323B4E]">
+                  <label className="cursor-pointer px-3 py-1.5 rounded-xl neu-btn text-[10px] font-mono text-[#C5A880] uppercase tracking-wider transition-all flex items-center gap-1.5">
                     {isUploading ? (
                       <>
                         <Loader2 className="w-3 h-3 animate-spin text-[#C5A880]" />
@@ -483,14 +795,282 @@ export default function AdminProductsPage() {
                     ) : (
                       <>
                         <Upload className="w-3 h-3 text-[#C5A880]" />
-                        <span>Upload to Storage</span>
+                        <span>Upload File</span>
                       </>
                     )}
                     <input
                       type="file"
                       accept="image/*"
                       disabled={isUploading}
-                      onChange={handleProductImageUpload}
+                      onChange={(e) => handleProductImageUpload(e, true)}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="relative w-14 h-14 rounded-xl neu-inset p-0.5 overflow-hidden flex-shrink-0">
+                    {editFormData.primary_image ? (
+                      <Image
+                        src={editFormData.primary_image}
+                        alt="Preview"
+                        fill
+                        className="object-cover rounded-lg"
+                      />
+                    ) : null}
+                  </div>
+                  <input
+                    type="url"
+                    required
+                    value={editFormData.primary_image}
+                    onChange={(e) =>
+                      setEditFormData({
+                        ...editFormData,
+                        primary_image: e.target.value,
+                      })
+                    }
+                    className="flex-1 px-4 py-3 rounded-xl neu-inset text-xs text-[#F5F7FA] font-mono focus:outline-none focus:ring-1 focus:ring-[#C5A880]/40 transition-all"
+                  />
+                </div>
+                {uploadError && (
+                  <p className="text-[11px] text-red-400 font-mono">{uploadError}</p>
+                )}
+              </div>
+
+              {/* Short Description */}
+              <div className="space-y-1.5">
+                <label className="text-[10px] uppercase tracking-widest text-[#8A95A5] font-mono">
+                  Short Description
+                </label>
+                <textarea
+                  rows={2}
+                  value={editFormData.short_description}
+                  onChange={(e) =>
+                    setEditFormData({
+                      ...editFormData,
+                      short_description: e.target.value,
+                    })
+                  }
+                  className="w-full px-4 py-3 rounded-xl neu-inset text-xs text-[#F5F7FA] focus:outline-none focus:ring-1 focus:ring-[#C5A880]/40 transition-all"
+                />
+              </div>
+
+              {/* Badges & Status Checkboxes */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
+                <label className="flex items-center gap-2 cursor-pointer p-3 rounded-xl neu-inset">
+                  <input
+                    type="checkbox"
+                    checked={editFormData.is_new}
+                    onChange={(e) =>
+                      setEditFormData({ ...editFormData, is_new: e.target.checked })
+                    }
+                    className="accent-[#C5A880] w-4 h-4 cursor-pointer"
+                  />
+                  <span className="text-[#EDEDED]">New Arrival</span>
+                </label>
+
+                <label className="flex items-center gap-2 cursor-pointer p-3 rounded-xl neu-inset">
+                  <input
+                    type="checkbox"
+                    checked={editFormData.is_bestseller}
+                    onChange={(e) =>
+                      setEditFormData({
+                        ...editFormData,
+                        is_bestseller: e.target.checked,
+                      })
+                    }
+                    className="accent-[#C5A880] w-4 h-4 cursor-pointer"
+                  />
+                  <span className="text-[#EDEDED]">Bestseller</span>
+                </label>
+
+                <label className="flex items-center gap-2 cursor-pointer p-3 rounded-xl neu-inset">
+                  <input
+                    type="checkbox"
+                    checked={editFormData.is_featured}
+                    onChange={(e) =>
+                      setEditFormData({
+                        ...editFormData,
+                        is_featured: e.target.checked,
+                      })
+                    }
+                    className="accent-[#C5A880] w-4 h-4 cursor-pointer"
+                  />
+                  <span className="text-[#EDEDED]">Featured</span>
+                </label>
+
+                <label className="flex items-center gap-2 cursor-pointer p-3 rounded-xl neu-inset">
+                  <input
+                    type="checkbox"
+                    checked={editFormData.is_published}
+                    onChange={(e) =>
+                      setEditFormData({
+                        ...editFormData,
+                        is_published: e.target.checked,
+                      })
+                    }
+                    className="accent-[#10B981] w-4 h-4 cursor-pointer"
+                  />
+                  <span className="text-[#10B981] font-semibold">Live</span>
+                </label>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex justify-end gap-3 pt-4 border-t border-white/[0.06]">
+                <button
+                  type="button"
+                  onClick={() => setEditingProduct(null)}
+                  className="px-5 py-2.5 rounded-xl neu-btn text-[#8A95A5] hover:text-[#EDEDED] text-xs font-medium transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-6 py-2.5 rounded-xl neu-btn-gold text-xs uppercase tracking-widest font-semibold text-[#0d0f12] transition-all"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* CREATE NEW PRODUCT MODAL */}
+      {isCreateModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md">
+          <div className="rounded-3xl neu-glass p-6 sm:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto text-xs space-y-6 shadow-2xl">
+            <div className="flex items-center justify-between pb-4 border-b border-white/[0.06]">
+              <div>
+                <span className="text-[10px] uppercase tracking-[0.25em] text-[#C5A880] font-mono font-semibold">
+                  New Product
+                </span>
+                <h3 className="font-sans font-medium text-lg text-[#F5F7FA] uppercase tracking-wider mt-0.5">
+                  Add Atelier Creation
+                </h3>
+              </div>
+              <button
+                onClick={() => setIsCreateModalOpen(false)}
+                className="p-2 rounded-xl neu-btn text-[#8A95A5] hover:text-[#F5F7FA] transition-all"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateProduct} className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] uppercase tracking-widest text-[#8A95A5] font-mono">
+                    Product Title
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.name}
+                    onChange={(e) =>
+                      setFormData({ ...formData, name: e.target.value })
+                    }
+                    placeholder="e.g. The Devi Sculpted Satchel"
+                    className="w-full px-4 py-3 rounded-xl neu-inset text-xs text-[#F5F7FA] placeholder-[#4B5565] focus:outline-none focus:ring-1 focus:ring-[#C5A880]/40 transition-all"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[10px] uppercase tracking-widest text-[#8A95A5] font-mono">
+                    Category Realm
+                  </label>
+                  <select
+                    value={formData.category_slug}
+                    onChange={(e) =>
+                      setFormData({ ...formData, category_slug: e.target.value })
+                    }
+                    className="w-full px-4 py-3 rounded-xl neu-inset text-xs text-[#F5F7FA] focus:outline-none focus:ring-1 focus:ring-[#C5A880]/40 transition-all"
+                  >
+                    {categories.map((c) => (
+                      <option key={c.slug} value={c.slug} className="bg-[#12151b] text-[#EDEDED]">
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] uppercase tracking-widest text-[#8A95A5] font-mono">
+                    Base Price (INR ₹)
+                  </label>
+                  <input
+                    type="number"
+                    required
+                    value={formData.base_price}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        base_price: Number(e.target.value),
+                      })
+                    }
+                    className="w-full px-4 py-3 rounded-xl neu-inset text-xs text-[#F5F7FA] font-mono focus:outline-none focus:ring-1 focus:ring-[#C5A880]/40 transition-all"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[10px] uppercase tracking-widest text-[#8A95A5] font-mono">
+                    Sale Price (Optional)
+                  </label>
+                  <input
+                    type="number"
+                    value={formData.sale_price || ""}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        sale_price: Number(e.target.value),
+                      })
+                    }
+                    className="w-full px-4 py-3 rounded-xl neu-inset text-xs text-[#F5F7FA] font-mono focus:outline-none focus:ring-1 focus:ring-[#C5A880]/40 transition-all"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[10px] uppercase tracking-widest text-[#8A95A5] font-mono">
+                    Stock Units
+                  </label>
+                  <input
+                    type="number"
+                    required
+                    value={formData.stock_quantity}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        stock_quantity: Number(e.target.value),
+                      })
+                    }
+                    className="w-full px-4 py-3 rounded-xl neu-inset text-xs text-[#F5F7FA] font-mono font-bold focus:outline-none focus:ring-1 focus:ring-[#C5A880]/40 transition-all"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-[10px] uppercase tracking-widest text-[#8A95A5] font-mono">
+                    Primary Image
+                  </label>
+                  <label className="cursor-pointer px-3 py-1.5 rounded-xl neu-btn text-[10px] font-mono text-[#C5A880] uppercase tracking-wider transition-all flex items-center gap-1.5">
+                    {isUploading ? (
+                      <>
+                        <Loader2 className="w-3 h-3 animate-spin text-[#C5A880]" />
+                        <span>Uploading...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="w-3 h-3 text-[#C5A880]" />
+                        <span>Upload File</span>
+                      </>
+                    )}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      disabled={isUploading}
+                      onChange={(e) => handleProductImageUpload(e, false)}
                       className="hidden"
                     />
                   </label>
@@ -499,62 +1079,76 @@ export default function AdminProductsPage() {
                   type="url"
                   required
                   value={formData.primary_image}
-                  onChange={(e) => setFormData({ ...formData, primary_image: e.target.value })}
-                  placeholder="https://... or upload image file directly"
-                  className="w-full p-2.5 bg-[#1A202C] border border-[#252D3D] text-[#E4E8EE]"
+                  onChange={(e) =>
+                    setFormData({ ...formData, primary_image: e.target.value })
+                  }
+                  placeholder="https://... or upload image directly"
+                  className="w-full px-4 py-3 rounded-xl neu-inset text-xs text-[#F5F7FA] font-mono focus:outline-none focus:ring-1 focus:ring-[#C5A880]/40 transition-all"
                 />
                 {uploadError && (
-                  <p className="text-[11px] text-red-400">{uploadError}</p>
+                  <p className="text-[11px] text-red-400 font-mono">{uploadError}</p>
                 )}
               </div>
 
-              <div className="space-y-1">
-                <label className="text-[10px] uppercase tracking-widest text-[#8491A5]">
+              <div className="space-y-1.5">
+                <label className="text-[10px] uppercase tracking-widest text-[#8A95A5] font-mono">
                   Short Description
                 </label>
                 <textarea
                   rows={3}
                   value={formData.short_description}
-                  onChange={(e) => setFormData({ ...formData, short_description: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      short_description: e.target.value,
+                    })
+                  }
                   placeholder="Architectural summary of material and atelier craft..."
-                  className="w-full p-2.5 bg-[#1A202C] border border-[#252D3D] text-[#E4E8EE]"
+                  className="w-full px-4 py-3 rounded-xl neu-inset text-xs text-[#F5F7FA] focus:outline-none focus:ring-1 focus:ring-[#C5A880]/40 transition-all"
                 />
               </div>
 
               <div className="flex gap-4 pt-2">
-                <label className="flex items-center gap-2 cursor-pointer">
+                <label className="flex items-center gap-2 cursor-pointer p-3 rounded-xl neu-inset">
                   <input
                     type="checkbox"
                     checked={formData.is_new}
-                    onChange={(e) => setFormData({ ...formData, is_new: e.target.checked })}
-                    className="accent-[#C5A880]"
+                    onChange={(e) =>
+                      setFormData({ ...formData, is_new: e.target.checked })
+                    }
+                    className="accent-[#C5A880] w-4 h-4 cursor-pointer"
                   />
-                  <span>Mark as New Arrival</span>
+                  <span className="text-[#EDEDED]">New Arrival</span>
                 </label>
-                <label className="flex items-center gap-2 cursor-pointer">
+                <label className="flex items-center gap-2 cursor-pointer p-3 rounded-xl neu-inset">
                   <input
                     type="checkbox"
                     checked={formData.is_bestseller}
-                    onChange={(e) => setFormData({ ...formData, is_bestseller: e.target.checked })}
-                    className="accent-[#C5A880]"
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        is_bestseller: e.target.checked,
+                      })
+                    }
+                    className="accent-[#C5A880] w-4 h-4 cursor-pointer"
                   />
-                  <span>Mark as Bestseller</span>
+                  <span className="text-[#EDEDED]">Bestseller</span>
                 </label>
               </div>
 
-              <div className="flex justify-end gap-3 pt-4 border-t border-[#252D3D]">
+              <div className="flex justify-end gap-3 pt-4 border-t border-white/[0.06]">
                 <button
                   type="button"
                   onClick={() => setIsCreateModalOpen(false)}
-                  className="px-4 py-2 text-[#8491A5] hover:text-[#E4E8EE]"
+                  className="px-5 py-2.5 rounded-xl neu-btn text-[#8A95A5] hover:text-[#EDEDED] text-xs font-medium transition-all"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2.5 bg-[#C5A880] text-[#111111] text-xs uppercase tracking-widest font-semibold hover:bg-[#DFCAAB]"
+                  className="px-6 py-2.5 rounded-xl neu-btn-gold text-xs uppercase tracking-widest font-semibold text-[#0d0f12] transition-all"
                 >
-                  Save & Publish Creation
+                  Publish Creation
                 </button>
               </div>
             </form>
@@ -564,3 +1158,4 @@ export default function AdminProductsPage() {
     </div>
   );
 }
+

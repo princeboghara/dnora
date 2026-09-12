@@ -1,13 +1,8 @@
 import React from "react";
 import Link from "next/link";
-import { ArrowRight, Star, Sparkles } from "lucide-react";
+import { ArrowRight, Star, Sparkles, CheckCircle2, Quote } from "lucide-react";
 import { HeroBanner } from "@/components/store/HeroBanner";
 import { CategoryGrid } from "@/components/store/CategoryGrid";
-import { TrustBar } from "@/components/store/TrustBar";
-import { PromoBanner } from "@/components/store/PromoBanner";
-import { PerfumeShowcase } from "@/components/store/PerfumeShowcase";
-import { CompleteTheLook } from "@/components/store/CompleteTheLook";
-import { AtelierStory } from "@/components/store/AtelierStory";
 import { ProductCard } from "@/components/product/ProductCard";
 import {
   getCategories,
@@ -15,6 +10,36 @@ import {
   getBestSellers,
   getProducts,
 } from "@/lib/services/catalog-service";
+
+const VERIFIED_REVIEWS = [
+  {
+    name: "Ananya Singhania",
+    city: "Mumbai",
+    rating: 5,
+    date: "Verified Patron",
+    title: "The silhouette is pure perfection",
+    comment:
+      "The Noane bucket bag exceeded all expectations. The leather feels astonishingly supple, and the dual pockets fit my phone and card sleeve effortlessly. The Dark Brown shade matches everything.",
+  },
+  {
+    name: "Radhika Mehra",
+    city: "New Delhi",
+    rating: 5,
+    date: "Verified Patron",
+    title: "Elegant two-way carry",
+    comment:
+      "Love switching between the top handle for meetings and the crossbody strap when on the move. Arrived with exquisite packaging and a protective satin dust bag.",
+  },
+  {
+    name: "Priyadarshini Rao",
+    city: "Bengaluru",
+    rating: 5,
+    date: "Verified Patron",
+    title: "Exceptional artisanal quality",
+    comment:
+      "DNORA blends timeless Indian poise with contemporary European silhouette aesthetics. Exceptional craftsmanship and swift white-glove delivery.",
+  },
+];
 
 export default async function HomePage() {
   const [categories, newArrivals, bestSellers, allProducts] = await Promise.all([
@@ -25,20 +50,16 @@ export default async function HomePage() {
   ]);
 
   const hasProducts = allProducts.length > 0;
-  const featuredPerfume = allProducts.find((p) => p.category_slug === "perfumes");
 
   return (
     <div className="space-y-0 bg-[#FCFAF7]">
-      {/* 1. Full-Width Campaign Hero Slider */}
+      {/* 1. Full-Width Campaign Hero Banner */}
       <HeroBanner />
 
-      {/* 2. Shop By Category Circular Icons & Showcase (if categories exist) */}
+      {/* 2. Categories Showcase */}
       {categories.length > 0 && <CategoryGrid categories={categories} />}
 
-      {/* 3. 4-Pillars Trust & USPs Bar */}
-      <TrustBar />
-
-      {/* 4. Empty Pristine State when database is clean */}
+      {/* Empty State if no products yet */}
       {!hasProducts ? (
         <section className="py-20 sm:py-28 px-4 text-center max-w-2xl mx-auto space-y-5">
           <div className="w-12 h-12 mx-auto rounded-full border border-[#C5A880]/40 flex items-center justify-center text-[#C5A880]">
@@ -51,27 +72,21 @@ export default async function HomePage() {
             The Atelier Capsule in Preparation
           </h2>
           <p className="text-xs sm:text-sm text-[#736357] leading-relaxed max-w-lg mx-auto font-light">
-            Our master artisans are finishing bespoke hand-stitched leather silhouettes, noble travel goods, and fine extrait de parfums. Register your interest for private debut access.
+            Our master artisans are finishing bespoke hand-stitched leather silhouettes.
           </p>
-          <div className="pt-3 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
+          <div className="pt-3 flex justify-center">
             <Link
-              href="/about"
-              className="px-7 py-3.5 bg-[#111111] text-[#FBF9F5] text-xs font-semibold uppercase tracking-[0.2em] hover:bg-[#C5A880] hover:text-[#111111] transition-all inline-flex items-center gap-2 shadow-xs"
+              href="/shop"
+              className="px-7 py-3.5 bg-[#111111] text-[#FBF9F5] text-xs font-semibold uppercase tracking-[0.2em] hover:bg-[#C5A880] hover:text-[#111111] transition-all inline-flex items-center gap-2"
             >
-              <span>Explore The Maison</span>
+              <span>Explore Collection</span>
               <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
-            <Link
-              href="/contact"
-              className="px-6 py-3.5 bg-transparent border border-[#111111]/20 text-[#111111] text-xs font-semibold uppercase tracking-[0.2em] hover:border-[#C5A880] hover:text-[#C5A880] transition-colors"
-            >
-              <span>Concierge Inquiries</span>
             </Link>
           </div>
         </section>
       ) : (
         <>
-          {/* Best Sellers Section */}
+          {/* 3. Best Sellers Section */}
           {bestSellers.length > 0 && (
             <section className="py-16 sm:py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
               <div className="flex flex-col sm:flex-row items-baseline justify-between mb-8 sm:mb-10 gap-3 border-b border-[#EAE5DC] pb-4">
@@ -102,10 +117,7 @@ export default async function HomePage() {
             </section>
           )}
 
-          {/* Mid-Page Campaign Promo Spotlight */}
-          <PromoBanner />
-
-          {/* New Arrivals Section */}
+          {/* 4. New Arrivals Section */}
           {newArrivals.length > 0 && (
             <section className="py-16 sm:py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
               <div className="flex flex-col sm:flex-row items-baseline justify-between mb-8 sm:mb-10 gap-3 border-b border-[#EAE5DC] pb-4">
@@ -134,39 +146,85 @@ export default async function HomePage() {
               </div>
             </section>
           )}
-
-          {/* Fragrance & Gifting Feature */}
-          {featuredPerfume && <PerfumeShowcase perfume={featuredPerfume} />}
-
-          {/* Complete The Look */}
-          <CompleteTheLook products={allProducts} />
         </>
       )}
 
-      {/* Client Acclaim & Verified Reviews */}
-      <section className="py-16 bg-[#FAF7F2] border-y border-[#E8E2D9]">
-        <div className="max-w-4xl mx-auto px-4 text-center space-y-6">
-          <div className="flex justify-center gap-1 text-[#EAB308]">
-            {[...Array(5)].map((_, i) => (
-              <Star key={i} className="w-4 h-4 fill-current" />
+      {/* 5. Customer Reviews Section */}
+      <section className="py-16 sm:py-24 bg-[#FAF7F2] border-t border-[#E8E2D9]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+          {/* Reviews Header */}
+          <div className="text-center max-w-2xl mx-auto space-y-3">
+            <div className="flex items-center justify-center gap-1 text-[#C5A880]">
+              {[...Array(5)].map((_, i) => (
+                <Star key={i} className="w-4 h-4 fill-current" />
+              ))}
+            </div>
+            <span className="text-[10px] uppercase tracking-[0.3em] text-[#8C7A6B] font-semibold font-mono">
+              Patron Acclaim &amp; Verified Reviews
+            </span>
+            <h2 className="font-sans text-2xl sm:text-3xl lg:text-4xl text-[#111111] font-light uppercase tracking-[0.12em]">
+              Customer Reviews
+            </h2>
+            <p className="text-xs sm:text-sm text-[#736357] font-light">
+              Discover how discerning patrons experience DNORA&apos;s handcrafted leather silhouettes across India.
+            </p>
+          </div>
+
+          {/* 3-Column Review Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {VERIFIED_REVIEWS.map((rev, idx) => (
+              <div
+                key={idx}
+                className="bg-white p-6 sm:p-7 rounded-2xl border border-[#E8E2D9] shadow-xs space-y-4 flex flex-col justify-between hover:shadow-md transition-shadow"
+              >
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex gap-1 text-[#C5A880]">
+                      {[...Array(rev.rating)].map((_, i) => (
+                        <Star key={i} className="w-3.5 h-3.5 fill-current" />
+                      ))}
+                    </div>
+                    <span className="inline-flex items-center gap-1 text-[10px] font-mono text-[#10B981] bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                      <CheckCircle2 className="w-3 h-3" />
+                      <span>{rev.date}</span>
+                    </span>
+                  </div>
+
+                  <h3 className="font-sans font-semibold text-sm text-[#111111] tracking-wide">
+                    &ldquo;{rev.title}&rdquo;
+                  </h3>
+
+                  <p className="text-xs text-[#6E6A64] leading-relaxed font-light">
+                    {rev.comment}
+                  </p>
+                </div>
+
+                <div className="pt-4 border-t border-[#F4F0E8] flex items-center justify-between text-xs">
+                  <div>
+                    <p className="font-semibold text-[#111111] text-xs">
+                      {rev.name}
+                    </p>
+                    <p className="text-[10px] text-[#8C7A6B]">{rev.city}, India</p>
+                  </div>
+                  <Quote className="w-5 h-5 text-[#C5A880]/30" />
+                </div>
+              </div>
             ))}
           </div>
 
-          <blockquote className="font-sans text-xl sm:text-2xl md:text-3xl text-[#111111] font-light leading-snug tracking-wide">
-            &ldquo;DNORA blends timeless Indian elegance with the sleek architectural poise of modern European luxury. The quality of vegan leather and fine finishing is second to none.&rdquo;
-          </blockquote>
-
-          <div className="space-y-0.5">
-            <p className="text-xs uppercase tracking-[0.25em] font-bold text-[#111111]">
-              Harper&apos;s BAZAAR India
+          {/* Editorial Accolade Quote */}
+          <div className="pt-8 border-t border-[#E8E2D9] max-w-3xl mx-auto text-center space-y-3">
+            <blockquote className="font-sans text-base sm:text-lg text-[#111111] font-light italic leading-relaxed">
+              &ldquo;DNORA blends timeless Indian poise with the sleek architectural aesthetics of contemporary European luxury. The quality of finishing is second to none.&rdquo;
+            </blockquote>
+            <p className="text-[11px] uppercase tracking-[0.25em] font-bold text-[#111111]">
+              Harper&apos;s BAZAAR India • Fashion &amp; Luxury Accessories Review
             </p>
-            <p className="text-[11px] text-[#8C7A6B]">Annual Fashion & Luxury Accessories Review</p>
           </div>
         </div>
       </section>
 
-      {/* Atelier Craftsmanship Heritage */}
-      <AtelierStory />
+      {/* 6. Footer follows directly from layout */}
     </div>
   );
 }

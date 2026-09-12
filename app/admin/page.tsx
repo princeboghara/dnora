@@ -51,12 +51,12 @@ export default function AdminDashboardPage() {
   return (
     <div className="space-y-8 max-w-7xl mx-auto">
       {/* Top Banner */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-white/[0.04]">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-slate-200/80">
         <div>
-          <span className="text-[10px] uppercase tracking-[0.3em] text-[#C5A880] font-semibold font-mono">
+          <span className="text-[10px] uppercase tracking-[0.3em] text-[#9E7D4E] font-semibold font-mono">
             Executive Control Tower
           </span>
-          <h1 className="font-sans text-2xl sm:text-3xl text-[#F5F7FA] uppercase tracking-[0.12em] font-medium mt-1">
+          <h1 className="font-sans text-2xl sm:text-3xl text-[#0F172A] uppercase tracking-[0.12em] font-bold mt-1">
             Atelier Performance Overview
           </h1>
         </div>
@@ -64,7 +64,7 @@ export default function AdminDashboardPage() {
         <div className="flex items-center gap-3">
           <Link
             href="/admin/products"
-            className="px-4 py-2.5 rounded-xl neu-btn text-[#EDEDED] text-xs uppercase tracking-wider font-medium transition-all"
+            className="px-4 py-2.5 rounded-xl neu-btn text-[#1E293B] text-xs uppercase tracking-wider font-semibold transition-all"
           >
             Manage Catalog
           </Link>
@@ -77,24 +77,24 @@ export default function AdminDashboardPage() {
         </div>
       </div>
 
-      {/* Metric Cards Grid - Matte Black Neumorphic Raised Tiles */}
+      {/* Metric Cards Grid - White Neumorphic Raised Tiles */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {/* Revenue */}
         <div className="p-6 rounded-2xl neu-raised space-y-3">
           <div className="flex items-center justify-between">
-            <span className="uppercase tracking-widest text-[10px] text-[#8A95A5] font-mono">
+            <span className="uppercase tracking-widest text-[10px] text-[#64748B] font-mono font-medium">
               Gross Atelier Revenue
             </span>
-            <div className="w-8 h-8 rounded-xl neu-inset flex items-center justify-center text-[#10B981]">
+            <div className="w-8 h-8 rounded-xl neu-inset flex items-center justify-center text-[#10B981] bg-[#F1F5F9]">
               <TrendingUp className="w-4 h-4" />
             </div>
           </div>
-          <p className="font-sans text-2xl sm:text-3xl font-semibold tracking-tight text-[#F5F7FA]">
+          <p className="font-sans text-2xl sm:text-3xl font-bold tracking-tight text-[#0F172A]">
             {formatINR(totalRevenue)}
           </p>
-          <p className="text-[11px] text-[#8A95A5] flex items-center gap-1">
+          <p className="text-[11px] text-[#64748B] flex items-center gap-1">
             {totalRevenue > 0 ? (
-              <span className="text-[#10B981]">+0% vs prior month</span>
+              <span className="text-[#10B981] font-medium">+0% vs prior month</span>
             ) : (
               <span>No transactions recorded</span>
             )}
@@ -104,17 +104,17 @@ export default function AdminDashboardPage() {
         {/* Orders */}
         <div className="p-6 rounded-2xl neu-raised space-y-3">
           <div className="flex items-center justify-between">
-            <span className="uppercase tracking-widest text-[10px] text-[#8A95A5] font-mono">
+            <span className="uppercase tracking-widest text-[10px] text-[#64748B] font-mono font-medium">
               Total Orders
             </span>
-            <div className="w-8 h-8 rounded-xl neu-inset flex items-center justify-center text-[#C5A880]">
+            <div className="w-8 h-8 rounded-xl neu-inset flex items-center justify-center text-[#9E7D4E] bg-[#F1F5F9]">
               <ShoppingBag className="w-4 h-4" />
             </div>
           </div>
-          <p className="font-sans text-2xl sm:text-3xl font-semibold tracking-tight text-[#F5F7FA]">
+          <p className="font-sans text-2xl sm:text-3xl font-bold tracking-tight text-[#0F172A]">
             {totalOrdersCount}
           </p>
-          <p className="text-[11px] text-[#8A95A5]">
+          <p className="text-[11px] text-[#64748B]">
             {orders.filter((o) => o.status === "confirmed" || o.status === "pending").length} awaiting fulfillment
           </p>
         </div>
@@ -122,17 +122,17 @@ export default function AdminDashboardPage() {
         {/* AOV */}
         <div className="p-6 rounded-2xl neu-raised space-y-3">
           <div className="flex items-center justify-between">
-            <span className="uppercase tracking-widest text-[10px] text-[#8A95A5] font-mono">
+            <span className="uppercase tracking-widest text-[10px] text-[#64748B] font-mono font-medium">
               Average Order Value
             </span>
-            <div className="w-8 h-8 rounded-xl neu-inset flex items-center justify-center text-[#C5A880]">
+            <div className="w-8 h-8 rounded-xl neu-inset flex items-center justify-center text-[#9E7D4E] bg-[#F1F5F9]">
               <PackageCheck className="w-4 h-4" />
             </div>
           </div>
-          <p className="font-sans text-2xl sm:text-3xl font-semibold tracking-tight text-[#F5F7FA]">
+          <p className="font-sans text-2xl sm:text-3xl font-bold tracking-tight text-[#0F172A]">
             {formatINR(aov)}
           </p>
-          <p className="text-[11px] text-[#8A95A5]">
+          <p className="text-[11px] text-[#64748B]">
             {totalOrdersCount > 0 ? "Haute luxury ticket size" : "Calculated from completed orders"}
           </p>
         </div>
@@ -140,17 +140,17 @@ export default function AdminDashboardPage() {
         {/* Low Stock Alerts */}
         <div className="p-6 rounded-2xl neu-raised space-y-3">
           <div className="flex items-center justify-between">
-            <span className="uppercase tracking-widest text-[10px] text-[#8A95A5] font-mono">
+            <span className="uppercase tracking-widest text-[10px] text-[#64748B] font-mono font-medium">
               Low Stock Threshold
             </span>
-            <div className="w-8 h-8 rounded-xl neu-inset flex items-center justify-center text-[#F59E0B]">
+            <div className="w-8 h-8 rounded-xl neu-inset flex items-center justify-center text-[#F59E0B] bg-[#F1F5F9]">
               <AlertTriangle className="w-4 h-4" />
             </div>
           </div>
-          <p className="font-sans text-2xl sm:text-3xl font-semibold tracking-tight text-[#F59E0B]">
+          <p className="font-sans text-2xl sm:text-3xl font-bold tracking-tight text-[#F59E0B]">
             {lowStockItems.length} SKUs
           </p>
-          <p className="text-[11px] text-[#8A95A5]">
+          <p className="text-[11px] text-[#64748B]">
             {products.length === 0 ? "Catalog is currently empty" : "Stock level ≤ 10 units"}
           </p>
         </div>
@@ -160,29 +160,29 @@ export default function AdminDashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Revenue Bars Panel */}
         <div className="lg:col-span-8 p-6 rounded-3xl neu-raised space-y-6">
-          <div className="flex items-center justify-between pb-4 border-b border-white/[0.04]">
+          <div className="flex items-center justify-between pb-4 border-b border-slate-200/80">
             <div>
-              <h3 className="font-sans font-medium text-xs text-[#F5F7FA] uppercase tracking-[0.15em]">
+              <h3 className="font-sans font-bold text-xs text-[#0F172A] uppercase tracking-[0.15em]">
                 Monthly Revenue Performance
               </h3>
-              <p className="text-xs text-[#8A95A5]">Historical trajectory over the last 6 months (in Lakhs)</p>
+              <p className="text-xs text-[#64748B]">Historical trajectory over the last 6 months (in Lakhs)</p>
             </div>
-            <span className="text-xs font-mono text-[#C5A880] px-3 py-1 rounded-lg neu-inset-sm">
+            <span className="text-xs font-mono text-[#9E7D4E] font-semibold px-3 py-1 rounded-lg neu-inset-sm bg-[#F1F5F9]">
               FY 2025–26
             </span>
           </div>
 
           {totalRevenue === 0 ? (
-            <div className="h-48 rounded-2xl neu-inset flex flex-col items-center justify-center text-center p-6 border border-white/[0.02]">
-              <p className="text-xs font-sans font-medium uppercase tracking-widest text-[#F5F7FA]">
+            <div className="h-48 rounded-2xl neu-inset bg-[#F1F5F9] flex flex-col items-center justify-center text-center p-6 border border-slate-200/60">
+              <p className="text-xs font-sans font-semibold uppercase tracking-widest text-[#0F172A]">
                 No Revenue Captured in Current Period
               </p>
-              <p className="text-[11px] text-[#8A95A5] mt-1 max-w-sm">
+              <p className="text-[11px] text-[#64748B] mt-1 max-w-sm">
                 As transactions occur through the atelier storefront, revenue bars and monthly comparisons will chart dynamically here.
               </p>
             </div>
           ) : (
-            <div className="h-48 rounded-2xl neu-inset p-4 flex items-end justify-between gap-4">
+            <div className="h-48 rounded-2xl neu-inset bg-[#F1F5F9] p-4 flex items-end justify-between gap-4">
               {[
                 { month: "Oct", val: 0, display: "₹0" },
                 { month: "Nov", val: 0, display: "₹0" },
@@ -192,16 +192,16 @@ export default function AdminDashboardPage() {
                 { month: "Mar", val: Math.min(100, Math.round((totalRevenue / 100000) * 10)), display: formatINR(totalRevenue) },
               ].map((col) => (
                 <div key={col.month} className="flex-1 flex flex-col items-center gap-2 group">
-                  <span className="text-[10px] font-mono text-[#8A95A5] opacity-0 group-hover:opacity-100 transition-opacity">
+                  <span className="text-[10px] font-mono text-[#64748B] opacity-0 group-hover:opacity-100 transition-opacity">
                     {col.display}
                   </span>
-                  <div className="w-full bg-[#121419] rounded-lg h-32 flex items-end overflow-hidden p-0.5">
+                  <div className="w-full bg-slate-200 rounded-lg h-32 flex items-end overflow-hidden p-0.5">
                     <div
-                      className="w-full bg-gradient-to-t from-[#8C6B37] to-[#C5A880] rounded-md transition-all duration-700 group-hover:brightness-125"
+                      className="w-full bg-gradient-to-t from-[#C5A880] to-[#E2CEB2] rounded-md transition-all duration-700 group-hover:brightness-110"
                       style={{ height: `${col.val}%` }}
                     />
                   </div>
-                  <span className="text-[11px] uppercase tracking-wider text-[#8A95A5] font-mono">
+                  <span className="text-[11px] uppercase tracking-wider text-[#64748B] font-mono font-medium">
                     {col.month}
                   </span>
                 </div>
@@ -212,16 +212,16 @@ export default function AdminDashboardPage() {
 
         {/* Category Share Panel */}
         <div className="lg:col-span-4 p-6 rounded-3xl neu-raised space-y-4">
-          <h3 className="font-sans font-medium text-xs text-[#F5F7FA] uppercase tracking-[0.15em] pb-4 border-b border-white/[0.04]">
+          <h3 className="font-sans font-bold text-xs text-[#0F172A] uppercase tracking-[0.15em] pb-4 border-b border-slate-200/80">
             Revenue by Realm
           </h3>
 
           {totalRevenue === 0 ? (
-            <div className="h-48 rounded-2xl neu-inset flex flex-col items-center justify-center text-center p-6 border border-white/[0.02]">
-              <p className="text-xs font-sans font-medium uppercase tracking-widest text-[#F5F7FA]">
+            <div className="h-48 rounded-2xl neu-inset bg-[#F1F5F9] flex flex-col items-center justify-center text-center p-6 border border-slate-200/60">
+              <p className="text-xs font-sans font-semibold uppercase tracking-widest text-[#0F172A]">
                 No Realm Sales Recorded
               </p>
-              <p className="text-[11px] text-[#8A95A5] mt-1">
+              <p className="text-[11px] text-[#64748B] mt-1">
                 Category distribution will activate once client orders are completed.
               </p>
             </div>
@@ -235,11 +235,11 @@ export default function AdminDashboardPage() {
                 { name: "Charms & Accessories", percent: 0, color: "bg-[#EC4899]" },
               ].map((cat) => (
                 <div key={cat.name} className="space-y-1.5">
-                  <div className="flex justify-between text-[#EDEDED]">
-                    <span>{cat.name}</span>
-                    <span className="font-mono text-[#8A95A5]">{cat.percent}%</span>
+                  <div className="flex justify-between text-[#1E293B]">
+                    <span className="font-medium">{cat.name}</span>
+                    <span className="font-mono text-[#64748B]">{cat.percent}%</span>
                   </div>
-                  <div className="w-full neu-inset-sm h-2 rounded-full overflow-hidden p-0.5">
+                  <div className="w-full neu-inset-sm bg-[#F1F5F9] h-2.5 rounded-full overflow-hidden p-0.5">
                     <div className={`h-full rounded-full ${cat.color}`} style={{ width: `${cat.percent}%` }} />
                   </div>
                 </div>
@@ -251,18 +251,18 @@ export default function AdminDashboardPage() {
 
       {/* Recent Orders Table - Neumorphic Cavity */}
       <div className="p-6 rounded-3xl neu-raised space-y-4">
-        <div className="flex items-center justify-between pb-4 border-b border-white/[0.04]">
-          <h3 className="font-sans font-medium text-xs text-[#F5F7FA] uppercase tracking-[0.15em]">
+        <div className="flex items-center justify-between pb-4 border-b border-slate-200/80">
+          <h3 className="font-sans font-bold text-xs text-[#0F172A] uppercase tracking-[0.15em]">
             Recent Client Orders &amp; Status Controls
           </h3>
-          <span className="text-xs text-[#8A95A5] font-mono px-3 py-1 rounded-lg neu-inset-sm">
+          <span className="text-xs text-[#64748B] font-mono font-medium px-3 py-1 rounded-lg neu-inset-sm bg-[#F1F5F9]">
             {orders.length} Active Orders
           </span>
         </div>
 
-        <div className="rounded-2xl neu-inset overflow-hidden border border-white/[0.02]">
+        <div className="rounded-2xl neu-card overflow-hidden border border-slate-200/80">
           <table className="w-full text-left text-xs">
-            <thead className="text-[10px] uppercase tracking-widest text-[#8A95A5] bg-[#12151c]/60 border-b border-white/[0.03]">
+            <thead className="text-[10px] uppercase tracking-widest text-[#64748B] font-mono bg-slate-50 border-b border-slate-200">
               <tr>
                 <th className="p-4">Order Number</th>
                 <th className="p-4">Patron Name</th>
@@ -273,16 +273,16 @@ export default function AdminDashboardPage() {
                 <th className="p-4 text-right">Fulfillment Update</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/[0.02] text-[#EDEDED]">
+            <tbody className="divide-y divide-slate-100 text-[#1E293B]">
               {orders.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="p-12 text-center text-[#8A95A5]">
+                  <td colSpan={7} className="p-12 text-center text-[#64748B]">
                     <div className="max-w-md mx-auto space-y-2">
-                      <div className="w-12 h-12 rounded-2xl neu-raised mx-auto flex items-center justify-center text-[#C5A880]/60">
+                      <div className="w-12 h-12 rounded-2xl neu-inset bg-[#F1F5F9] mx-auto flex items-center justify-center text-[#9E7D4E]">
                         <ShoppingBag className="w-6 h-6" />
                       </div>
-                      <p className="text-sm font-medium text-[#F5F7FA]">No client orders placed yet</p>
-                      <p className="text-[11px] text-[#8A95A5]">
+                      <p className="text-sm font-semibold text-[#0F172A]">No client orders placed yet</p>
+                      <p className="text-[11px] text-[#64748B]">
                         As patrons place orders in the atelier storefront, they will stream into this console in real time with end-to-end fulfillment controls.
                       </p>
                     </div>
@@ -290,20 +290,20 @@ export default function AdminDashboardPage() {
                 </tr>
               ) : (
                 orders.map((order) => (
-                  <tr key={order.id} className="hover:bg-white/[0.02] transition-colors">
-                    <td className="p-4 font-mono font-medium text-[#C5A880]">
+                  <tr key={order.id} className="hover:bg-slate-50/80 transition-colors">
+                    <td className="p-4 font-mono font-semibold text-[#9E7D4E]">
                       {order.order_number}
                     </td>
                     <td className="p-4">
-                      <p className="font-medium text-[#F5F7FA]">{order.customer_name}</p>
-                      <p className="text-[10px] text-[#8A95A5] font-mono">{order.customer_email}</p>
+                      <p className="font-semibold text-[#0F172A]">{order.customer_name}</p>
+                      <p className="text-[10px] text-[#64748B] font-mono">{order.customer_email}</p>
                     </td>
-                    <td className="p-4 text-[#8A95A5]">{formatDate(order.created_at)}</td>
-                    <td className="p-4 font-semibold text-[#F5F7FA]">
+                    <td className="p-4 text-[#64748B]">{formatDate(order.created_at)}</td>
+                    <td className="p-4 font-bold text-[#0F172A]">
                       {formatINR(order.total)}
                     </td>
                     <td className="p-4">
-                      <span className="px-2.5 py-1 rounded-lg neu-inset-sm text-[#10B981] text-[10px] uppercase font-bold font-mono">
+                      <span className="px-2.5 py-1 rounded-lg bg-emerald-50 text-[#10B981] border border-emerald-200 text-[10px] uppercase font-bold font-mono">
                         {order.payment_status}
                       </span>
                     </td>
@@ -311,10 +311,10 @@ export default function AdminDashboardPage() {
                       <span
                         className={`px-3 py-1 rounded-lg text-[10px] uppercase tracking-wider font-semibold ${
                           order.status === "delivered"
-                            ? "bg-[#10B981]/20 text-[#10B981] border border-[#10B981]/30"
+                            ? "bg-emerald-50 text-[#10B981] border border-emerald-200"
                             : order.status === "shipped"
-                            ? "bg-[#3B82F6]/20 text-[#3B82F6] border border-[#3B82F6]/30"
-                            : "neu-inset-sm text-[#C5A880]"
+                            ? "bg-blue-50 text-[#3B82F6] border border-blue-200"
+                            : "bg-[#F1F5F9] text-[#9E7D4E] border border-slate-200"
                         }`}
                       >
                         {order.status}
@@ -327,7 +327,7 @@ export default function AdminDashboardPage() {
                         onChange={(e) =>
                           handleStatusChange(order.id, e.target.value as OrderStatus)
                         }
-                        className="rounded-xl neu-btn text-[#EDEDED] px-3 py-1.5 text-[11px] focus:outline-none focus:ring-1 focus:ring-[#C5A880]/50"
+                        className="rounded-xl neu-btn text-[#0F172A] bg-white px-3 py-1.5 text-[11px] focus:outline-none focus:ring-1 focus:ring-[#C5A880]/50 cursor-pointer"
                       >
                         <option value="pending">Pending</option>
                         <option value="confirmed">Confirmed</option>

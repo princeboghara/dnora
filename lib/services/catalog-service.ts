@@ -22,9 +22,67 @@ export function invalidateCatalogCache(): void {
   cachedProducts = null;
 }
 
+const ADMIN_CATEGORIES_KEY = "dnora_admin_categories_override";
+
+export function getAdminCategoriesOverride(): Category[] | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(ADMIN_CATEGORIES_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch {
+    // Ignore
+  }
+  return null;
+}
+
+export function saveAdminCategoriesOverride(categories: Category[]): void {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(ADMIN_CATEGORIES_KEY, JSON.stringify(categories));
+    invalidateCatalogCache();
+    window.dispatchEvent(new Event("dnora_categories_updated"));
+  } catch {
+    // Ignore
+  }
+}
+
+export async function getAllAdminCategories(): Promise<Category[]> {
+  const local = getAdminCategoriesOverride();
+  if (local && local.length > 0) {
+    return local;
+  }
+
+  if (isSupabaseConfigured() && supabase) {
+    try {
+      const { data, error } = await supabase
+        .from("categories")
+        .select("*")
+        .order("display_order", { ascending: true });
+
+      if (!error && data && data.length > 0) {
+        return data as Category[];
+      }
+    } catch {
+      // Return fallback on error
+    }
+  }
+
+  return INITIAL_CATEGORIES;
+}
+
 export async function getCategories(): Promise<Category[]> {
   if (cachedCategories && Date.now() - cachedCategories.timestamp < CACHE_TTL_MS) {
     return cachedCategories.data;
+  }
+
+  const local = getAdminCategoriesOverride();
+  if (local && local.length > 0) {
+    const active = local.filter((c) => c.is_active !== false).sort((a, b) => a.display_order - b.display_order);
+    cachedCategories = { data: active, timestamp: Date.now() };
+    return active;
   }
 
   if (isSupabaseConfigured() && supabase) {
@@ -53,11 +111,100 @@ export async function getCategoryBySlug(slug: string): Promise<Category | null> 
   return categories.find((c) => c.slug === slug && c.is_active) || null;
 }
 
+const ADMIN_PRODUCTS_KEY = "dnora_admin_products_override";
+
+export function getAdminProductsOverride(): Product[] | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(ADMIN_PRODUCTS_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch {
+    // Ignore
+  }
+  return null;
+}
+
+export function saveAdminProductsOverride(products: Product[]): void {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(ADMIN_PRODUCTS_KEY, JSON.stringify(products));
+    invalidateCatalogCache();
+  } catch {
+    // Ignore
+  }
+}
+
+export async function getAllAdminProducts(): Promise<Product[]> {
+  const local = getAdminProductsOverride();
+  if (local && local.length > 0) {
+    return local;
+  }
+
+  if (isSupabaseConfigured() && supabase) {
+    try {
+      const { data, error } = await supabase
+        .from("products")
+        .select("*, categories(slug), product_images(*), product_variants(*)")
+        .order("created_at", { ascending: false });
+
+      if (!error && data && data.length > 0) {
+        const mapped = data.map((p: any) => {
+          const initMatch = INITIAL_PRODUCTS.find((ip) => ip.slug === p.slug || ip.id === p.id);
+          const images =
+            p.product_images && p.product_images.length > 0
+              ? p.product_images
+              : initMatch?.images || [
+                  {
+                    id: "1",
+                    product_id: p.id,
+                    url: p.primary_image,
+                    alt_text: p.name,
+                    display_order: 1,
+                    is_primary: true,
+                  },
+                ];
+          const variants =
+            p.product_variants && p.product_variants.length > 0
+              ? p.product_variants
+              : initMatch?.variants || [];
+          const details = Array.isArray(p.details) ? p.details : initMatch?.details || [];
+
+          return {
+            ...p,
+            category_slug: p.categories?.slug || initMatch?.category_slug || "handbags",
+            stock_quantity: p.stock_quantity ?? initMatch?.stock_quantity ?? 30,
+            images,
+            variants,
+            details,
+          };
+        }) as Product[];
+        return mapped;
+      }
+    } catch {
+      // Fallback
+    }
+  }
+
+  return INITIAL_PRODUCTS;
+}
+
 async function fetchRawProducts(): Promise<Product[]> {
   if (cachedProducts && Date.now() - cachedProducts.timestamp < CACHE_TTL_MS) {
     return cachedProducts.data;
   }
 
+  // 1. Check if admin has customized catalog products
+  const local = getAdminProductsOverride();
+  if (local && local.length > 0) {
+    const published = local.filter((p) => p.is_published !== false);
+    cachedProducts = { data: published, timestamp: Date.now() };
+    return published;
+  }
+
+  // 2. Fetch from Supabase
   if (isSupabaseConfigured() && supabase) {
     try {
       const { data, error } = await supabase
