@@ -303,15 +303,6 @@ export default function AdminCategoriesPage() {
 
         <div className="flex items-center gap-3 flex-wrap">
           <button
-            onClick={handleResetToDefault}
-            title="Reset to Default 8 Official Realms"
-            className="px-4 py-2.5 rounded-xl neu-btn text-[#475569] hover:text-[#9E7D4E] text-xs font-semibold uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer"
-          >
-            <RefreshCw className="w-3.5 h-3.5" />
-            <span>Reset Realms</span>
-          </button>
-
-          <button
             onClick={() => {
               setCreateForm((prev) => ({
                 ...prev,
@@ -368,7 +359,7 @@ export default function AdminCategoriesPage() {
             No Category Realms Found
           </p>
           <p className="text-xs text-[#64748B] max-w-sm mx-auto">
-            No categories match your search criteria. Click &quot;New Category&quot; to add one or &quot;Reset Realms&quot; to restore the official defaults.
+            No category realms found. Click &quot;New Category&quot; to create and curate category collections.
           </p>
         </div>
       ) : (

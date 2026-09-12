@@ -1,30 +1,120 @@
-import React from "react";
-import { notFound } from "next/navigation";
+"use client";
+
+import React, { useState, useEffect, use } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { getCategoryBySlug, getProducts } from "@/lib/services/catalog-service";
+import {
+  getCategoryBySlug,
+  getAdminCategoriesOverride,
+  getAdminProductsOverride,
+} from "@/lib/services/catalog-service";
+import { INITIAL_CATEGORIES, INITIAL_PRODUCTS } from "@/lib/seed/catalog-data";
 import { ProductCard } from "@/components/product/ProductCard";
-import { INITIAL_CATEGORIES } from "@/lib/seed/catalog-data";
+import { Category, Product } from "@/types";
 
-export async function generateStaticParams() {
-  return INITIAL_CATEGORIES.map((c) => ({
-    category: c.slug,
-  }));
-}
-
-export default async function CategoryPage({
+export default function CategoryPage({
   params,
 }: {
   params: Promise<{ category: string }>;
 }) {
-  const { category: categorySlug } = await params;
-  const category = await getCategoryBySlug(categorySlug);
+  const unwrappedParams = use(params);
+  const categorySlug = unwrappedParams.category;
 
-  if (!category) {
-    notFound();
+  const [category, setCategory] = useState<Category | null>(null);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const resolveCategoryAndProducts = async () => {
+      setIsLoading(true);
+
+      // 1. Try to find from live admin categories first
+      const adminCategories = getAdminCategoriesOverride();
+      let matchedCategory =
+        adminCategories?.find(
+          (c) => c.slug.toLowerCase() === categorySlug.toLowerCase()
+        ) || null;
+
+      // 2. If not found in override, query catalog service / seed
+      if (!matchedCategory) {
+        matchedCategory = await getCategoryBySlug(categorySlug);
+      }
+
+      // 3. If still not found, construct a graceful fallback so newly added/dynamic categories never 404
+      if (!matchedCategory) {
+        const formattedTitle = categorySlug
+          .split("-")
+          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(" ");
+
+        matchedCategory = {
+          id: `cat_dyn_${categorySlug}`,
+          name: formattedTitle,
+          slug: categorySlug,
+          tagline: `Exclusive ${formattedTitle} Collection`,
+          description: `Discover handcrafted luxury ${formattedTitle.toLowerCase()} designs meticulously engineered in our atelier.`,
+          image_url:
+            "https://www.charleskeith.in/dw/image/v2/BCWJ_PRD/on/demandware.static/-/Sites-in-products/default/dw0c35245a/images/hi-res/2026-L6-CK2-10160273-A-29-1.jpg?sw=600&q=80",
+          hero_image_url:
+            "https://www.charleskeith.in/dw/image/v2/BCWJ_PRD/on/demandware.static/-/Sites-in-products/default/dw0c35245a/images/hi-res/2026-L6-CK2-10160273-A-29-1.jpg?sw=600&q=80",
+          display_order: 99,
+          is_active: true,
+        };
+      }
+
+      setCategory(matchedCategory);
+
+      // 4. Resolve products for this category
+      const adminProducts = getAdminProductsOverride();
+      const allProductsList =
+        adminProducts && adminProducts.length > 0
+          ? adminProducts
+          : INITIAL_PRODUCTS;
+
+      const matchedProducts = allProductsList.filter(
+        (p) =>
+          p.category_slug.toLowerCase() === categorySlug.toLowerCase() ||
+          (categorySlug === "handbags" &&
+            [
+              "bucket-bags",
+              "shoulder-bags",
+              "tote-bags",
+              "hobo-bags",
+              "crossbody-bags",
+            ].includes(p.category_slug))
+      );
+
+      setProducts(matchedProducts);
+      setIsLoading(false);
+    };
+
+    resolveCategoryAndProducts();
+
+    const handleUpdate = () => {
+      resolveCategoryAndProducts();
+    };
+
+    window.addEventListener("storage", handleUpdate);
+    window.addEventListener("dnora_categories_updated", handleUpdate);
+    window.addEventListener("dnora_products_updated", handleUpdate);
+
+    return () => {
+      window.removeEventListener("storage", handleUpdate);
+      window.removeEventListener("dnora_categories_updated", handleUpdate);
+      window.removeEventListener("dnora_products_updated", handleUpdate);
+    };
+  }, [categorySlug]);
+
+  if (isLoading || !category) {
+    return (
+      <div className="py-24 max-w-md mx-auto text-center space-y-4">
+        <div className="w-8 h-8 mx-auto border-2 border-[#C5A880] border-t-transparent rounded-full animate-spin" />
+        <p className="text-xs uppercase tracking-[0.25em] text-[#8C7A6B] font-mono">
+          Retrieving Atelier Realm...
+        </p>
+      </div>
+    );
   }
-
-  const products = await getProducts({ category: category.slug });
 
   return (
     <div className="space-y-12 pb-24">
@@ -58,7 +148,7 @@ export default async function CategoryPage({
           </h1>
 
           <p className="text-xs sm:text-sm text-[#D5CDC0] font-light max-w-xl mx-auto leading-relaxed">
-            {category.description}
+            {category.description || category.tagline || "Discover handcrafted luxury silhouettes."}
           </p>
         </div>
       </div>
@@ -66,7 +156,9 @@ export default async function CategoryPage({
       {/* Catalog Grid */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between pb-4 border-b border-[#E8E2D9] text-xs text-[#8C7A6B]">
-          <span>Showing {products.length} Atelier Masterpieces in {category.name}</span>
+          <span>
+            Showing {products.length} Atelier Masterpieces in {category.name}
+          </span>
           <Link
             href="/shop"
             className="text-[#111111] hover:text-[#C5A880] underline font-medium"
@@ -76,16 +168,16 @@ export default async function CategoryPage({
         </div>
 
         {products.length === 0 ? (
-          <div className="text-center py-20 space-y-3 bg-[#FAF7F2] p-8 border border-[#E8E2D9] my-8">
+          <div className="text-center py-20 space-y-3 bg-[#FAF7F2] p-8 border border-[#E8E2D9] my-8 rounded-2xl">
             <p className="font-sans font-medium text-lg text-[#111111] uppercase tracking-wide">
-              New editions are presently being crafted in our atelier.
+              New editions are presently being crafted in our atelier for {category.name}.
             </p>
             <p className="text-xs text-[#8C7A6B]">
-              Discover our other signature creations in the meantime.
+              Explore our full collection or check back soon for debut releases.
             </p>
             <Link
               href="/shop"
-              className="inline-block mt-2 px-6 py-2.5 bg-[#141414] text-[#F5F2EB] text-xs uppercase tracking-widest"
+              className="inline-block mt-2 px-6 py-3 bg-[#141414] hover:bg-[#C5A880] hover:text-[#111111] text-[#F5F2EB] text-xs uppercase tracking-widest font-semibold transition-all rounded-lg"
             >
               View Complete Catalog
             </Link>

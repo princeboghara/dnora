@@ -28,9 +28,9 @@ export function getAdminCategoriesOverride(): Category[] | null {
   if (typeof window === "undefined") return null;
   try {
     const raw = localStorage.getItem(ADMIN_CATEGORIES_KEY);
-    if (raw) {
+    if (raw !== null) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      if (Array.isArray(parsed)) return parsed;
     }
   } catch {
     // Ignore
@@ -51,7 +51,7 @@ export function saveAdminCategoriesOverride(categories: Category[]): void {
 
 export async function getAllAdminCategories(): Promise<Category[]> {
   const local = getAdminCategoriesOverride();
-  if (local && local.length > 0) {
+  if (local !== null) {
     return local;
   }
 
@@ -79,7 +79,7 @@ export async function getCategories(): Promise<Category[]> {
   }
 
   const local = getAdminCategoriesOverride();
-  if (local && local.length > 0) {
+  if (local !== null) {
     const active = local.filter((c) => c.is_active !== false).sort((a, b) => a.display_order - b.display_order);
     cachedCategories = { data: active, timestamp: Date.now() };
     return active;
@@ -108,7 +108,15 @@ export async function getCategories(): Promise<Category[]> {
 
 export async function getCategoryBySlug(slug: string): Promise<Category | null> {
   const categories = await getCategories();
-  return categories.find((c) => c.slug === slug && c.is_active) || null;
+  const match = categories.find((c) => c.slug.toLowerCase() === slug.toLowerCase() && c.is_active !== false);
+  if (match) return match;
+
+  const local = getAdminCategoriesOverride();
+  if (local !== null) {
+    return local.find((c) => c.slug.toLowerCase() === slug.toLowerCase()) || null;
+  }
+
+  return INITIAL_CATEGORIES.find((c) => c.slug.toLowerCase() === slug.toLowerCase()) || null;
 }
 
 const ADMIN_PRODUCTS_KEY = "dnora_admin_products_override";

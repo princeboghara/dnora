@@ -6,7 +6,11 @@ import Link from "next/link";
 import { Filter, X, SlidersHorizontal, ChevronDown, Check, LayoutGrid, Grid2X2 } from "lucide-react";
 import { ProductCard } from "@/components/product/ProductCard";
 import { INITIAL_CATEGORIES, INITIAL_PRODUCTS } from "@/lib/seed/catalog-data";
-import { Product } from "@/types";
+import {
+  getAdminCategoriesOverride,
+  getAdminProductsOverride,
+} from "@/lib/services/catalog-service";
+import { Product, Category } from "@/types";
 import { DnoraLoadingScreen } from "@/components/ui/DnoraLoadingScreen";
 
 const PRICE_RANGES = [
@@ -40,6 +44,39 @@ function ShopContent() {
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
   const [gridColumns, setGridColumns] = useState<2 | 4>(4);
 
+  const [categories, setCategories] = useState<Category[]>(INITIAL_CATEGORIES);
+  const [allProducts, setAllProducts] = useState<Product[]>(INITIAL_PRODUCTS);
+
+  useEffect(() => {
+    const updateCatalog = () => {
+      const adminCats = getAdminCategoriesOverride();
+      if (adminCats !== null) {
+        setCategories(adminCats.filter((c) => c.is_active !== false).sort((a, b) => a.display_order - b.display_order));
+      } else {
+        setCategories(INITIAL_CATEGORIES);
+      }
+
+      const adminProds = getAdminProductsOverride();
+      if (adminProds !== null) {
+        setAllProducts(adminProds.filter((p) => p.is_published !== false));
+      } else {
+        setAllProducts(INITIAL_PRODUCTS);
+      }
+    };
+
+    updateCatalog();
+
+    window.addEventListener("storage", updateCatalog);
+    window.addEventListener("dnora_categories_updated", updateCatalog);
+    window.addEventListener("dnora_products_updated", updateCatalog);
+
+    return () => {
+      window.removeEventListener("storage", updateCatalog);
+      window.removeEventListener("dnora_categories_updated", updateCatalog);
+      window.removeEventListener("dnora_products_updated", updateCatalog);
+    };
+  }, []);
+
   // Lock body scroll and handle Escape key for smooth filter drawer
   useEffect(() => {
     if (isMobileFilterOpen) {
@@ -66,7 +103,7 @@ function ShopContent() {
   }, [initialCategory, initialSearch, initialFilter]);
 
   const filteredProducts = useMemo(() => {
-    let result = [...INITIAL_PRODUCTS];
+    let result = [...allProducts];
 
     // Category filter
     if (selectedCategory && selectedCategory !== "all") {
@@ -187,10 +224,10 @@ function ShopContent() {
                   : "border-transparent text-[#736357] hover:text-[#111111]"
               }`}
             >
-              All Bags ({INITIAL_PRODUCTS.length})
+              All Bags ({allProducts.length})
             </button>
-            {INITIAL_CATEGORIES.map((cat) => {
-              const count = INITIAL_PRODUCTS.filter(
+            {categories.map((cat) => {
+              const count = allProducts.filter(
                 (p) =>
                   p.category_slug === cat.slug ||
                   (cat.slug === "handbags" &&
@@ -408,9 +445,9 @@ function ShopContent() {
                   }`}
                 >
                   <span>All Handbags</span>
-                  <span>{INITIAL_PRODUCTS.length}</span>
+                  <span>{allProducts.length}</span>
                 </button>
-                {INITIAL_CATEGORIES.map((cat) => {
+                {categories.map((cat) => {
                   const isSelected = selectedCategory === cat.slug;
                   return (
                     <button

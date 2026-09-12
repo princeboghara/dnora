@@ -57,7 +57,7 @@ export default async function HomePage() {
       <HeroBanner />
 
       {/* 2. Categories Showcase */}
-      {categories.length > 0 && <CategoryGrid categories={categories} />}
+      <CategoryGrid categories={categories} />
 
       {/* Empty State if no products yet */}
       {!hasProducts ? (

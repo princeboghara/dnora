@@ -17,7 +17,7 @@ export function CategoryGrid({ categories }: CategoryGridProps) {
   useEffect(() => {
     const updateCategories = () => {
       const override = getAdminCategoriesOverride();
-      if (override && override.length > 0) {
+      if (override !== null) {
         setLiveCategories(
           override
             .filter((c) => c.is_active !== false)
@@ -41,10 +41,6 @@ export function CategoryGrid({ categories }: CategoryGridProps) {
       window.removeEventListener("dnora_categories_updated", updateCategories);
     };
   }, [categories]);
-
-  if (liveCategories.length === 0) {
-    return null;
-  }
 
   return (
     <section className="py-10 sm:py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
