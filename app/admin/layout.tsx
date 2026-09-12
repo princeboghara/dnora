@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
@@ -49,6 +49,13 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
   const { adminUser, isAdmin, adminSignOut, isLoading } = useAuth();
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
 
+  // Safely redirect to /admin/login inside useEffect when unauthenticated
+  useEffect(() => {
+    if (!isLoading && !isAdmin && pathname !== "/admin/login") {
+      router.push("/admin/login");
+    }
+  }, [isLoading, isAdmin, pathname, router]);
+
   // 1. If visiting dedicated Admin Login page, render directly
   if (pathname === "/admin/login") {
     return <>{children}</>;
@@ -66,11 +73,8 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // 3. Gatekeeper: redirect to /admin/login if not authenticated
+  // 3. Gatekeeper: show loading screen while redirecting if not authenticated
   if (!isAdmin) {
-    if (typeof window !== "undefined") {
-      router.push("/admin/login");
-    }
     return (
       <DnoraLoadingScreen
         fullScreen
