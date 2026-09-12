@@ -324,41 +324,7 @@ export function Header() {
               ))}
             </div>
 
-            <div className="pt-2 space-y-2 text-xs uppercase tracking-widest text-[#6E6A64]">
-              <p className="text-[10px] uppercase tracking-[0.25em] text-[#8C7A6B] font-mono px-1">
-                Concierge &amp; Heritage
-              </p>
-              <Link
-                href="/about"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="block py-1.5 px-1 hover:text-[#111111] transition-colors"
-              >
-                Atelier Heritage
-              </Link>
-              <Link
-                href="/contact"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="block py-1.5 px-1 hover:text-[#111111] transition-colors"
-              >
-                Client Concierge
-              </Link>
-              <Link
-                href="/faq"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="block py-1.5 px-1 hover:text-[#111111] transition-colors"
-              >
-                Shipping & Authenticity
-              </Link>
-              {isAdmin && (
-                <Link
-                  href="/admin"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="block py-2.5 px-3 bg-[#111111] text-[#C5A880] rounded-xl text-center font-semibold tracking-wider transition-colors hover:bg-[#C5A880] hover:text-[#111111]"
-                >
-                  Go To Admin Control Tower &rarr;
-                </Link>
-              )}
-            </div>
+
           </div>
 
           <div className="pt-6 border-t border-[#E8E2D9] text-xs text-[#8C7A6B] text-center space-y-1">
