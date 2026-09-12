@@ -105,35 +105,35 @@ export default function AdminCustomersPage() {
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-white/[0.04]">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-slate-200/80">
         <div>
           <span className="text-[10px] uppercase tracking-[0.3em] text-[#C5A880] font-semibold font-mono">
             Clientele Management
           </span>
-          <h1 className="font-sans text-2xl sm:text-3xl text-[#F5F7FA] uppercase tracking-[0.12em] font-medium mt-1">
+          <h1 className="font-sans text-2xl sm:text-3xl text-[#0F172A] uppercase tracking-[0.12em] font-bold mt-1">
             Patrons &amp; Collectors Directory
           </h1>
         </div>
-        <span className="text-xs text-[#8A95A5] font-mono px-3 py-1.5 rounded-xl neu-inset-sm">
+        <span className="text-xs text-[#64748B] font-mono px-3 py-1.5 rounded-xl neu-inset bg-[#F1F5F9] font-semibold">
           {patrons.length} Registered Patrons
         </span>
       </div>
 
       <div className="relative">
-        <Search className="w-4 h-4 text-[#8A95A5] absolute left-4 top-1/2 -translate-y-1/2" />
+        <Search className="w-4 h-4 text-[#64748B] absolute left-4 top-1/2 -translate-y-1/2" />
         <input
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search patrons by name, email, or city..."
-          className="w-full pl-11 pr-4 py-3.5 rounded-2xl neu-inset text-xs text-[#EDEDED] placeholder:text-[#6E7B8E] focus:outline-none focus:ring-1 focus:ring-[#C5A880]/50"
+          className="w-full pl-11 pr-4 py-3.5 rounded-2xl neu-inset bg-[#F1F5F9] text-xs text-[#0F172A] placeholder:text-[#94A3B8] focus:outline-none focus:ring-1 focus:ring-[#C5A880]/50 font-medium"
         />
       </div>
 
-      <div className="rounded-3xl neu-raised p-6">
-        <div className="rounded-2xl neu-inset overflow-hidden border border-white/[0.02]">
+      <div className="rounded-3xl neu-card bg-white border border-slate-200/80 p-6 shadow-sm">
+        <div className="rounded-2xl overflow-hidden border border-slate-200/80">
           <table className="w-full text-left text-xs">
-            <thead className="text-[10px] uppercase tracking-widest text-[#8A95A5] bg-[#12151c]/60 border-b border-white/[0.03]">
+            <thead className="text-[10px] uppercase tracking-widest text-[#475569] bg-[#F8FAFC] border-b border-slate-200 font-mono font-semibold">
               <tr>
                 <th className="p-4">Patron Name</th>
                 <th className="p-4">Contact</th>
@@ -144,16 +144,16 @@ export default function AdminCustomersPage() {
                 <th className="p-4 text-right">Patron Since</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/[0.02] text-[#EDEDED]">
+            <tbody className="divide-y divide-slate-100 text-[#0F172A]">
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={7} className="p-12 text-center text-[#8491A5]">
+                <td colSpan={7} className="p-12 text-center text-[#64748B]">
                   <div className="max-w-md mx-auto space-y-2">
-                    <Users className="w-8 h-8 mx-auto text-[#C5A880]/50" />
-                    <p className="text-sm font-medium text-[#FBF9F5]">
+                    <Users className="w-8 h-8 mx-auto text-[#C5A880]/60" />
+                    <p className="text-sm font-semibold text-[#0F172A]">
                       {isLoading ? "Loading clientele directory..." : "No Patrons Registered Yet"}
                     </p>
-                    <p className="text-[11px] text-[#8491A5]">
+                    <p className="text-[11px] text-[#64748B]">
                       {isLoading
                         ? "Querying verified profiles from Supabase..."
                         : "As clients register accounts or complete purchases, their dossiers and lifetime spending records will appear here."}
@@ -163,23 +163,23 @@ export default function AdminCustomersPage() {
               </tr>
             ) : (
               filtered.map((p) => (
-                <tr key={p.id} className="hover:bg-[#1A202C]/60 transition-colors">
-                  <td className="p-4 font-semibold text-[#FBF9F5]">{p.name}</td>
-                  <td className="p-4 text-[#8491A5]">
-                    <p>{p.email}</p>
+                <tr key={p.id} className="hover:bg-slate-50 transition-colors">
+                  <td className="p-4 font-bold text-[#0F172A]">{p.name}</td>
+                  <td className="p-4 text-[#64748B]">
+                    <p className="font-medium text-[#0F172A]">{p.email}</p>
                     <p className="text-[10px]">{p.phone}</p>
                   </td>
-                  <td className="p-4 text-[#8491A5]">{p.city}</td>
+                  <td className="p-4 text-[#64748B] font-medium">{p.city}</td>
                   <td className="p-4">
-                    <span className="px-2.5 py-0.5 bg-[#C5A880]/20 text-[#C5A880] text-[10px] uppercase tracking-wider font-semibold border border-[#C5A880]/30">
+                    <span className="px-2.5 py-0.5 rounded-md bg-amber-50 text-amber-800 text-[10px] uppercase tracking-wider font-bold border border-amber-200">
                       {p.tier}
                     </span>
                   </td>
-                  <td className="p-4 font-mono font-medium">{p.ordersCount} acquisitions</td>
-                  <td className="p-4 font-semibold text-[#FBF9F5]">
+                  <td className="p-4 font-mono font-semibold text-[#0F172A]">{p.ordersCount} acquisitions</td>
+                  <td className="p-4 font-bold text-[#0F172A]">
                     {formatINR(p.totalSpent)}
                   </td>
-                  <td className="p-4 text-right text-[#8491A5] font-mono text-[11px]">
+                  <td className="p-4 text-right text-[#64748B] font-mono text-[11px]">
                     {p.memberSince}
                   </td>
                 </tr>

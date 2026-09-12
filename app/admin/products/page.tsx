@@ -588,7 +588,7 @@ export default function AdminProductsPage() {
                         className={`flex items-center gap-1.5 text-[10px] uppercase tracking-wider font-semibold font-mono px-3 py-1 rounded-full transition-all ${
                           prod.is_published !== false
                             ? "neu-inset text-[#10B981]"
-                            : "neu-btn text-[#8A95A5]"
+                            : "neu-btn text-[#64748B]"
                         }`}
                       >
                         {prod.is_published !== false ? (
@@ -604,21 +604,21 @@ export default function AdminProductsPage() {
                         <button
                           onClick={() => handleOpenEdit(prod)}
                           title="Edit Creation"
-                          className="p-2 rounded-xl neu-btn text-[#8A95A5] hover:text-[#C5A880] transition-all"
+                          className="p-2 rounded-xl neu-btn text-[#64748B] hover:text-[#C5A880] transition-all"
                         >
                           <Edit2 className="w-3.5 h-3.5" />
                         </button>
                         <button
                           onClick={() => handleDuplicate(prod)}
                           title="Duplicate Creation"
-                          className="p-2 rounded-xl neu-btn text-[#8A95A5] hover:text-[#C5A880] transition-all"
+                          className="p-2 rounded-xl neu-btn text-[#64748B] hover:text-[#C5A880] transition-all"
                         >
                           <Copy className="w-3.5 h-3.5" />
                         </button>
                         <button
                           onClick={() => handleDelete(prod.id, prod.name)}
                           title="Delete Creation"
-                          className="p-2 rounded-xl neu-btn text-[#8A95A5] hover:text-[#FF6B6B] transition-all"
+                          className="p-2 rounded-xl neu-btn text-[#64748B] hover:text-[#FF6B6B] transition-all"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -634,20 +634,20 @@ export default function AdminProductsPage() {
 
       {/* EDIT PRODUCT MODAL */}
       {editingProduct && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md">
-          <div className="rounded-3xl neu-glass p-6 sm:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto text-xs space-y-6 shadow-2xl">
-            <div className="flex items-center justify-between pb-4 border-b border-white/[0.06]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="rounded-3xl neu-card bg-white p-6 sm:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto text-xs space-y-6 shadow-2xl border border-slate-200">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-200/80">
               <div>
-                <span className="text-[10px] uppercase tracking-[0.25em] text-[#C5A880] font-mono font-semibold">
+                <span className="text-[10px] uppercase tracking-[0.25em] text-[#9E7D4E] font-mono font-semibold">
                   Catalog Studio
                 </span>
-                <h3 className="font-sans font-medium text-lg text-[#F5F7FA] uppercase tracking-wider mt-0.5">
+                <h3 className="font-sans font-bold text-lg text-[#0F172A] uppercase tracking-wider mt-0.5">
                   Edit Creation: {editingProduct.name}
                 </h3>
               </div>
               <button
                 onClick={() => setEditingProduct(null)}
-                className="p-2 rounded-xl neu-btn text-[#8A95A5] hover:text-[#F5F7FA] transition-all"
+                className="p-2 rounded-xl neu-btn text-[#64748B] hover:text-[#0F172A] transition-all cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -656,7 +656,7 @@ export default function AdminProductsPage() {
             <form onSubmit={handleSaveEdit} className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-[10px] uppercase tracking-widest text-[#8A95A5] font-mono">
+                  <label className="text-[10px] uppercase tracking-widest text-[#475569] font-mono font-semibold">
                     Product Title
                   </label>
                   <input
@@ -666,12 +666,12 @@ export default function AdminProductsPage() {
                     onChange={(e) =>
                       setEditFormData({ ...editFormData, name: e.target.value })
                     }
-                    className="w-full px-4 py-3 rounded-xl neu-inset text-xs text-[#F5F7FA] placeholder-[#4B5565] focus:outline-none focus:ring-1 focus:ring-[#C5A880]/40 transition-all"
+                    className="w-full px-4 py-3 rounded-xl neu-inset bg-[#F1F5F9] text-xs text-[#0F172A] placeholder-[#94A3B8] focus:outline-none focus:ring-1 focus:ring-[#C5A880]/50 transition-all font-semibold"
                   />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[10px] uppercase tracking-widest text-[#8A95A5] font-mono">
+                  <label className="text-[10px] uppercase tracking-widest text-[#475569] font-mono font-semibold">
                     Category Realm
                   </label>
                   <select
@@ -682,10 +682,10 @@ export default function AdminProductsPage() {
                         category_slug: e.target.value,
                       })
                     }
-                    className="w-full px-4 py-3 rounded-xl neu-inset text-xs text-[#F5F7FA] focus:outline-none focus:ring-1 focus:ring-[#C5A880]/40 transition-all"
+                    className="w-full px-4 py-3 rounded-xl neu-inset bg-[#F1F5F9] text-xs text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#C5A880]/50 transition-all font-semibold cursor-pointer"
                   >
                     {categories.map((c) => (
-                      <option key={c.slug} value={c.slug} className="bg-[#12151b] text-[#EDEDED]">
+                      <option key={c.slug} value={c.slug} className="bg-white text-[#0F172A]">
                         {c.name}
                       </option>
                     ))}
@@ -695,7 +695,7 @@ export default function AdminProductsPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-[10px] uppercase tracking-widest text-[#8A95A5] font-mono">
+                  <label className="text-[10px] uppercase tracking-widest text-[#475569] font-mono font-semibold">
                     Subtitle / Style Code
                   </label>
                   <input
@@ -704,12 +704,12 @@ export default function AdminProductsPage() {
                     onChange={(e) =>
                       setEditFormData({ ...editFormData, subtitle: e.target.value })
                     }
-                    className="w-full px-4 py-3 rounded-xl neu-inset text-xs text-[#F5F7FA] focus:outline-none focus:ring-1 focus:ring-[#C5A880]/40 transition-all"
+                    className="w-full px-4 py-3 rounded-xl neu-inset bg-[#F1F5F9] text-xs text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#C5A880]/50 transition-all"
                   />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[10px] uppercase tracking-widest text-[#8A95A5] font-mono">
+                  <label className="text-[10px] uppercase tracking-widest text-[#475569] font-mono font-semibold">
                     SKU Identifier
                   </label>
                   <input
@@ -719,14 +719,14 @@ export default function AdminProductsPage() {
                     onChange={(e) =>
                       setEditFormData({ ...editFormData, sku: e.target.value })
                     }
-                    className="w-full px-4 py-3 rounded-xl neu-inset text-xs text-[#F5F7FA] font-mono focus:outline-none focus:ring-1 focus:ring-[#C5A880]/40 transition-all"
+                    className="w-full px-4 py-3 rounded-xl neu-inset bg-[#F1F5F9] text-xs text-[#0F172A] font-mono focus:outline-none focus:ring-1 focus:ring-[#C5A880]/50 transition-all font-bold"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-[10px] uppercase tracking-widest text-[#8A95A5] font-mono">
+                  <label className="text-[10px] uppercase tracking-widest text-[#475569] font-mono font-semibold">
                     Base Price (INR ₹)
                   </label>
                   <input
@@ -739,12 +739,12 @@ export default function AdminProductsPage() {
                         base_price: Number(e.target.value),
                       })
                     }
-                    className="w-full px-4 py-3 rounded-xl neu-inset text-xs text-[#F5F7FA] font-mono focus:outline-none focus:ring-1 focus:ring-[#C5A880]/40 transition-all"
+                    className="w-full px-4 py-3 rounded-xl neu-inset bg-[#F1F5F9] text-xs text-[#0F172A] font-mono font-bold focus:outline-none focus:ring-1 focus:ring-[#C5A880]/50 transition-all"
                   />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[10px] uppercase tracking-widest text-[#8A95A5] font-mono">
+                  <label className="text-[10px] uppercase tracking-widest text-[#475569] font-mono font-semibold">
                     Sale Price (₹)
                   </label>
                   <input
@@ -757,12 +757,12 @@ export default function AdminProductsPage() {
                       })
                     }
                     placeholder="Optional"
-                    className="w-full px-4 py-3 rounded-xl neu-inset text-xs text-[#F5F7FA] font-mono focus:outline-none focus:ring-1 focus:ring-[#C5A880]/40 transition-all"
+                    className="w-full px-4 py-3 rounded-xl neu-inset bg-[#F1F5F9] text-xs text-[#0F172A] placeholder-[#94A3B8] font-mono focus:outline-none focus:ring-1 focus:ring-[#C5A880]/50 transition-all"
                   />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[10px] uppercase tracking-widest text-[#8A95A5] font-mono">
+                  <label className="text-[10px] uppercase tracking-widest text-[#475569] font-mono font-semibold">
                     Stock Units
                   </label>
                   <input
@@ -775,7 +775,7 @@ export default function AdminProductsPage() {
                         stock_quantity: Number(e.target.value),
                       })
                     }
-                    className="w-full px-4 py-3 rounded-xl neu-inset text-xs text-[#F5F7FA] font-mono font-bold focus:outline-none focus:ring-1 focus:ring-[#C5A880]/40 transition-all"
+                    className="w-full px-4 py-3 rounded-xl neu-inset bg-[#F1F5F9] text-xs text-[#0F172A] font-mono font-bold focus:outline-none focus:ring-1 focus:ring-[#C5A880]/50 transition-all"
                   />
                 </div>
               </div>
@@ -783,18 +783,18 @@ export default function AdminProductsPage() {
               {/* Image Input & Preview */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <label className="text-[10px] uppercase tracking-widest text-[#8A95A5] font-mono">
+                  <label className="text-[10px] uppercase tracking-widest text-[#475569] font-mono font-semibold">
                     Primary Image
                   </label>
-                  <label className="cursor-pointer px-3 py-1.5 rounded-xl neu-btn text-[10px] font-mono text-[#C5A880] uppercase tracking-wider transition-all flex items-center gap-1.5">
+                  <label className="cursor-pointer px-3 py-1.5 rounded-xl neu-btn text-[10px] font-mono text-[#9E7D4E] uppercase tracking-wider font-semibold transition-all flex items-center gap-1.5">
                     {isUploading ? (
                       <>
-                        <Loader2 className="w-3 h-3 animate-spin text-[#C5A880]" />
+                        <Loader2 className="w-3 h-3 animate-spin text-[#9E7D4E]" />
                         <span>Uploading...</span>
                       </>
                     ) : (
                       <>
-                        <Upload className="w-3 h-3 text-[#C5A880]" />
+                        <Upload className="w-3 h-3 text-[#9E7D4E]" />
                         <span>Upload File</span>
                       </>
                     )}
@@ -808,7 +808,7 @@ export default function AdminProductsPage() {
                   </label>
                 </div>
                 <div className="flex items-center gap-3">
-                  <div className="relative w-14 h-14 rounded-xl neu-inset p-0.5 overflow-hidden flex-shrink-0">
+                  <div className="relative w-14 h-14 rounded-xl neu-inset bg-[#F1F5F9] p-0.5 overflow-hidden flex-shrink-0 border border-slate-200">
                     {editFormData.primary_image ? (
                       <Image
                         src={editFormData.primary_image}
@@ -828,17 +828,17 @@ export default function AdminProductsPage() {
                         primary_image: e.target.value,
                       })
                     }
-                    className="flex-1 px-4 py-3 rounded-xl neu-inset text-xs text-[#F5F7FA] font-mono focus:outline-none focus:ring-1 focus:ring-[#C5A880]/40 transition-all"
+                    className="flex-1 px-4 py-3 rounded-xl neu-inset bg-[#F1F5F9] text-xs text-[#0F172A] font-mono focus:outline-none focus:ring-1 focus:ring-[#C5A880]/50 transition-all"
                   />
                 </div>
                 {uploadError && (
-                  <p className="text-[11px] text-red-400 font-mono">{uploadError}</p>
+                  <p className="text-[11px] text-red-500 font-mono">{uploadError}</p>
                 )}
               </div>
 
               {/* Short Description */}
               <div className="space-y-1.5">
-                <label className="text-[10px] uppercase tracking-widest text-[#8A95A5] font-mono">
+                <label className="text-[10px] uppercase tracking-widest text-[#475569] font-mono font-semibold">
                   Short Description
                 </label>
                 <textarea
@@ -850,13 +850,13 @@ export default function AdminProductsPage() {
                       short_description: e.target.value,
                     })
                   }
-                  className="w-full px-4 py-3 rounded-xl neu-inset text-xs text-[#F5F7FA] focus:outline-none focus:ring-1 focus:ring-[#C5A880]/40 transition-all"
+                  className="w-full px-4 py-3 rounded-xl neu-inset bg-[#F1F5F9] text-xs text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#C5A880]/50 transition-all"
                 />
               </div>
 
               {/* Badges & Status Checkboxes */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
-                <label className="flex items-center gap-2 cursor-pointer p-3 rounded-xl neu-inset">
+                <label className="flex items-center gap-2 cursor-pointer p-3 rounded-xl neu-inset bg-[#F1F5F9]">
                   <input
                     type="checkbox"
                     checked={editFormData.is_new}
@@ -865,10 +865,10 @@ export default function AdminProductsPage() {
                     }
                     className="accent-[#C5A880] w-4 h-4 cursor-pointer"
                   />
-                  <span className="text-[#EDEDED]">New Arrival</span>
+                  <span className="text-[#0F172A] font-medium">New Arrival</span>
                 </label>
 
-                <label className="flex items-center gap-2 cursor-pointer p-3 rounded-xl neu-inset">
+                <label className="flex items-center gap-2 cursor-pointer p-3 rounded-xl neu-inset bg-[#F1F5F9]">
                   <input
                     type="checkbox"
                     checked={editFormData.is_bestseller}
@@ -880,10 +880,10 @@ export default function AdminProductsPage() {
                     }
                     className="accent-[#C5A880] w-4 h-4 cursor-pointer"
                   />
-                  <span className="text-[#EDEDED]">Bestseller</span>
+                  <span className="text-[#0F172A] font-medium">Bestseller</span>
                 </label>
 
-                <label className="flex items-center gap-2 cursor-pointer p-3 rounded-xl neu-inset">
+                <label className="flex items-center gap-2 cursor-pointer p-3 rounded-xl neu-inset bg-[#F1F5F9]">
                   <input
                     type="checkbox"
                     checked={editFormData.is_featured}
@@ -895,10 +895,10 @@ export default function AdminProductsPage() {
                     }
                     className="accent-[#C5A880] w-4 h-4 cursor-pointer"
                   />
-                  <span className="text-[#EDEDED]">Featured</span>
+                  <span className="text-[#0F172A] font-medium">Featured</span>
                 </label>
 
-                <label className="flex items-center gap-2 cursor-pointer p-3 rounded-xl neu-inset">
+                <label className="flex items-center gap-2 cursor-pointer p-3 rounded-xl neu-inset bg-[#F1F5F9]">
                   <input
                     type="checkbox"
                     checked={editFormData.is_published}
@@ -910,22 +910,22 @@ export default function AdminProductsPage() {
                     }
                     className="accent-[#10B981] w-4 h-4 cursor-pointer"
                   />
-                  <span className="text-[#10B981] font-semibold">Live</span>
+                  <span className="text-[#10B981] font-bold">Live</span>
                 </label>
               </div>
 
               {/* Action Buttons */}
-              <div className="flex justify-end gap-3 pt-4 border-t border-white/[0.06]">
+              <div className="flex justify-end gap-3 pt-4 border-t border-slate-200/80">
                 <button
                   type="button"
                   onClick={() => setEditingProduct(null)}
-                  className="px-5 py-2.5 rounded-xl neu-btn text-[#8A95A5] hover:text-[#EDEDED] text-xs font-medium transition-all"
+                  className="px-5 py-2.5 rounded-xl neu-btn text-[#64748B] hover:text-[#0F172A] text-xs font-semibold transition-all cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2.5 rounded-xl neu-btn-gold text-xs uppercase tracking-widest font-semibold text-[#0d0f12] transition-all"
+                  className="px-6 py-2.5 rounded-xl neu-btn-gold text-xs uppercase tracking-widest font-bold text-white transition-all cursor-pointer"
                 >
                   Save Changes
                 </button>
@@ -937,20 +937,20 @@ export default function AdminProductsPage() {
 
       {/* CREATE NEW PRODUCT MODAL */}
       {isCreateModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md">
-          <div className="rounded-3xl neu-glass p-6 sm:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto text-xs space-y-6 shadow-2xl">
-            <div className="flex items-center justify-between pb-4 border-b border-white/[0.06]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="rounded-3xl neu-card bg-white border border-slate-200 p-6 sm:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto text-xs space-y-6 shadow-2xl">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-200/80">
               <div>
-                <span className="text-[10px] uppercase tracking-[0.25em] text-[#C5A880] font-mono font-semibold">
+                <span className="text-[10px] uppercase tracking-[0.25em] text-[#C5A880] font-mono font-bold">
                   New Product
                 </span>
-                <h3 className="font-sans font-medium text-lg text-[#F5F7FA] uppercase tracking-wider mt-0.5">
+                <h3 className="font-sans font-semibold text-lg text-[#0F172A] uppercase tracking-wider mt-0.5">
                   Add Atelier Creation
                 </h3>
               </div>
               <button
                 onClick={() => setIsCreateModalOpen(false)}
-                className="p-2 rounded-xl neu-btn text-[#8A95A5] hover:text-[#F5F7FA] transition-all"
+                className="p-2 rounded-xl neu-btn text-[#64748B] hover:text-[#0F172A] transition-all cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -959,7 +959,7 @@ export default function AdminProductsPage() {
             <form onSubmit={handleCreateProduct} className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-[10px] uppercase tracking-widest text-[#8A95A5] font-mono">
+                  <label className="text-[10px] uppercase tracking-widest text-[#475569] font-mono font-semibold">
                     Product Title
                   </label>
                   <input
@@ -970,12 +970,12 @@ export default function AdminProductsPage() {
                       setFormData({ ...formData, name: e.target.value })
                     }
                     placeholder="e.g. The Devi Sculpted Satchel"
-                    className="w-full px-4 py-3 rounded-xl neu-inset text-xs text-[#F5F7FA] placeholder-[#4B5565] focus:outline-none focus:ring-1 focus:ring-[#C5A880]/40 transition-all"
+                    className="w-full px-4 py-3 rounded-xl neu-inset bg-[#F1F5F9] text-xs text-[#0F172A] placeholder-[#94A3B8] focus:outline-none focus:ring-1 focus:ring-[#C5A880]/40 transition-all font-medium"
                   />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[10px] uppercase tracking-widest text-[#8A95A5] font-mono">
+                  <label className="text-[10px] uppercase tracking-widest text-[#475569] font-mono font-semibold">
                     Category Realm
                   </label>
                   <select
@@ -983,10 +983,10 @@ export default function AdminProductsPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, category_slug: e.target.value })
                     }
-                    className="w-full px-4 py-3 rounded-xl neu-inset text-xs text-[#F5F7FA] focus:outline-none focus:ring-1 focus:ring-[#C5A880]/40 transition-all"
+                    className="w-full px-4 py-3 rounded-xl neu-inset bg-[#F1F5F9] text-xs text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#C5A880]/40 transition-all font-medium"
                   >
                     {categories.map((c) => (
-                      <option key={c.slug} value={c.slug} className="bg-[#12151b] text-[#EDEDED]">
+                      <option key={c.slug} value={c.slug} className="bg-white text-[#0F172A]">
                         {c.name}
                       </option>
                     ))}
@@ -996,7 +996,7 @@ export default function AdminProductsPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-[10px] uppercase tracking-widest text-[#8A95A5] font-mono">
+                  <label className="text-[10px] uppercase tracking-widest text-[#475569] font-mono font-semibold">
                     Base Price (INR ₹)
                   </label>
                   <input
@@ -1009,12 +1009,12 @@ export default function AdminProductsPage() {
                         base_price: Number(e.target.value),
                       })
                     }
-                    className="w-full px-4 py-3 rounded-xl neu-inset text-xs text-[#F5F7FA] font-mono focus:outline-none focus:ring-1 focus:ring-[#C5A880]/40 transition-all"
+                    className="w-full px-4 py-3 rounded-xl neu-inset bg-[#F1F5F9] text-xs text-[#0F172A] font-mono font-semibold focus:outline-none focus:ring-1 focus:ring-[#C5A880]/40 transition-all"
                   />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[10px] uppercase tracking-widest text-[#8A95A5] font-mono">
+                  <label className="text-[10px] uppercase tracking-widest text-[#475569] font-mono font-semibold">
                     Sale Price (Optional)
                   </label>
                   <input
@@ -1026,12 +1026,12 @@ export default function AdminProductsPage() {
                         sale_price: Number(e.target.value),
                       })
                     }
-                    className="w-full px-4 py-3 rounded-xl neu-inset text-xs text-[#F5F7FA] font-mono focus:outline-none focus:ring-1 focus:ring-[#C5A880]/40 transition-all"
+                    className="w-full px-4 py-3 rounded-xl neu-inset bg-[#F1F5F9] text-xs text-[#0F172A] font-mono font-semibold focus:outline-none focus:ring-1 focus:ring-[#C5A880]/40 transition-all"
                   />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[10px] uppercase tracking-widest text-[#8A95A5] font-mono">
+                  <label className="text-[10px] uppercase tracking-widest text-[#475569] font-mono font-semibold">
                     Stock Units
                   </label>
                   <input
@@ -1044,14 +1044,14 @@ export default function AdminProductsPage() {
                         stock_quantity: Number(e.target.value),
                       })
                     }
-                    className="w-full px-4 py-3 rounded-xl neu-inset text-xs text-[#F5F7FA] font-mono font-bold focus:outline-none focus:ring-1 focus:ring-[#C5A880]/40 transition-all"
+                    className="w-full px-4 py-3 rounded-xl neu-inset bg-[#F1F5F9] text-xs text-[#0F172A] font-mono font-bold focus:outline-none focus:ring-1 focus:ring-[#C5A880]/40 transition-all"
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <label className="text-[10px] uppercase tracking-widest text-[#8A95A5] font-mono">
+                  <label className="text-[10px] uppercase tracking-widest text-[#475569] font-mono font-semibold">
                     Primary Image
                   </label>
                   <label className="cursor-pointer px-3 py-1.5 rounded-xl neu-btn text-[10px] font-mono text-[#C5A880] uppercase tracking-wider transition-all flex items-center gap-1.5">
@@ -1083,15 +1083,15 @@ export default function AdminProductsPage() {
                     setFormData({ ...formData, primary_image: e.target.value })
                   }
                   placeholder="https://... or upload image directly"
-                  className="w-full px-4 py-3 rounded-xl neu-inset text-xs text-[#F5F7FA] font-mono focus:outline-none focus:ring-1 focus:ring-[#C5A880]/40 transition-all"
+                  className="w-full px-4 py-3 rounded-xl neu-inset bg-[#F1F5F9] text-xs text-[#0F172A] font-mono placeholder-[#94A3B8] focus:outline-none focus:ring-1 focus:ring-[#C5A880]/40 transition-all"
                 />
                 {uploadError && (
-                  <p className="text-[11px] text-red-400 font-mono">{uploadError}</p>
+                  <p className="text-[11px] text-red-500 font-mono">{uploadError}</p>
                 )}
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[10px] uppercase tracking-widest text-[#8A95A5] font-mono">
+                <label className="text-[10px] uppercase tracking-widest text-[#475569] font-mono font-semibold">
                   Short Description
                 </label>
                 <textarea
@@ -1104,12 +1104,12 @@ export default function AdminProductsPage() {
                     })
                   }
                   placeholder="Architectural summary of material and atelier craft..."
-                  className="w-full px-4 py-3 rounded-xl neu-inset text-xs text-[#F5F7FA] focus:outline-none focus:ring-1 focus:ring-[#C5A880]/40 transition-all"
+                  className="w-full px-4 py-3 rounded-xl neu-inset bg-[#F1F5F9] text-xs text-[#0F172A] placeholder-[#94A3B8] focus:outline-none focus:ring-1 focus:ring-[#C5A880]/40 transition-all font-medium"
                 />
               </div>
 
               <div className="flex gap-4 pt-2">
-                <label className="flex items-center gap-2 cursor-pointer p-3 rounded-xl neu-inset">
+                <label className="flex items-center gap-2 cursor-pointer p-3 rounded-xl neu-inset bg-[#F1F5F9]">
                   <input
                     type="checkbox"
                     checked={formData.is_new}
@@ -1118,9 +1118,9 @@ export default function AdminProductsPage() {
                     }
                     className="accent-[#C5A880] w-4 h-4 cursor-pointer"
                   />
-                  <span className="text-[#EDEDED]">New Arrival</span>
+                  <span className="text-[#0F172A] font-medium">New Arrival</span>
                 </label>
-                <label className="flex items-center gap-2 cursor-pointer p-3 rounded-xl neu-inset">
+                <label className="flex items-center gap-2 cursor-pointer p-3 rounded-xl neu-inset bg-[#F1F5F9]">
                   <input
                     type="checkbox"
                     checked={formData.is_bestseller}
@@ -1132,21 +1132,21 @@ export default function AdminProductsPage() {
                     }
                     className="accent-[#C5A880] w-4 h-4 cursor-pointer"
                   />
-                  <span className="text-[#EDEDED]">Bestseller</span>
+                  <span className="text-[#0F172A] font-medium">Bestseller</span>
                 </label>
               </div>
 
-              <div className="flex justify-end gap-3 pt-4 border-t border-white/[0.06]">
+              <div className="flex justify-end gap-3 pt-4 border-t border-slate-200/80">
                 <button
                   type="button"
                   onClick={() => setIsCreateModalOpen(false)}
-                  className="px-5 py-2.5 rounded-xl neu-btn text-[#8A95A5] hover:text-[#EDEDED] text-xs font-medium transition-all"
+                  className="px-5 py-2.5 rounded-xl neu-btn text-[#64748B] hover:text-[#0F172A] text-xs font-semibold transition-all cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2.5 rounded-xl neu-btn-gold text-xs uppercase tracking-widest font-semibold text-[#0d0f12] transition-all"
+                  className="px-6 py-2.5 rounded-xl neu-btn-gold text-xs uppercase tracking-widest font-bold text-white transition-all cursor-pointer"
                 >
                   Publish Creation
                 </button>

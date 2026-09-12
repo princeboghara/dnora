@@ -35,7 +35,7 @@ import {
   Headphones,
   Award,
 } from "lucide-react";
-import { Banner } from "@/types";
+import { Banner, Category } from "@/types";
 import { DEFAULT_STORE_SETTINGS, INITIAL_BANNERS } from "@/lib/seed/catalog-data";
 import { uploadImageToStorage } from "@/lib/supabase/storage";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase/client";
@@ -44,9 +44,19 @@ import {
   saveAdminBannersOverride,
   invalidateBannersCache,
 } from "@/lib/services/cms-service";
+import { getAllAdminCategories } from "@/lib/services/catalog-service";
 
 type SectionType = "hub" | "hero" | "announcement" | "categories" | "pillars";
 type HeroSubTab = "banners" | "studio";
+
+export const STOREFRONT_DESTINATIONS = [
+  { value: "/shop", label: "All Creations / Entire Catalog (/shop)", defaultText: "Shop The Collection" },
+  { value: "/shop?filter=new", label: "New Arrivals Showcase (/shop?filter=new)", defaultText: "Explore New Arrivals" },
+  { value: "/shop?filter=bestseller", label: "Bestsellers Showcase (/shop?filter=bestseller)", defaultText: "Discover Bestsellers" },
+  { value: "/about", label: "Atelier Heritage & Craft (/about)", defaultText: "Discover Our Heritage" },
+  { value: "/contact", label: "Client Concierge (/contact)", defaultText: "Connect With Concierge" },
+  { value: "/faq", label: "Authenticity & Advisory (/faq)", defaultText: "View Client Advisory" },
+];
 
 export default function AdminCMSPage() {
   // Navigation: "hub" shows section selector cards. Selecting a card opens that section.
@@ -54,6 +64,7 @@ export default function AdminCMSPage() {
   const [heroSubTab, setHeroSubTab] = useState<HeroSubTab>("banners");
 
   const [banners, setBanners] = useState<Banner[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [announcementText, setAnnouncementText] = useState(
     DEFAULT_STORE_SETTINGS.announcement_text
@@ -109,16 +120,35 @@ export default function AdminCMSPage() {
     async function load() {
       setIsLoading(true);
       try {
-        const data = await getAllAdminBanners();
-        setBanners(data);
+        const [bannersData, categoriesData] = await Promise.all([
+          getAllAdminBanners(),
+          getAllAdminCategories(),
+        ]);
+        setBanners(bannersData);
+        setCategories(categoriesData);
       } catch (err) {
-        console.error("Failed to load banners:", err);
+        console.error("Failed to load CMS data:", err);
       } finally {
         setIsLoading(false);
       }
     }
     load();
   }, []);
+
+  const isKnownDestination = (link: string) => {
+    return (
+      STOREFRONT_DESTINATIONS.some((d) => d.value === link) ||
+      categories.some((c) => `/shop/${c.slug}` === link)
+    );
+  };
+
+  const getDestinationDefaultText = (link: string) => {
+    const preset = STOREFRONT_DESTINATIONS.find((d) => d.value === link);
+    if (preset) return preset.defaultText;
+    const cat = categories.find((c) => `/shop/${c.slug}` === link);
+    if (cat) return `Explore ${cat.name}`;
+    return "Shop Now";
+  };
 
   const activeBanners = banners.filter((b) => b.is_active);
   const previewList = activeBanners.length > 0 ? activeBanners : banners;
@@ -356,8 +386,8 @@ export default function AdminCMSPage() {
     <div className="space-y-8 max-w-6xl mx-auto pb-16">
       {/* Toast Notification */}
       {notification && (
-        <div className="fixed bottom-6 right-6 z-50 px-5 py-3.5 rounded-2xl neu-raised border border-[#C5A880]/40 text-[#F5F7FA] text-xs font-semibold uppercase tracking-wider shadow-2xl flex items-center gap-3 animate-bounce">
-          <div className="w-5 h-5 rounded-full neu-inset flex items-center justify-center text-[#C5A880]">
+        <div className="fixed bottom-6 right-6 z-50 px-5 py-3.5 rounded-2xl neu-raised bg-white border border-[#C5A880]/50 text-[#0F172A] text-xs font-semibold uppercase tracking-wider shadow-2xl flex items-center gap-3 animate-bounce">
+          <div className="w-5 h-5 rounded-full neu-inset bg-[#F1F5F9] flex items-center justify-center text-[#9E7D4E]">
             <Check className="w-3.5 h-3.5" />
           </div>
           <span>{notification}</span>
@@ -370,20 +400,20 @@ export default function AdminCMSPage() {
       {currentSection === "hub" && (
         <div className="space-y-8">
           {/* Header */}
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-6 border-b border-white/[0.04]">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-6 border-b border-slate-200/80">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <span className="text-[10px] uppercase tracking-[0.3em] text-[#C5A880] font-semibold font-mono">
+                <span className="text-[10px] uppercase tracking-[0.3em] text-[#9E7D4E] font-semibold font-mono">
                   Storefront Content Management
                 </span>
-                <span className="text-[9px] uppercase tracking-wider text-[#10B981] bg-[#10B981]/10 px-2 py-0.5 rounded-full border border-[#10B981]/25 font-mono">
+                <span className="text-[9px] uppercase tracking-wider text-[#10B981] bg-[#10B981]/10 px-2 py-0.5 rounded-full border border-[#10B981]/25 font-mono font-medium">
                   Overview
                 </span>
               </div>
-              <h1 className="font-sans text-2xl sm:text-3xl text-[#F5F7FA] uppercase tracking-[0.14em] font-medium">
+              <h1 className="font-sans text-2xl sm:text-3xl text-[#0F172A] uppercase tracking-[0.14em] font-bold">
                 Homepage CMS Sections
               </h1>
-              <p className="text-xs text-[#8A95A5] max-w-xl">
+              <p className="text-xs text-[#475569] max-w-xl">
                 Select which section of your homepage you would like to customize, update copy, or edit visuals.
               </p>
             </div>
@@ -391,7 +421,7 @@ export default function AdminCMSPage() {
             <Link
               href="/"
               target="_blank"
-              className="px-4 py-2.5 rounded-xl neu-btn text-[#C5A880] hover:text-[#DFCAAB] text-xs font-medium uppercase tracking-wider transition-all flex items-center gap-2"
+              className="px-4 py-2.5 rounded-xl neu-btn text-[#0F172A] hover:text-[#9E7D4E] text-xs font-semibold uppercase tracking-wider transition-all flex items-center gap-2"
             >
               <span>View Live Storefront</span>
               <ExternalLink className="w-3.5 h-3.5" />
@@ -400,22 +430,22 @@ export default function AdminCMSPage() {
 
           {/* Quick Metrics Bar */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div className="p-4 rounded-2xl neu-raised space-y-1">
-              <span className="text-[10px] uppercase tracking-widest text-[#8A95A5] font-mono">
+            <div className="p-4 rounded-2xl neu-raised bg-white border border-slate-200/60 space-y-1">
+              <span className="text-[10px] uppercase tracking-widest text-[#64748B] font-mono">
                 Homepage Sections
               </span>
-              <p className="text-xl sm:text-2xl font-sans font-semibold text-[#F5F7FA]">
+              <p className="text-xl sm:text-2xl font-sans font-bold text-[#0F172A]">
                 4 Managed
               </p>
             </div>
 
-            <div className="p-4 rounded-2xl neu-raised space-y-1">
-              <span className="text-[10px] uppercase tracking-widest text-[#8A95A5] font-mono">
+            <div className="p-4 rounded-2xl neu-raised bg-white border border-slate-200/60 space-y-1">
+              <span className="text-[10px] uppercase tracking-widest text-[#64748B] font-mono">
                 Hero Banner Status
               </span>
               <p
-                className={`text-xl sm:text-2xl font-sans font-semibold ${
-                  activeBanners.length > 0 ? "text-[#10B981]" : "text-[#8A95A5]"
+                className={`text-xl sm:text-2xl font-sans font-bold ${
+                  activeBanners.length > 0 ? "text-[#10B981]" : "text-[#64748B]"
                 }`}
               >
                 {activeBanners.length > 0
@@ -424,20 +454,20 @@ export default function AdminCMSPage() {
               </p>
             </div>
 
-            <div className="p-4 rounded-2xl neu-raised space-y-1">
-              <span className="text-[10px] uppercase tracking-widest text-[#8A95A5] font-mono">
+            <div className="p-4 rounded-2xl neu-raised bg-white border border-slate-200/60 space-y-1">
+              <span className="text-[10px] uppercase tracking-widest text-[#64748B] font-mono">
                 Announcement Bar
               </span>
-              <p className="text-xl sm:text-2xl font-sans font-semibold text-[#C5A880]">
+              <p className="text-xl sm:text-2xl font-sans font-bold text-[#9E7D4E]">
                 Active
               </p>
             </div>
 
-            <div className="p-4 rounded-2xl neu-raised space-y-1">
-              <span className="text-[10px] uppercase tracking-widest text-[#8A95A5] font-mono">
+            <div className="p-4 rounded-2xl neu-raised bg-white border border-slate-200/60 space-y-1">
+              <span className="text-[10px] uppercase tracking-widest text-[#64748B] font-mono">
                 Sync Engine
               </span>
-              <p className="text-xl sm:text-2xl font-sans font-semibold text-[#10B981] flex items-center gap-1.5">
+              <p className="text-xl sm:text-2xl font-sans font-bold text-[#10B981] flex items-center gap-1.5">
                 <CheckCircle2 className="w-5 h-5 text-[#10B981]" />
                 <span className="text-sm font-mono">100% Online</span>
               </p>
@@ -447,10 +477,10 @@ export default function AdminCMSPage() {
           {/* Section Selection Cards Grid */}
           <div className="space-y-4">
             <div className="flex items-center justify-between text-xs px-1">
-              <span className="text-[11px] uppercase tracking-widest text-[#8A95A5] font-mono">
+              <span className="text-[11px] uppercase tracking-widest text-[#475569] font-mono font-semibold">
                 Select A Section to Customize
               </span>
-              <span className="text-[#C5A880] text-[11px] font-mono">
+              <span className="text-[#9E7D4E] text-[11px] font-mono font-semibold">
                 Click any section below &rarr;
               </span>
             </div>
@@ -459,17 +489,17 @@ export default function AdminCMSPage() {
               {/* SECTION CARD 1: HERO BANNER CAROUSEL */}
               <div
                 onClick={() => setCurrentSection("hero")}
-                className="p-6 sm:p-7 rounded-3xl neu-card hover:border-[#C5A880]/40 transition-all duration-300 cursor-pointer space-y-4 group"
+                className="p-6 sm:p-7 rounded-3xl neu-card bg-white border border-slate-200/80 hover:border-[#C5A880]/60 transition-all duration-300 cursor-pointer space-y-4 group"
               >
                 <div className="flex items-start justify-between">
-                  <div className="w-12 h-12 rounded-2xl neu-inset flex items-center justify-center text-[#C5A880] group-hover:scale-110 transition-transform">
+                  <div className="w-12 h-12 rounded-2xl neu-inset bg-[#F1F5F9] flex items-center justify-center text-[#9E7D4E] group-hover:scale-110 transition-transform">
                     <Sparkles className="w-6 h-6" />
                   </div>
                   <span
                     className={`px-3 py-1 rounded-full text-[10px] font-mono uppercase tracking-wider font-semibold ${
                       activeBanners.length > 0
-                        ? "neu-inset text-[#10B981]"
-                        : "neu-btn text-[#8A95A5]"
+                        ? "neu-inset bg-[#F1F5F9] text-[#10B981]"
+                        : "neu-btn text-[#64748B]"
                     }`}
                   >
                     {activeBanners.length > 0
@@ -479,22 +509,22 @@ export default function AdminCMSPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <span className="text-[10px] uppercase tracking-[0.25em] text-[#C5A880] font-mono font-semibold">
+                  <span className="text-[10px] uppercase tracking-[0.25em] text-[#9E7D4E] font-mono font-semibold">
                     Section 01 • Top Visual Showcase
                   </span>
-                  <h3 className="text-xl font-sans font-medium text-[#F5F7FA] group-hover:text-[#C5A880] transition-colors">
+                  <h3 className="text-xl font-sans font-bold text-[#0F172A] group-hover:text-[#9E7D4E] transition-colors">
                     Hero Banner Carousel
                   </h3>
-                  <p className="text-xs text-[#8A95A5] leading-relaxed">
+                  <p className="text-xs text-[#475569] leading-relaxed">
                     Curate the full-width cinematic campaign banners at the top of the website. Add new slides, edit copy, customize CTAs, and preview live on Desktop and Mobile.
                   </p>
                 </div>
 
-                <div className="pt-2 flex items-center justify-between text-xs border-t border-white/[0.04]">
-                  <span className="text-[11px] font-mono text-[#8A95A5]">
+                <div className="pt-2 flex items-center justify-between text-xs border-t border-slate-200/80">
+                  <span className="text-[11px] font-mono text-[#64748B]">
                     Recommended Size: 1920×750 px
                   </span>
-                  <span className="text-xs font-semibold uppercase tracking-wider text-[#C5A880] inline-flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-[#9E7D4E] inline-flex items-center gap-1 group-hover:translate-x-1 transition-transform">
                     <span>Manage Hero Banners</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </span>
@@ -504,34 +534,34 @@ export default function AdminCMSPage() {
               {/* SECTION CARD 2: GLOBAL ANNOUNCEMENT BAR */}
               <div
                 onClick={() => setCurrentSection("announcement")}
-                className="p-6 sm:p-7 rounded-3xl neu-card hover:border-[#C5A880]/40 transition-all duration-300 cursor-pointer space-y-4 group"
+                className="p-6 sm:p-7 rounded-3xl neu-card bg-white border border-slate-200/80 hover:border-[#C5A880]/60 transition-all duration-300 cursor-pointer space-y-4 group"
               >
                 <div className="flex items-start justify-between">
-                  <div className="w-12 h-12 rounded-2xl neu-inset flex items-center justify-center text-[#C5A880] group-hover:scale-110 transition-transform">
+                  <div className="w-12 h-12 rounded-2xl neu-inset bg-[#F1F5F9] flex items-center justify-center text-[#9E7D4E] group-hover:scale-110 transition-transform">
                     <Megaphone className="w-6 h-6" />
                   </div>
-                  <span className="px-3 py-1 rounded-full text-[10px] font-mono uppercase tracking-wider font-semibold neu-inset text-[#10B981]">
+                  <span className="px-3 py-1 rounded-full text-[10px] font-mono uppercase tracking-wider font-semibold neu-inset bg-[#F1F5F9] text-[#10B981]">
                     Live Active
                   </span>
                 </div>
 
                 <div className="space-y-1.5">
-                  <span className="text-[10px] uppercase tracking-[0.25em] text-[#C5A880] font-mono font-semibold">
+                  <span className="text-[10px] uppercase tracking-[0.25em] text-[#9E7D4E] font-mono font-semibold">
                     Global Header Alert
                   </span>
-                  <h3 className="text-xl font-sans font-medium text-[#F5F7FA] group-hover:text-[#C5A880] transition-colors">
+                  <h3 className="text-xl font-sans font-bold text-[#0F172A] group-hover:text-[#9E7D4E] transition-colors">
                     Announcement Ticker Bar
                   </h3>
-                  <p className="text-xs text-[#8A95A5] leading-relaxed">
+                  <p className="text-xs text-[#475569] leading-relaxed">
                     The top running notification banner displayed above the navbar on all pages. Announce discount coupons, complimentary delivery perks, or VIP privileges.
                   </p>
                 </div>
 
-                <div className="pt-2 flex items-center justify-between text-xs border-t border-white/[0.04]">
-                  <span className="text-[11px] font-mono text-[#8A95A5] truncate max-w-[200px]">
+                <div className="pt-2 flex items-center justify-between text-xs border-t border-slate-200/80">
+                  <span className="text-[11px] font-mono text-[#64748B] truncate max-w-[200px]">
                     &quot;{announcementText}&quot;
                   </span>
-                  <span className="text-xs font-semibold uppercase tracking-wider text-[#C5A880] inline-flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-[#9E7D4E] inline-flex items-center gap-1 group-hover:translate-x-1 transition-transform">
                     <span>Edit Ticker</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </span>
@@ -541,34 +571,34 @@ export default function AdminCMSPage() {
               {/* SECTION CARD 3: FEATURED CATEGORIES SHOWCASE */}
               <div
                 onClick={() => setCurrentSection("categories")}
-                className="p-6 sm:p-7 rounded-3xl neu-card hover:border-[#C5A880]/40 transition-all duration-300 cursor-pointer space-y-4 group"
+                className="p-6 sm:p-7 rounded-3xl neu-card bg-white border border-slate-200/80 hover:border-[#C5A880]/60 transition-all duration-300 cursor-pointer space-y-4 group"
               >
                 <div className="flex items-start justify-between">
-                  <div className="w-12 h-12 rounded-2xl neu-inset flex items-center justify-center text-[#C5A880] group-hover:scale-110 transition-transform">
+                  <div className="w-12 h-12 rounded-2xl neu-inset bg-[#F1F5F9] flex items-center justify-center text-[#9E7D4E] group-hover:scale-110 transition-transform">
                     <FolderTree className="w-6 h-6" />
                   </div>
-                  <span className="px-3 py-1 rounded-full text-[10px] font-mono uppercase tracking-wider font-semibold neu-inset text-[#C5A880]">
+                  <span className="px-3 py-1 rounded-full text-[10px] font-mono uppercase tracking-wider font-semibold neu-inset bg-[#F1F5F9] text-[#9E7D4E]">
                     8 Categories
                   </span>
                 </div>
 
                 <div className="space-y-1.5">
-                  <span className="text-[10px] uppercase tracking-[0.25em] text-[#C5A880] font-mono font-semibold">
+                  <span className="text-[10px] uppercase tracking-[0.25em] text-[#9E7D4E] font-mono font-semibold">
                     Section 02 • Category Navigation
                   </span>
-                  <h3 className="text-xl font-sans font-medium text-[#F5F7FA] group-hover:text-[#C5A880] transition-colors">
+                  <h3 className="text-xl font-sans font-bold text-[#0F172A] group-hover:text-[#9E7D4E] transition-colors">
                     Featured Categories Showcase
                   </h3>
-                  <p className="text-xs text-[#8A95A5] leading-relaxed">
+                  <p className="text-xs text-[#475569] leading-relaxed">
                     The circular storytelling realms directly beneath the hero (Handbags, Bucket Bags, Shoulder Bags, Tote Bags, Hobo Bags, Crossbody Bags, Parfums).
                   </p>
                 </div>
 
-                <div className="pt-2 flex items-center justify-between text-xs border-t border-white/[0.04]">
-                  <span className="text-[11px] font-mono text-[#8A95A5]">
+                <div className="pt-2 flex items-center justify-between text-xs border-t border-slate-200/80">
+                  <span className="text-[11px] font-mono text-[#64748B]">
                     Storefront Circular Rails
                   </span>
-                  <span className="text-xs font-semibold uppercase tracking-wider text-[#C5A880] inline-flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-[#9E7D4E] inline-flex items-center gap-1 group-hover:translate-x-1 transition-transform">
                     <span>Manage Categories</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </span>
@@ -578,34 +608,34 @@ export default function AdminCMSPage() {
               {/* SECTION CARD 4: TRUST PILLARS & BRAND STORY */}
               <div
                 onClick={() => setCurrentSection("pillars")}
-                className="p-6 sm:p-7 rounded-3xl neu-card hover:border-[#C5A880]/40 transition-all duration-300 cursor-pointer space-y-4 group"
+                className="p-6 sm:p-7 rounded-3xl neu-card bg-white border border-slate-200/80 hover:border-[#C5A880]/60 transition-all duration-300 cursor-pointer space-y-4 group"
               >
                 <div className="flex items-start justify-between">
-                  <div className="w-12 h-12 rounded-2xl neu-inset flex items-center justify-center text-[#C5A880] group-hover:scale-110 transition-transform">
+                  <div className="w-12 h-12 rounded-2xl neu-inset bg-[#F1F5F9] flex items-center justify-center text-[#9E7D4E] group-hover:scale-110 transition-transform">
                     <ShieldCheck className="w-6 h-6" />
                   </div>
-                  <span className="px-3 py-1 rounded-full text-[10px] font-mono uppercase tracking-wider font-semibold neu-inset text-[#10B981]">
+                  <span className="px-3 py-1 rounded-full text-[10px] font-mono uppercase tracking-wider font-semibold neu-inset bg-[#F1F5F9] text-[#10B981]">
                     4 Pillars Active
                   </span>
                 </div>
 
                 <div className="space-y-1.5">
-                  <span className="text-[10px] uppercase tracking-[0.25em] text-[#C5A880] font-mono font-semibold">
+                  <span className="text-[10px] uppercase tracking-[0.25em] text-[#9E7D4E] font-mono font-semibold">
                     Section 03 • Brand Trust &amp; Heritage
                   </span>
-                  <h3 className="text-xl font-sans font-medium text-[#F5F7FA] group-hover:text-[#C5A880] transition-colors">
+                  <h3 className="text-xl font-sans font-bold text-[#0F172A] group-hover:text-[#9E7D4E] transition-colors">
                     Trust Pillars &amp; Atelier Heritage
                   </h3>
-                  <p className="text-xs text-[#8A95A5] leading-relaxed">
+                  <p className="text-xs text-[#475569] leading-relaxed">
                     The 4 confidence pillars (Free Express Shipping, Cash on Delivery across India, Authenticity Guarantee, Atelier Concierge) and the brand story narrative.
                   </p>
                 </div>
 
-                <div className="pt-2 flex items-center justify-between text-xs border-t border-white/[0.04]">
-                  <span className="text-[11px] font-mono text-[#8A95A5]">
+                <div className="pt-2 flex items-center justify-between text-xs border-t border-slate-200/80">
+                  <span className="text-[11px] font-mono text-[#64748B]">
                     4-Pillars Guarantee
                   </span>
-                  <span className="text-xs font-semibold uppercase tracking-wider text-[#C5A880] inline-flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-[#9E7D4E] inline-flex items-center gap-1 group-hover:translate-x-1 transition-transform">
                     <span>Review Pillars</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </span>
@@ -622,20 +652,20 @@ export default function AdminCMSPage() {
       {currentSection === "hero" && (
         <div className="space-y-7">
           {/* Top Back Navigation Bar */}
-          <div className="flex items-center justify-between pb-4 border-b border-white/[0.04]">
+          <div className="flex items-center justify-between pb-4 border-b border-slate-200/80">
             <button
               type="button"
               onClick={() => setCurrentSection("hub")}
-              className="px-4 py-2 rounded-xl neu-btn text-[#C5A880] hover:text-[#F5F7FA] text-xs font-medium transition-all flex items-center gap-2"
+              className="px-4 py-2 rounded-xl neu-btn text-[#0F172A] hover:text-[#9E7D4E] text-xs font-semibold transition-all flex items-center gap-2"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               <span>Back to All Sections</span>
             </button>
 
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-mono text-[#8A95A5]">Breadcrumb:</span>
-              <span className="text-[10px] font-mono text-[#8A95A5]">Homepage CMS /</span>
-              <span className="text-[10px] font-mono text-[#C5A880] font-semibold">
+              <span className="text-[10px] font-mono text-[#64748B]">Breadcrumb:</span>
+              <span className="text-[10px] font-mono text-[#64748B]">Homepage CMS /</span>
+              <span className="text-[10px] font-mono text-[#9E7D4E] font-semibold">
                 Hero Banner Carousel
               </span>
             </div>
@@ -645,17 +675,17 @@ export default function AdminCMSPage() {
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-5">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <span className="text-[10px] uppercase tracking-[0.3em] text-[#C5A880] font-semibold font-mono">
+                <span className="text-[10px] uppercase tracking-[0.3em] text-[#9E7D4E] font-semibold font-mono">
                   Section 01 Customizer
                 </span>
-                <span className="text-[9px] uppercase tracking-wider text-[#10B981] bg-[#10B981]/10 px-2 py-0.5 rounded-full border border-[#10B981]/25 font-mono">
+                <span className="text-[9px] uppercase tracking-wider text-[#10B981] bg-[#10B981]/10 px-2 py-0.5 rounded-full border border-[#10B981]/25 font-mono font-medium">
                   Auto-Responsive Scaling
                 </span>
               </div>
-              <h2 className="font-sans text-2xl sm:text-3xl text-[#F5F7FA] uppercase tracking-[0.14em] font-medium">
+              <h2 className="font-sans text-2xl sm:text-3xl text-[#0F172A] uppercase tracking-[0.14em] font-bold">
                 Hero Banner Carousel
               </h2>
-              <p className="text-xs text-[#8A95A5] max-w-xl">
+              <p className="text-xs text-[#475569] max-w-xl">
                 Add, delete, edit, and reorder full-width hero campaign slides.
               </p>
             </div>
@@ -665,7 +695,7 @@ export default function AdminCMSPage() {
               <button
                 type="button"
                 onClick={handleResetToDefault}
-                className="px-4 py-2.5 rounded-xl neu-btn text-[#8A95A5] hover:text-[#C5A880] text-xs font-medium uppercase tracking-wider transition-all flex items-center gap-2"
+                className="px-4 py-2.5 rounded-xl neu-btn text-[#475569] hover:text-[#9E7D4E] text-xs font-semibold uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer"
               >
                 <RefreshCw className="w-3.5 h-3.5" />
                 <span>Reset Default</span>
@@ -674,7 +704,7 @@ export default function AdminCMSPage() {
               <button
                 type="button"
                 onClick={() => setIsAddModalOpen(true)}
-                className="px-5 py-2.5 rounded-xl neu-btn-gold text-xs uppercase tracking-widest font-semibold text-[#0d0f12] transition-all flex items-center gap-2"
+                className="px-5 py-2.5 rounded-xl neu-btn-gold text-xs uppercase tracking-widest font-bold text-white transition-all flex items-center gap-2 cursor-pointer"
               >
                 <Plus className="w-4 h-4" />
                 <span>New Hero Banner</span>
@@ -683,35 +713,35 @@ export default function AdminCMSPage() {
           </div>
 
           {/* 📐 RECOMMENDED FIXED IMAGE SIZE GUIDE (CRITICAL USER REQUIREMENT) */}
-          <div className="p-4 sm:p-5 rounded-2xl neu-raised border border-[#C5A880]/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="p-4 sm:p-5 rounded-2xl neu-raised bg-white border border-[#C5A880]/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-start gap-3">
-              <div className="w-9 h-9 rounded-xl neu-inset flex items-center justify-center text-[#C5A880] flex-shrink-0 mt-0.5">
+              <div className="w-9 h-9 rounded-xl neu-inset bg-[#F1F5F9] flex items-center justify-center text-[#9E7D4E] flex-shrink-0 mt-0.5">
                 <Info className="w-4 h-4" />
               </div>
               <div className="space-y-0.5">
-                <p className="text-xs font-semibold text-[#F5F7FA] uppercase tracking-wider font-sans">
+                <p className="text-xs font-bold text-[#0F172A] uppercase tracking-wider font-sans">
                   Universal Fixed Size: 1920 × 750 px (Single Image Auto-Scale)
                 </p>
-                <p className="text-[11px] text-[#8A95A5] leading-relaxed">
-                  Upload just <span className="text-[#C5A880] font-semibold">ONE single image</span> of 1920×750 px. Our auto-responsive engine automatically scales, crops, and centers it across <span className="text-[#EDEDED]">Smartphones, Tablets, Laptops, and 4K Ultra-Wide Desktops</span> seamlessly!
+                <p className="text-[11px] text-[#475569] leading-relaxed">
+                  Upload just <span className="text-[#9E7D4E] font-semibold">ONE single image</span> of 1920×750 px. Our auto-responsive engine automatically scales, crops, and centers it across <span className="text-[#0F172A] font-semibold">Smartphones, Tablets, Laptops, and 4K Ultra-Wide Desktops</span> seamlessly!
                 </p>
               </div>
             </div>
 
-            <div className="px-3 py-1.5 rounded-xl neu-inset text-[10px] font-mono text-[#10B981] font-semibold whitespace-nowrap self-start sm:self-auto">
+            <div className="px-3 py-1.5 rounded-xl neu-inset bg-[#F1F5F9] text-[10px] font-mono text-[#10B981] font-semibold whitespace-nowrap self-start sm:self-auto">
               Auto-Merged For All Screens
             </div>
           </div>
 
           {/* Sub-tab Switcher: Campaigns vs Studio Simulator */}
-          <div className="p-1.5 rounded-2xl neu-inset flex items-center gap-1 max-w-sm">
+          <div className="p-1.5 rounded-2xl neu-inset bg-[#F1F5F9] flex items-center gap-1 max-w-sm">
             <button
               type="button"
               onClick={() => setHeroSubTab("banners")}
-              className={`flex-1 py-2.5 px-4 rounded-xl text-xs uppercase tracking-wider font-semibold transition-all flex items-center justify-center gap-2 ${
+              className={`flex-1 py-2.5 px-4 rounded-xl text-xs uppercase tracking-wider font-semibold transition-all flex items-center justify-center gap-2 cursor-pointer ${
                 heroSubTab === "banners"
-                  ? "neu-pill-active font-bold"
-                  : "text-[#8A95A5] hover:text-[#EDEDED]"
+                  ? "neu-pill-active font-bold text-[#0F172A]"
+                  : "text-[#64748B] hover:text-[#0F172A]"
               }`}
             >
               <Layers className="w-4 h-4" />
@@ -721,10 +751,10 @@ export default function AdminCMSPage() {
             <button
               type="button"
               onClick={() => setHeroSubTab("studio")}
-              className={`flex-1 py-2.5 px-4 rounded-xl text-xs uppercase tracking-wider font-semibold transition-all flex items-center justify-center gap-2 ${
+              className={`flex-1 py-2.5 px-4 rounded-xl text-xs uppercase tracking-wider font-semibold transition-all flex items-center justify-center gap-2 cursor-pointer ${
                 heroSubTab === "studio"
-                  ? "neu-pill-active font-bold"
-                  : "text-[#8A95A5] hover:text-[#EDEDED]"
+                  ? "neu-pill-active font-bold text-[#0F172A]"
+                  : "text-[#64748B] hover:text-[#0F172A]"
               }`}
             >
               <Sparkles className="w-4 h-4" />
@@ -736,26 +766,26 @@ export default function AdminCMSPage() {
           {heroSubTab === "banners" && (
             <div className="space-y-4">
               {isLoading ? (
-                <div className="p-16 rounded-2xl neu-raised text-center text-[#8A95A5] space-y-3">
-                  <Loader2 className="w-6 h-6 animate-spin mx-auto text-[#C5A880]" />
+                <div className="p-16 rounded-2xl neu-raised bg-white text-center text-[#64748B] space-y-3">
+                  <Loader2 className="w-6 h-6 animate-spin mx-auto text-[#9E7D4E]" />
                   <p className="text-xs uppercase tracking-widest font-mono">
                     Accessing Atelier Banners...
                   </p>
                 </div>
               ) : banners.length === 0 ? (
                 /* EMPTY STATE: CLEAR NOTICE THAT HERO BANNER IS REMOVED FROM HOMEPAGE */
-                <div className="p-12 sm:p-16 rounded-3xl neu-card text-center space-y-4 border border-dashed border-[#C5A880]/30">
-                  <div className="w-16 h-16 rounded-2xl neu-inset mx-auto flex items-center justify-center text-[#C5A880]">
+                <div className="p-12 sm:p-16 rounded-3xl neu-card bg-white text-center space-y-4 border border-dashed border-[#C5A880]/40">
+                  <div className="w-16 h-16 rounded-2xl neu-inset bg-[#F1F5F9] mx-auto flex items-center justify-center text-[#9E7D4E]">
                     <ImageIcon className="w-8 h-8" />
                   </div>
                   <div className="space-y-1.5 max-w-md mx-auto">
-                    <h3 className="text-lg text-[#F5F7FA] font-medium uppercase tracking-wider font-sans">
+                    <h3 className="text-lg text-[#0F172A] font-bold uppercase tracking-wider font-sans">
                       All Hero Banners Removed
                     </h3>
-                    <p className="text-xs text-[#10B981] font-mono">
+                    <p className="text-xs text-[#10B981] font-mono font-medium">
                       ✓ The Hero Banner section is currently completely hidden from the live homepage.
                     </p>
-                    <p className="text-xs text-[#8A95A5]">
+                    <p className="text-xs text-[#475569]">
                       Your category showcase and product collection will smoothly display right at the top of the homepage without any empty space.
                     </p>
                   </div>
@@ -763,14 +793,14 @@ export default function AdminCMSPage() {
                     <button
                       type="button"
                       onClick={() => setIsAddModalOpen(true)}
-                      className="px-6 py-2.5 rounded-xl neu-btn-gold text-xs uppercase tracking-widest font-semibold text-[#0d0f12]"
+                      className="px-6 py-2.5 rounded-xl neu-btn-gold text-xs uppercase tracking-widest font-bold text-white cursor-pointer"
                     >
                       + Create New Banner
                     </button>
                     <button
                       type="button"
                       onClick={handleResetToDefault}
-                      className="px-5 py-2.5 rounded-xl neu-btn text-[#8A95A5] text-xs uppercase tracking-widest font-medium"
+                      className="px-5 py-2.5 rounded-xl neu-btn text-[#475569] hover:text-[#0F172A] text-xs uppercase tracking-widest font-semibold cursor-pointer"
                     >
                       Restore Default
                     </button>
@@ -781,22 +811,22 @@ export default function AdminCMSPage() {
                   {banners.map((banner, idx) => (
                     <div
                       key={banner.id}
-                      className="p-5 sm:p-6 rounded-2xl neu-card hover:border-[#C5A880]/30 transition-all duration-300 space-y-4 group"
+                      className="p-5 sm:p-6 rounded-2xl neu-card bg-white border border-slate-200/80 hover:border-[#C5A880]/50 transition-all duration-300 space-y-4 group"
                     >
                       {/* Card Header Row */}
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-white/[0.04]">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200/80">
                         <div className="flex items-center gap-3">
-                          <span className="px-2.5 py-1 rounded-lg neu-inset text-[11px] font-mono font-bold text-[#C5A880]">
+                          <span className="px-2.5 py-1 rounded-lg neu-inset bg-[#F1F5F9] text-[11px] font-mono font-bold text-[#9E7D4E]">
                             #{banner.display_order ?? idx + 1}
                           </span>
 
                           <button
                             type="button"
                             onClick={() => handleToggleActive(banner.id)}
-                            className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] uppercase tracking-wider font-semibold font-mono transition-all ${
+                            className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] uppercase tracking-wider font-semibold font-mono transition-all cursor-pointer ${
                               banner.is_active !== false
-                                ? "neu-inset text-[#10B981]"
-                                : "neu-btn text-[#8A95A5]"
+                                ? "neu-inset bg-[#F1F5F9] text-[#10B981]"
+                                : "neu-btn text-[#64748B]"
                             }`}
                             title="Click to toggle Active / Hidden"
                           >
@@ -807,7 +837,7 @@ export default function AdminCMSPage() {
                               </>
                             ) : (
                               <>
-                                <EyeOff className="w-3 h-3 text-[#8A95A5]" />
+                                <EyeOff className="w-3 h-3 text-[#64748B]" />
                                 <span>Hidden Draft</span>
                               </>
                             )}
@@ -819,17 +849,17 @@ export default function AdminCMSPage() {
                           <button
                             type="button"
                             onClick={() => handleFocusPreview(idx)}
-                            className="px-3 py-1.5 rounded-xl neu-btn text-xs text-[#8A95A5] hover:text-[#C5A880] flex items-center gap-1.5 transition-all"
+                            className="px-3 py-1.5 rounded-xl neu-btn text-xs text-[#475569] hover:text-[#9E7D4E] flex items-center gap-1.5 transition-all cursor-pointer"
                             title="View in Live Studio"
                           >
-                            <Eye className="w-3.5 h-3.5 text-[#C5A880]" />
+                            <Eye className="w-3.5 h-3.5 text-[#9E7D4E]" />
                             <span className="text-[11px] font-medium">Studio View</span>
                           </button>
 
                           <button
                             type="button"
                             onClick={() => handleOpenEdit(banner)}
-                            className="p-2 rounded-xl neu-btn text-[#8A95A5] hover:text-[#C5A880] transition-all"
+                            className="p-2 rounded-xl neu-btn text-[#475569] hover:text-[#9E7D4E] transition-all cursor-pointer"
                             title="Edit Banner"
                           >
                             <Edit2 className="w-3.5 h-3.5" />
@@ -838,7 +868,7 @@ export default function AdminCMSPage() {
                           <button
                             type="button"
                             onClick={() => handleDeleteBanner(banner.id, banner.title)}
-                            className="p-2 rounded-xl neu-btn text-[#8A95A5] hover:text-[#FF6B6B] transition-all"
+                            className="p-2 rounded-xl neu-btn text-[#475569] hover:text-[#EF4444] transition-all cursor-pointer"
                             title="Delete Banner"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -848,7 +878,7 @@ export default function AdminCMSPage() {
 
                       {/* Card Body: Thumbnail + Narrative */}
                       <div className="flex flex-col sm:flex-row items-start gap-5">
-                        <div className="relative w-full sm:w-64 h-36 rounded-xl neu-inset p-1 overflow-hidden flex-shrink-0 group-hover:shadow-[0_8px_20px_rgba(0,0,0,0.6)] transition-all">
+                        <div className="relative w-full sm:w-64 h-36 rounded-xl neu-inset bg-[#F1F5F9] p-1 overflow-hidden flex-shrink-0 group-hover:shadow-md transition-all">
                           <div className="relative w-full h-full rounded-lg overflow-hidden">
                             <Image
                               src={banner.desktop_image_url}
@@ -858,7 +888,7 @@ export default function AdminCMSPage() {
                               className="object-cover group-hover:scale-105 transition-transform duration-500"
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-2.5">
-                              <span className="text-[9px] uppercase tracking-widest text-[#C5A880] font-mono bg-black/70 px-2 py-0.5 rounded">
+                              <span className="text-[9px] uppercase tracking-widest text-[#DFCAAB] font-mono bg-black/70 px-2 py-0.5 rounded font-medium">
                                 1920×750 Asset
                               </span>
                             </div>
@@ -867,28 +897,28 @@ export default function AdminCMSPage() {
 
                         <div className="flex-1 space-y-2.5 min-w-0">
                           <div>
-                            <span className="text-[9px] uppercase tracking-[0.25em] text-[#C5A880] font-mono font-semibold">
+                            <span className="text-[9px] uppercase tracking-[0.25em] text-[#9E7D4E] font-mono font-semibold">
                               Atelier Campaign
                             </span>
-                            <h3 className="text-lg sm:text-xl font-sans font-medium text-[#F5F7FA] tracking-wide mt-0.5 truncate">
+                            <h3 className="text-lg sm:text-xl font-sans font-bold text-[#0F172A] tracking-wide mt-0.5 truncate">
                               {banner.title}
                             </h3>
                           </div>
 
                           {banner.subtitle && (
-                            <p className="text-xs text-[#8A95A5] leading-relaxed line-clamp-2">
+                            <p className="text-xs text-[#475569] leading-relaxed line-clamp-2">
                               {banner.subtitle}
                             </p>
                           )}
 
                           <div className="flex items-center gap-3 pt-1 flex-wrap">
-                            <div className="px-3 py-1.5 rounded-xl neu-inset text-xs text-[#C5A880] flex items-center gap-1.5 font-mono">
+                            <div className="px-3 py-1.5 rounded-xl neu-inset bg-[#F1F5F9] text-xs text-[#9E7D4E] flex items-center gap-1.5 font-mono">
                               <span className="font-semibold">{banner.cta_text || "Shop"}</span>
-                              <ArrowRight className="w-3 h-3 text-[#8A95A5]" />
-                              <span className="text-[#8A95A5]">{banner.cta_link || "/shop"}</span>
+                              <ArrowRight className="w-3 h-3 text-[#64748B]" />
+                              <span className="text-[#475569]">{banner.cta_link || "/shop"}</span>
                             </div>
 
-                            <span className="px-2.5 py-1 rounded-lg neu-inset text-[10px] text-[#10B981] font-mono">
+                            <span className="px-2.5 py-1 rounded-lg neu-inset bg-[#F1F5F9] text-[10px] text-[#10B981] font-mono font-medium">
                               Auto-Scaled All Screens
                             </span>
                           </div>
@@ -905,15 +935,15 @@ export default function AdminCMSPage() {
           {heroSubTab === "studio" && (
             <div className="space-y-6">
               {/* Studio Control Toolbar */}
-              <div className="p-4 rounded-2xl neu-raised flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div className="p-1 rounded-xl neu-inset flex items-center gap-1">
+              <div className="p-4 rounded-2xl neu-raised bg-white border border-slate-200/80 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="p-1 rounded-xl neu-inset bg-[#F1F5F9] flex items-center gap-1">
                   <button
                     type="button"
                     onClick={() => setPreviewMode("desktop")}
-                    className={`px-3.5 py-1.5 rounded-lg text-xs uppercase tracking-wider font-semibold transition-all flex items-center gap-1.5 ${
+                    className={`px-3.5 py-1.5 rounded-lg text-xs uppercase tracking-wider font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
                       previewMode === "desktop"
-                        ? "neu-pill-active font-bold"
-                        : "text-[#8A95A5] hover:text-[#EDEDED]"
+                        ? "neu-pill-active font-bold text-[#0F172A]"
+                        : "text-[#64748B] hover:text-[#0F172A]"
                     }`}
                   >
                     <Monitor className="w-3.5 h-3.5" />
@@ -923,10 +953,10 @@ export default function AdminCMSPage() {
                   <button
                     type="button"
                     onClick={() => setPreviewMode("mobile")}
-                    className={`px-3.5 py-1.5 rounded-lg text-xs uppercase tracking-wider font-semibold transition-all flex items-center gap-1.5 ${
+                    className={`px-3.5 py-1.5 rounded-lg text-xs uppercase tracking-wider font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
                       previewMode === "mobile"
-                        ? "neu-pill-active font-bold"
-                        : "text-[#8A95A5] hover:text-[#EDEDED]"
+                        ? "neu-pill-active font-bold text-[#0F172A]"
+                        : "text-[#64748B] hover:text-[#0F172A]"
                     }`}
                   >
                     <Smartphone className="w-3.5 h-3.5" />
@@ -943,13 +973,13 @@ export default function AdminCMSPage() {
                           (prev) => (prev - 1 + previewList.length) % previewList.length
                         )
                       }
-                      className="p-2 rounded-xl neu-btn text-[#8A95A5] hover:text-[#F5F7FA] transition-all"
+                      className="p-2 rounded-xl neu-btn text-[#475569] hover:text-[#0F172A] transition-all cursor-pointer"
                       title="Previous Slide"
                     >
                       <ChevronLeft className="w-4 h-4" />
                     </button>
 
-                    <span className="text-xs font-mono text-[#C5A880] px-3 py-1 rounded-lg neu-inset">
+                    <span className="text-xs font-mono text-[#9E7D4E] font-semibold px-3 py-1 rounded-lg neu-inset bg-[#F1F5F9]">
                       Slide {(previewIdx % previewList.length) + 1} of {previewList.length}
                     </span>
 
@@ -958,7 +988,7 @@ export default function AdminCMSPage() {
                       onClick={() =>
                         setPreviewIdx((prev) => (prev + 1) % previewList.length)
                       }
-                      className="p-2 rounded-xl neu-btn text-[#8A95A5] hover:text-[#F5F7FA] transition-all"
+                      className="p-2 rounded-xl neu-btn text-[#475569] hover:text-[#0F172A] transition-all cursor-pointer"
                       title="Next Slide"
                     >
                       <ChevronRight className="w-4 h-4" />
@@ -969,7 +999,7 @@ export default function AdminCMSPage() {
                 <Link
                   href="/"
                   target="_blank"
-                  className="px-4 py-2 rounded-xl neu-btn text-[#C5A880] hover:text-[#DFCAAB] text-xs uppercase tracking-wider font-semibold transition-all flex items-center gap-2"
+                  className="px-4 py-2 rounded-xl neu-btn text-[#0F172A] hover:text-[#9E7D4E] text-xs uppercase tracking-wider font-bold transition-all flex items-center gap-2"
                 >
                   <span>Live Website</span>
                   <ExternalLink className="w-3.5 h-3.5" />
@@ -978,12 +1008,12 @@ export default function AdminCMSPage() {
 
               {/* Canvas Display */}
               {currentPreview ? (
-                <div className="p-6 sm:p-10 rounded-3xl neu-card flex flex-col items-center justify-center overflow-hidden">
+                <div className="p-6 sm:p-10 rounded-3xl neu-card bg-white border border-slate-200/80 flex flex-col items-center justify-center overflow-hidden">
                   <div
                     className={`relative overflow-hidden transition-all duration-500 ${
                       previewMode === "desktop"
-                        ? "w-full aspect-[16/6] max-h-[420px] rounded-2xl neu-inset p-1.5 shadow-[0_20px_50px_rgba(0,0,0,0.8)]"
-                        : "w-[300px] sm:w-[320px] aspect-[9/16] rounded-[36px] neu-inset p-3 shadow-[0_25px_60px_rgba(0,0,0,0.9)] border border-white/[0.06]"
+                        ? "w-full aspect-[16/6] max-h-[420px] rounded-2xl neu-inset p-1.5 shadow-lg border border-slate-200/80"
+                        : "w-[300px] sm:w-[320px] aspect-[9/16] rounded-[36px] neu-inset p-3 shadow-2xl border border-slate-300"
                     }`}
                   >
                     <div className="relative w-full h-full rounded-xl overflow-hidden">
@@ -1022,14 +1052,14 @@ export default function AdminCMSPage() {
                     </div>
                   </div>
 
-                  <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4 w-full pt-4 border-t border-white/[0.04] text-xs">
+                  <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4 w-full pt-4 border-t border-slate-200/80 text-xs">
                     <div className="space-y-0.5 text-center sm:text-left">
-                      <p className="text-[#F5F7FA] font-medium font-sans">
+                      <p className="text-[#0F172A] font-bold font-sans">
                         {currentPreview.title}
                       </p>
-                      <p className="text-[11px] text-[#8A95A5]">
+                      <p className="text-[11px] text-[#475569]">
                         Destination:{" "}
-                        <span className="text-[#C5A880] font-mono">
+                        <span className="text-[#9E7D4E] font-mono font-semibold">
                           {currentPreview.cta_link || "/shop"}
                         </span>
                       </p>
@@ -1038,15 +1068,15 @@ export default function AdminCMSPage() {
                     <button
                       type="button"
                       onClick={() => handleOpenEdit(currentPreview)}
-                      className="px-4 py-2 rounded-xl neu-btn text-[#C5A880] text-xs uppercase tracking-wider font-semibold transition-all flex items-center gap-1.5"
+                      className="px-4 py-2 rounded-xl neu-btn text-[#0F172A] hover:text-[#9E7D4E] text-xs uppercase tracking-wider font-bold transition-all flex items-center gap-1.5 cursor-pointer"
                     >
-                      <Edit2 className="w-3.5 h-3.5" />
+                      <Edit2 className="w-3.5 h-3.5 text-[#9E7D4E]" />
                       <span>Edit This Slide</span>
                     </button>
                   </div>
                 </div>
               ) : (
-                <div className="p-16 rounded-2xl neu-raised text-center text-[#8A95A5]">
+                <div className="p-16 rounded-2xl neu-raised bg-white border border-slate-200/80 text-center text-[#64748B]">
                   No active banners to preview.
                 </div>
               )}
@@ -1060,50 +1090,50 @@ export default function AdminCMSPage() {
           ========================================================================= */}
       {currentSection === "announcement" && (
         <div className="space-y-6">
-          <div className="flex items-center justify-between pb-4 border-b border-white/[0.04]">
+          <div className="flex items-center justify-between pb-4 border-b border-slate-200/80">
             <button
               type="button"
               onClick={() => setCurrentSection("hub")}
-              className="px-4 py-2 rounded-xl neu-btn text-[#C5A880] hover:text-[#F5F7FA] text-xs font-medium transition-all flex items-center gap-2"
+              className="px-4 py-2 rounded-xl neu-btn text-[#0F172A] hover:text-[#9E7D4E] text-xs font-semibold transition-all flex items-center gap-2 cursor-pointer"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               <span>Back to All Sections</span>
             </button>
-            <span className="text-[10px] font-mono text-[#C5A880]">
+            <span className="text-[10px] font-mono text-[#9E7D4E] font-semibold">
               Homepage CMS / Announcement Ticker
             </span>
           </div>
 
-          <div className="p-6 sm:p-8 rounded-2xl neu-card space-y-6">
+          <div className="p-6 sm:p-8 rounded-2xl neu-card bg-white border border-slate-200/80 space-y-6">
             <div className="space-y-1">
-              <span className="text-[10px] uppercase tracking-[0.25em] text-[#C5A880] font-mono font-semibold">
+              <span className="text-[10px] uppercase tracking-[0.25em] text-[#9E7D4E] font-mono font-semibold">
                 Global Header Bar
               </span>
-              <h2 className="text-xl font-sans font-medium text-[#F5F7FA] uppercase tracking-wider">
+              <h2 className="text-xl font-sans font-bold text-[#0F172A] uppercase tracking-wider">
                 Announcement Ticker Copy
               </h2>
-              <p className="text-xs text-[#8A95A5]">
+              <p className="text-xs text-[#475569]">
                 Broadcast flash privileges, promo codes, and complimentary delivery updates at the very top of all pages.
               </p>
             </div>
 
             <div className="space-y-2">
-              <label className="text-[10px] uppercase tracking-widest text-[#8A95A5] font-mono">
+              <label className="text-[10px] uppercase tracking-widest text-[#475569] font-mono font-semibold">
                 Ticker Display Copy
               </label>
               <input
                 type="text"
                 value={announcementText}
                 onChange={(e) => setAnnouncementText(e.target.value)}
-                className="w-full px-4 py-3.5 rounded-xl neu-inset text-xs text-[#F5F7FA] placeholder-[#4B5565] focus:outline-none focus:ring-1 focus:ring-[#C5A880]/40 transition-all font-mono"
+                className="w-full px-4 py-3.5 rounded-xl neu-inset bg-[#F1F5F9] text-xs text-[#0F172A] placeholder-[#94A3B8] focus:outline-none focus:ring-1 focus:ring-[#C5A880]/50 transition-all font-mono"
               />
             </div>
 
             <div className="space-y-2">
-              <span className="text-[10px] uppercase tracking-widest text-[#8A95A5] font-mono">
+              <span className="text-[10px] uppercase tracking-widest text-[#475569] font-mono font-semibold">
                 Live Ticker Preview
               </span>
-              <div className="p-2.5 rounded-xl bg-[#0e1015] border border-white/[0.04] text-center text-[11px] uppercase tracking-[0.2em] text-[#C5A880] font-mono font-medium">
+              <div className="p-3 rounded-xl bg-[#0F172A] border border-slate-700 text-center text-[11px] uppercase tracking-[0.2em] text-[#DFCAAB] font-mono font-semibold shadow-inner">
                 {announcementText || "—"}
               </div>
             </div>
@@ -1112,7 +1142,7 @@ export default function AdminCMSPage() {
               <button
                 type="button"
                 onClick={handleSaveAnnouncement}
-                className="px-6 py-2.5 rounded-xl neu-btn-gold text-xs font-semibold uppercase tracking-widest text-[#0d0f12] transition-all"
+                className="px-6 py-2.5 rounded-xl neu-btn-gold text-xs font-bold uppercase tracking-widest text-white transition-all cursor-pointer"
               >
                 Save Announcement
               </button>
@@ -1126,29 +1156,29 @@ export default function AdminCMSPage() {
           ========================================================================= */}
       {currentSection === "categories" && (
         <div className="space-y-6">
-          <div className="flex items-center justify-between pb-4 border-b border-white/[0.04]">
+          <div className="flex items-center justify-between pb-4 border-b border-slate-200/80">
             <button
               type="button"
               onClick={() => setCurrentSection("hub")}
-              className="px-4 py-2 rounded-xl neu-btn text-[#C5A880] hover:text-[#F5F7FA] text-xs font-medium transition-all flex items-center gap-2"
+              className="px-4 py-2 rounded-xl neu-btn text-[#0F172A] hover:text-[#9E7D4E] text-xs font-semibold transition-all flex items-center gap-2 cursor-pointer"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               <span>Back to All Sections</span>
             </button>
-            <span className="text-[10px] font-mono text-[#C5A880]">
+            <span className="text-[10px] font-mono text-[#9E7D4E] font-semibold">
               Homepage CMS / Featured Categories
             </span>
           </div>
 
-          <div className="p-6 sm:p-8 rounded-2xl neu-card space-y-6">
+          <div className="p-6 sm:p-8 rounded-2xl neu-card bg-white border border-slate-200/80 space-y-6">
             <div className="space-y-1">
-              <span className="text-[10px] uppercase tracking-[0.25em] text-[#C5A880] font-mono font-semibold">
+              <span className="text-[10px] uppercase tracking-[0.25em] text-[#9E7D4E] font-mono font-semibold">
                 Section 02
               </span>
-              <h2 className="text-xl font-sans font-medium text-[#F5F7FA] uppercase tracking-wider">
+              <h2 className="text-xl font-sans font-bold text-[#0F172A] uppercase tracking-wider">
                 Featured Categories Showcase
               </h2>
-              <p className="text-xs text-[#8A95A5]">
+              <p className="text-xs text-[#475569]">
                 These circular categories appear immediately after the hero banner for quick visual navigation.
               </p>
             </div>
@@ -1164,12 +1194,12 @@ export default function AdminCMSPage() {
                 { name: "Clutches", slug: "clutches", count: "5 Designs" },
                 { name: "Parfumerie", slug: "perfumes", count: "4 Extraits" },
               ].map((c) => (
-                <div key={c.slug} className="p-4 rounded-xl neu-raised space-y-1">
-                  <p className="text-xs font-semibold text-[#F5F7FA] uppercase font-sans">
+                <div key={c.slug} className="p-4 rounded-xl neu-raised bg-white border border-slate-200/60 space-y-1">
+                  <p className="text-xs font-bold text-[#0F172A] uppercase font-sans">
                     {c.name}
                   </p>
-                  <p className="text-[10px] text-[#C5A880] font-mono">{c.count}</p>
-                  <span className="inline-block px-2 py-0.5 rounded-full neu-inset text-[9px] text-[#10B981] font-mono mt-1">
+                  <p className="text-[10px] text-[#9E7D4E] font-mono font-semibold">{c.count}</p>
+                  <span className="inline-block px-2 py-0.5 rounded-full neu-inset bg-[#F1F5F9] text-[9px] text-[#10B981] font-mono font-semibold mt-1">
                     Live Active
                   </span>
                 </div>
@@ -1179,7 +1209,7 @@ export default function AdminCMSPage() {
             <div className="pt-2 flex justify-end">
               <Link
                 href="/admin/categories"
-                className="px-6 py-2.5 rounded-xl neu-btn-gold text-xs font-semibold uppercase tracking-widest text-[#0d0f12] transition-all inline-flex items-center gap-2"
+                className="px-6 py-2.5 rounded-xl neu-btn-gold text-xs font-bold uppercase tracking-widest text-white transition-all inline-flex items-center gap-2 cursor-pointer"
               >
                 <span>Full Categories Manager</span>
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -1194,29 +1224,29 @@ export default function AdminCMSPage() {
           ========================================================================= */}
       {currentSection === "pillars" && (
         <div className="space-y-6">
-          <div className="flex items-center justify-between pb-4 border-b border-white/[0.04]">
+          <div className="flex items-center justify-between pb-4 border-b border-slate-200/80">
             <button
               type="button"
               onClick={() => setCurrentSection("hub")}
-              className="px-4 py-2 rounded-xl neu-btn text-[#C5A880] hover:text-[#F5F7FA] text-xs font-medium transition-all flex items-center gap-2"
+              className="px-4 py-2 rounded-xl neu-btn text-[#0F172A] hover:text-[#9E7D4E] text-xs font-semibold transition-all flex items-center gap-2 cursor-pointer"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               <span>Back to All Sections</span>
             </button>
-            <span className="text-[10px] font-mono text-[#C5A880]">
+            <span className="text-[10px] font-mono text-[#9E7D4E] font-semibold">
               Homepage CMS / Trust Pillars &amp; Heritage
             </span>
           </div>
 
-          <div className="p-6 sm:p-8 rounded-2xl neu-card space-y-6">
+          <div className="p-6 sm:p-8 rounded-2xl neu-card bg-white border border-slate-200/80 space-y-6">
             <div className="space-y-1">
-              <span className="text-[10px] uppercase tracking-[0.25em] text-[#C5A880] font-mono font-semibold">
+              <span className="text-[10px] uppercase tracking-[0.25em] text-[#9E7D4E] font-mono font-semibold">
                 Section 03
               </span>
-              <h2 className="text-xl font-sans font-medium text-[#F5F7FA] uppercase tracking-wider">
+              <h2 className="text-xl font-sans font-bold text-[#0F172A] uppercase tracking-wider">
                 Atelier Trust Pillars
               </h2>
-              <p className="text-xs text-[#8A95A5]">
+              <p className="text-xs text-[#475569]">
                 Displayed on the homepage to instill confidence and luxury distinction.
               </p>
             </div>
@@ -1246,15 +1276,15 @@ export default function AdminCMSPage() {
               ].map((p, i) => {
                 const Icon = p.icon;
                 return (
-                  <div key={i} className="p-5 rounded-2xl neu-raised flex items-start gap-3.5">
-                    <div className="w-10 h-10 rounded-xl neu-inset flex items-center justify-center text-[#C5A880] flex-shrink-0">
+                  <div key={i} className="p-5 rounded-2xl neu-raised bg-white border border-slate-200/60 flex items-start gap-3.5">
+                    <div className="w-10 h-10 rounded-xl neu-inset bg-[#F1F5F9] flex items-center justify-center text-[#9E7D4E] flex-shrink-0">
                       <Icon className="w-5 h-5" />
                     </div>
                     <div className="space-y-1">
-                      <h4 className="text-xs font-semibold text-[#F5F7FA] uppercase tracking-wider font-sans">
+                      <h4 className="text-xs font-bold text-[#0F172A] uppercase tracking-wider font-sans">
                         {p.title}
                       </h4>
-                      <p className="text-[11px] text-[#8A95A5] leading-relaxed">
+                      <p className="text-[11px] text-[#475569] leading-relaxed">
                         {p.desc}
                       </p>
                     </div>
@@ -1270,21 +1300,21 @@ export default function AdminCMSPage() {
           EDIT BANNER MODAL (WITH 1920x750 FIXED DIMENSION GUIDANCE)
           ========================================================================= */}
       {editingBanner && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md">
-          <div className="rounded-3xl neu-glass p-6 sm:p-8 max-w-xl w-full max-h-[90vh] overflow-y-auto space-y-6 text-xs shadow-2xl">
-            <div className="flex items-center justify-between pb-4 border-b border-white/[0.06]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="rounded-3xl neu-card bg-white p-6 sm:p-8 max-w-xl w-full max-h-[90vh] overflow-y-auto space-y-6 text-xs shadow-2xl border border-slate-200">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-200/80">
               <div className="space-y-0.5">
-                <span className="text-[10px] uppercase tracking-[0.25em] text-[#C5A880] font-mono font-semibold">
+                <span className="text-[10px] uppercase tracking-[0.25em] text-[#9E7D4E] font-mono font-semibold">
                   Hero Banner Customizer
                 </span>
-                <h3 className="text-lg font-sans font-medium text-[#F5F7FA] uppercase tracking-wider">
+                <h3 className="text-lg font-sans font-bold text-[#0F172A] uppercase tracking-wider">
                   Edit Banner Slide
                 </h3>
               </div>
               <button
                 type="button"
                 onClick={() => setEditingBanner(null)}
-                className="p-2 rounded-xl neu-btn text-[#8A95A5] hover:text-[#F5F7FA] transition-all"
+                className="p-2 rounded-xl neu-btn text-[#64748B] hover:text-[#0F172A] transition-all cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -1292,7 +1322,7 @@ export default function AdminCMSPage() {
 
             <form onSubmit={handleSaveEdit} className="space-y-4">
               <div className="space-y-1.5">
-                <label className="text-[10px] uppercase tracking-widest text-[#8A95A5] font-mono">
+                <label className="text-[10px] uppercase tracking-widest text-[#475569] font-mono font-semibold">
                   Campaign Title / Headline
                 </label>
                 <input
@@ -1301,12 +1331,12 @@ export default function AdminCMSPage() {
                   value={editForm.title}
                   onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
                   placeholder="e.g. The Autumn Handbag Capsule"
-                  className="w-full px-4 py-3 rounded-xl neu-inset text-xs text-[#F5F7FA] placeholder-[#4B5565] focus:outline-none focus:ring-1 focus:ring-[#C5A880]/40 transition-all"
+                  className="w-full px-4 py-3 rounded-xl neu-inset bg-[#F1F5F9] text-xs text-[#0F172A] placeholder-[#94A3B8] focus:outline-none focus:ring-1 focus:ring-[#C5A880]/50 transition-all"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[10px] uppercase tracking-widest text-[#8A95A5] font-mono">
+                <label className="text-[10px] uppercase tracking-widest text-[#475569] font-mono font-semibold">
                   Narrative Subtitle
                 </label>
                 <textarea
@@ -1314,13 +1344,13 @@ export default function AdminCMSPage() {
                   value={editForm.subtitle}
                   onChange={(e) => setEditForm({ ...editForm, subtitle: e.target.value })}
                   placeholder="Explore the new sculptural silhouettes..."
-                  className="w-full px-4 py-3 rounded-xl neu-inset text-xs text-[#F5F7FA] placeholder-[#4B5565] focus:outline-none focus:ring-1 focus:ring-[#C5A880]/40 transition-all"
+                  className="w-full px-4 py-3 rounded-xl neu-inset bg-[#F1F5F9] text-xs text-[#0F172A] placeholder-[#94A3B8] focus:outline-none focus:ring-1 focus:ring-[#C5A880]/50 transition-all"
                 />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-[10px] uppercase tracking-widest text-[#8A95A5] font-mono">
+                  <label className="text-[10px] uppercase tracking-widest text-[#475569] font-mono font-semibold">
                     CTA Button Text
                   </label>
                   <input
@@ -1329,21 +1359,73 @@ export default function AdminCMSPage() {
                     value={editForm.cta_text}
                     onChange={(e) => setEditForm({ ...editForm, cta_text: e.target.value })}
                     placeholder="Shop The Collection"
-                    className="w-full px-4 py-3 rounded-xl neu-inset text-xs text-[#F5F7FA] focus:outline-none focus:ring-1 focus:ring-[#C5A880]/40 transition-all"
+                    className="w-full px-4 py-3 rounded-xl neu-inset bg-[#F1F5F9] text-xs text-[#0F172A] placeholder-[#94A3B8] focus:outline-none focus:ring-1 focus:ring-[#C5A880]/50 transition-all font-semibold"
                   />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[10px] uppercase tracking-widest text-[#8A95A5] font-mono">
-                    CTA Destination Link
-                  </label>
+                  <div className="flex items-center justify-between">
+                    <label className="text-[10px] uppercase tracking-widest text-[#475569] font-mono font-semibold">
+                      CTA Destination Link
+                    </label>
+                    <span className="text-[9px] text-[#9E7D4E] font-mono font-semibold">
+                      Select Available Route
+                    </span>
+                  </div>
+
+                  {/* Available CTAs Dropdown */}
+                  <select
+                    value={
+                      isKnownDestination(editForm.cta_link)
+                        ? editForm.cta_link
+                        : "custom"
+                    }
+                    onChange={(e) => {
+                      const selectedVal = e.target.value;
+                      if (selectedVal !== "custom") {
+                        setEditForm({
+                          ...editForm,
+                          cta_link: selectedVal,
+                          cta_text: editForm.cta_text || getDestinationDefaultText(selectedVal),
+                        });
+                      }
+                    }}
+                    className="w-full px-4 py-3 rounded-xl neu-inset bg-[#F1F5F9] text-xs text-[#0F172A] font-medium focus:outline-none focus:ring-1 focus:ring-[#C5A880]/50 transition-all cursor-pointer"
+                  >
+                    <optgroup label="Storefront Hubs">
+                      {STOREFRONT_DESTINATIONS.slice(0, 3).map((item) => (
+                        <option key={item.value} value={item.value}>
+                          {item.label}
+                        </option>
+                      ))}
+                    </optgroup>
+                    {categories.length > 0 && (
+                      <optgroup label="Category Realms">
+                        {categories.map((c) => (
+                          <option key={c.slug} value={`/shop/${c.slug}`}>
+                            Category: {c.name} (/shop/{c.slug})
+                          </option>
+                        ))}
+                      </optgroup>
+                    )}
+                    <optgroup label="Brand &amp; Support">
+                      {STOREFRONT_DESTINATIONS.slice(3).map((item) => (
+                        <option key={item.value} value={item.value}>
+                          {item.label}
+                        </option>
+                      ))}
+                    </optgroup>
+                    <option value="custom">Custom Destination URL (Type below)...</option>
+                  </select>
+
+                  {/* Direct editable link input */}
                   <input
                     type="text"
                     required
                     value={editForm.cta_link}
                     onChange={(e) => setEditForm({ ...editForm, cta_link: e.target.value })}
-                    placeholder="/shop"
-                    className="w-full px-4 py-3 rounded-xl neu-inset text-xs text-[#F5F7FA] font-mono focus:outline-none focus:ring-1 focus:ring-[#C5A880]/40 transition-all"
+                    placeholder="/shop or /shop/handbags"
+                    className="w-full px-4 py-2.5 rounded-xl neu-inset bg-[#F1F5F9] text-xs text-[#0F172A] font-mono focus:outline-none focus:ring-1 focus:ring-[#C5A880]/50 transition-all"
                   />
                 </div>
               </div>
@@ -1352,14 +1434,14 @@ export default function AdminCMSPage() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <div>
-                    <label className="text-[10px] uppercase tracking-widest text-[#8A95A5] font-mono block">
+                    <label className="text-[10px] uppercase tracking-widest text-[#475569] font-mono font-semibold block">
                       Universal Banner Image
                     </label>
-                    <span className="text-[9px] text-[#10B981] font-mono">
+                    <span className="text-[9px] text-[#10B981] font-mono font-medium">
                       Recommended: 1920 × 750 px (Auto-Scales All Devices)
                     </span>
                   </div>
-                  <label className="cursor-pointer px-3 py-1.5 rounded-xl neu-btn text-[10px] font-mono text-[#C5A880] uppercase tracking-wider transition-all flex items-center gap-1.5">
+                  <label className="cursor-pointer px-3 py-1.5 rounded-xl neu-btn text-[10px] font-mono text-[#9E7D4E] uppercase tracking-wider font-semibold transition-all flex items-center gap-1.5">
                     {isUploading ? (
                       <>
                         <Loader2 className="w-3 h-3 animate-spin" />
@@ -1382,7 +1464,7 @@ export default function AdminCMSPage() {
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <div className="relative w-20 h-12 rounded-lg neu-inset p-0.5 overflow-hidden flex-shrink-0">
+                  <div className="relative w-20 h-12 rounded-lg neu-inset bg-[#F1F5F9] p-0.5 overflow-hidden flex-shrink-0 border border-slate-200">
                     {editForm.desktop_image_url && (
                       <Image
                         src={editForm.desktop_image_url}
@@ -1401,7 +1483,7 @@ export default function AdminCMSPage() {
                       setEditForm({ ...editForm, desktop_image_url: e.target.value })
                     }
                     placeholder="https://..."
-                    className="flex-1 px-4 py-3 rounded-xl neu-inset text-xs text-[#F5F7FA] font-mono focus:outline-none focus:ring-1 focus:ring-[#C5A880]/40 transition-all"
+                    className="flex-1 px-4 py-3 rounded-xl neu-inset bg-[#F1F5F9] text-xs text-[#0F172A] font-mono focus:outline-none focus:ring-1 focus:ring-[#C5A880]/50 transition-all"
                   />
                 </div>
               </div>
@@ -1409,7 +1491,7 @@ export default function AdminCMSPage() {
               {/* Display Order & Active Toggle */}
               <div className="grid grid-cols-2 gap-4 pt-2">
                 <div className="space-y-1.5">
-                  <label className="text-[10px] uppercase tracking-widest text-[#8A95A5] font-mono">
+                  <label className="text-[10px] uppercase tracking-widest text-[#475569] font-mono font-semibold">
                     Display Order
                   </label>
                   <input
@@ -1419,12 +1501,12 @@ export default function AdminCMSPage() {
                     onChange={(e) =>
                       setEditForm({ ...editForm, display_order: Number(e.target.value) })
                     }
-                    className="w-full px-4 py-3 rounded-xl neu-inset text-xs text-[#F5F7FA] font-mono focus:outline-none focus:ring-1 focus:ring-[#C5A880]/40 transition-all"
+                    className="w-full px-4 py-3 rounded-xl neu-inset bg-[#F1F5F9] text-xs text-[#0F172A] font-mono focus:outline-none focus:ring-1 focus:ring-[#C5A880]/50 transition-all font-semibold"
                   />
                 </div>
 
                 <div className="flex items-end pb-1">
-                  <label className="flex items-center gap-2.5 cursor-pointer p-3 rounded-xl neu-inset w-full">
+                  <label className="flex items-center gap-2.5 cursor-pointer p-3 rounded-xl neu-inset bg-[#F1F5F9] w-full">
                     <input
                       type="checkbox"
                       checked={editForm.is_active}
@@ -1433,7 +1515,7 @@ export default function AdminCMSPage() {
                       }
                       className="accent-[#10B981] w-4 h-4 cursor-pointer"
                     />
-                    <span className="text-[#10B981] font-semibold text-xs">
+                    <span className="text-[#10B981] font-bold text-xs">
                       Live on Site
                     </span>
                   </label>
@@ -1441,17 +1523,17 @@ export default function AdminCMSPage() {
               </div>
 
               {/* Modal Footer Buttons */}
-              <div className="flex justify-end gap-3 pt-4 border-t border-white/[0.06]">
+              <div className="flex justify-end gap-3 pt-4 border-t border-slate-200/80">
                 <button
                   type="button"
                   onClick={() => setEditingBanner(null)}
-                  className="px-5 py-2.5 rounded-xl neu-btn text-[#8A95A5] hover:text-[#EDEDED] text-xs font-medium transition-all"
+                  className="px-5 py-2.5 rounded-xl neu-btn text-[#64748B] hover:text-[#0F172A] text-xs font-semibold transition-all cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2.5 rounded-xl neu-btn-gold text-xs uppercase tracking-widest font-semibold text-[#0d0f12] transition-all"
+                  className="px-6 py-2.5 rounded-xl neu-btn-gold text-xs uppercase tracking-widest font-bold text-white transition-all cursor-pointer"
                 >
                   Save Changes
                 </button>
@@ -1465,21 +1547,21 @@ export default function AdminCMSPage() {
           ADD NEW BANNER MODAL (WITH 1920x750 FIXED DIMENSION GUIDANCE)
           ========================================================================= */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md">
-          <div className="rounded-3xl neu-glass p-6 sm:p-8 max-w-xl w-full max-h-[90vh] overflow-y-auto space-y-6 text-xs shadow-2xl">
-            <div className="flex items-center justify-between pb-4 border-b border-white/[0.06]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="rounded-3xl neu-card bg-white p-6 sm:p-8 max-w-xl w-full max-h-[90vh] overflow-y-auto space-y-6 text-xs shadow-2xl border border-slate-200">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-200/80">
               <div className="space-y-0.5">
-                <span className="text-[10px] uppercase tracking-[0.25em] text-[#C5A880] font-mono font-semibold">
+                <span className="text-[10px] uppercase tracking-[0.25em] text-[#9E7D4E] font-mono font-semibold">
                   New Campaign
                 </span>
-                <h3 className="font-sans font-medium text-lg text-[#F5F7FA] uppercase tracking-wider">
+                <h3 className="font-sans font-bold text-lg text-[#0F172A] uppercase tracking-wider">
                   Create Hero Banner
                 </h3>
               </div>
               <button
                 type="button"
                 onClick={() => setIsAddModalOpen(false)}
-                className="p-2 rounded-xl neu-btn text-[#8A95A5] hover:text-[#F5F7FA] transition-all"
+                className="p-2 rounded-xl neu-btn text-[#64748B] hover:text-[#0F172A] transition-all cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -1487,7 +1569,7 @@ export default function AdminCMSPage() {
 
             <form onSubmit={handleCreateBanner} className="space-y-4">
               <div className="space-y-1.5">
-                <label className="text-[10px] uppercase tracking-widest text-[#8A95A5] font-mono">
+                <label className="text-[10px] uppercase tracking-widest text-[#475569] font-mono font-semibold">
                   Campaign Title / Headline
                 </label>
                 <input
@@ -1498,12 +1580,12 @@ export default function AdminCMSPage() {
                     setCreateForm({ ...createForm, title: e.target.value })
                   }
                   placeholder="e.g. The Royal Trousseau Capsule"
-                  className="w-full px-4 py-3 rounded-xl neu-inset text-xs text-[#F5F7FA] placeholder-[#4B5565] focus:outline-none focus:ring-1 focus:ring-[#C5A880]/40 transition-all"
+                  className="w-full px-4 py-3 rounded-xl neu-inset bg-[#F1F5F9] text-xs text-[#0F172A] placeholder-[#94A3B8] focus:outline-none focus:ring-1 focus:ring-[#C5A880]/50 transition-all"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[10px] uppercase tracking-widest text-[#8A95A5] font-mono">
+                <label className="text-[10px] uppercase tracking-widest text-[#475569] font-mono font-semibold">
                   Narrative Subtitle
                 </label>
                 <textarea
@@ -1513,13 +1595,13 @@ export default function AdminCMSPage() {
                     setCreateForm({ ...createForm, subtitle: e.target.value })
                   }
                   placeholder="Architectural silhouettes tailored in noble full-grain leathers..."
-                  className="w-full px-4 py-3 rounded-xl neu-inset text-xs text-[#F5F7FA] placeholder-[#4B5565] focus:outline-none focus:ring-1 focus:ring-[#C5A880]/40 transition-all"
+                  className="w-full px-4 py-3 rounded-xl neu-inset bg-[#F1F5F9] text-xs text-[#0F172A] placeholder-[#94A3B8] focus:outline-none focus:ring-1 focus:ring-[#C5A880]/50 transition-all"
                 />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-[10px] uppercase tracking-widest text-[#8A95A5] font-mono">
+                  <label className="text-[10px] uppercase tracking-widest text-[#475569] font-mono font-semibold">
                     CTA Button Text
                   </label>
                   <input
@@ -1530,14 +1612,66 @@ export default function AdminCMSPage() {
                       setCreateForm({ ...createForm, cta_text: e.target.value })
                     }
                     placeholder="Shop The Collection"
-                    className="w-full px-4 py-3 rounded-xl neu-inset text-xs text-[#F5F7FA] focus:outline-none focus:ring-1 focus:ring-[#C5A880]/40 transition-all"
+                    className="w-full px-4 py-3 rounded-xl neu-inset bg-[#F1F5F9] text-xs text-[#0F172A] placeholder-[#94A3B8] focus:outline-none focus:ring-1 focus:ring-[#C5A880]/50 transition-all font-semibold"
                   />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[10px] uppercase tracking-widest text-[#8A95A5] font-mono">
-                    CTA Destination Link
-                  </label>
+                  <div className="flex items-center justify-between">
+                    <label className="text-[10px] uppercase tracking-widest text-[#475569] font-mono font-semibold">
+                      CTA Destination Link
+                    </label>
+                    <span className="text-[9px] text-[#9E7D4E] font-mono font-semibold">
+                      Select Available Route
+                    </span>
+                  </div>
+
+                  {/* Available CTAs Dropdown */}
+                  <select
+                    value={
+                      isKnownDestination(createForm.cta_link)
+                        ? createForm.cta_link
+                        : "custom"
+                    }
+                    onChange={(e) => {
+                      const selectedVal = e.target.value;
+                      if (selectedVal !== "custom") {
+                        setCreateForm({
+                          ...createForm,
+                          cta_link: selectedVal,
+                          cta_text: createForm.cta_text || getDestinationDefaultText(selectedVal),
+                        });
+                      }
+                    }}
+                    className="w-full px-4 py-3 rounded-xl neu-inset bg-[#F1F5F9] text-xs text-[#0F172A] font-medium focus:outline-none focus:ring-1 focus:ring-[#C5A880]/50 transition-all cursor-pointer"
+                  >
+                    <optgroup label="Storefront Hubs">
+                      {STOREFRONT_DESTINATIONS.slice(0, 3).map((item) => (
+                        <option key={item.value} value={item.value}>
+                          {item.label}
+                        </option>
+                      ))}
+                    </optgroup>
+                    {categories.length > 0 && (
+                      <optgroup label="Category Realms">
+                        {categories.map((c) => (
+                          <option key={c.slug} value={`/shop/${c.slug}`}>
+                            Category: {c.name} (/shop/{c.slug})
+                          </option>
+                        ))}
+                      </optgroup>
+                    )}
+                    <optgroup label="Brand &amp; Support">
+                      {STOREFRONT_DESTINATIONS.slice(3).map((item) => (
+                        <option key={item.value} value={item.value}>
+                          {item.label}
+                        </option>
+                      ))}
+                    </optgroup>
+                    <option value="custom">Custom Destination URL (Type below)...</option>
+                  </select>
+
+                  {/* Direct editable link input */}
                   <input
                     type="text"
                     required
@@ -1546,7 +1680,7 @@ export default function AdminCMSPage() {
                       setCreateForm({ ...createForm, cta_link: e.target.value })
                     }
                     placeholder="/shop or /shop/handbags"
-                    className="w-full px-4 py-3 rounded-xl neu-inset text-xs text-[#F5F7FA] font-mono focus:outline-none focus:ring-1 focus:ring-[#C5A880]/40 transition-all"
+                    className="w-full px-4 py-2.5 rounded-xl neu-inset bg-[#F1F5F9] text-xs text-[#0F172A] font-mono focus:outline-none focus:ring-1 focus:ring-[#C5A880]/50 transition-all"
                   />
                 </div>
               </div>
@@ -1555,14 +1689,14 @@ export default function AdminCMSPage() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <div>
-                    <label className="text-[10px] uppercase tracking-widest text-[#8A95A5] font-mono block">
+                    <label className="text-[10px] uppercase tracking-widest text-[#475569] font-mono font-semibold block">
                       Universal Banner Image
                     </label>
-                    <span className="text-[9px] text-[#10B981] font-mono">
+                    <span className="text-[9px] text-[#10B981] font-mono font-medium">
                       Recommended: 1920 × 750 px (Auto-Scales All Devices)
                     </span>
                   </div>
-                  <label className="cursor-pointer px-3 py-1.5 rounded-xl neu-btn text-[10px] font-mono text-[#C5A880] uppercase tracking-wider transition-all flex items-center gap-1.5">
+                  <label className="cursor-pointer px-3 py-1.5 rounded-xl neu-btn text-[10px] font-mono text-[#9E7D4E] uppercase tracking-wider font-semibold transition-all flex items-center gap-1.5">
                     {isUploading ? (
                       <>
                         <Loader2 className="w-3 h-3 animate-spin" />
@@ -1594,14 +1728,14 @@ export default function AdminCMSPage() {
                     })
                   }
                   placeholder="https://images.unsplash.com/... or upload directly"
-                  className="w-full px-4 py-3 rounded-xl neu-inset text-xs text-[#F5F7FA] font-mono focus:outline-none focus:ring-1 focus:ring-[#C5A880]/40 transition-all"
+                  className="w-full px-4 py-3 rounded-xl neu-inset bg-[#F1F5F9] text-xs text-[#0F172A] font-mono focus:outline-none focus:ring-1 focus:ring-[#C5A880]/50 transition-all"
                 />
               </div>
 
               {/* Display Order & Active Toggle */}
               <div className="grid grid-cols-2 gap-4 pt-2">
                 <div className="space-y-1.5">
-                  <label className="text-[10px] uppercase tracking-widest text-[#8A95A5] font-mono">
+                  <label className="text-[10px] uppercase tracking-widest text-[#475569] font-mono font-semibold">
                     Display Order
                   </label>
                   <input
@@ -1614,12 +1748,12 @@ export default function AdminCMSPage() {
                         display_order: Number(e.target.value),
                       })
                     }
-                    className="w-full px-4 py-3 rounded-xl neu-inset text-xs text-[#F5F7FA] font-mono focus:outline-none focus:ring-1 focus:ring-[#C5A880]/40 transition-all"
+                    className="w-full px-4 py-3 rounded-xl neu-inset bg-[#F1F5F9] text-xs text-[#0F172A] font-mono focus:outline-none focus:ring-1 focus:ring-[#C5A880]/50 transition-all font-semibold"
                   />
                 </div>
 
                 <div className="flex items-end pb-1">
-                  <label className="flex items-center gap-2.5 cursor-pointer p-3 rounded-xl neu-inset w-full">
+                  <label className="flex items-center gap-2.5 cursor-pointer p-3 rounded-xl neu-inset bg-[#F1F5F9] w-full">
                     <input
                       type="checkbox"
                       checked={createForm.is_active}
@@ -1631,7 +1765,7 @@ export default function AdminCMSPage() {
                       }
                       className="accent-[#10B981] w-4 h-4 cursor-pointer"
                     />
-                    <span className="text-[#10B981] font-semibold text-xs">
+                    <span className="text-[#10B981] font-bold text-xs">
                       Live on Site
                     </span>
                   </label>
@@ -1639,17 +1773,17 @@ export default function AdminCMSPage() {
               </div>
 
               {/* Modal Footer Buttons */}
-              <div className="flex justify-end gap-3 pt-4 border-t border-white/[0.06]">
+              <div className="flex justify-end gap-3 pt-4 border-t border-slate-200/80">
                 <button
                   type="button"
                   onClick={() => setIsAddModalOpen(false)}
-                  className="px-5 py-2.5 rounded-xl neu-btn text-[#8A95A5] hover:text-[#EDEDED] text-xs font-medium transition-all"
+                  className="px-5 py-2.5 rounded-xl neu-btn text-[#64748B] hover:text-[#0F172A] text-xs font-semibold transition-all cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2.5 rounded-xl neu-btn-gold text-xs uppercase tracking-widest font-semibold text-[#0d0f12] transition-all"
+                  className="px-6 py-2.5 rounded-xl neu-btn-gold text-xs uppercase tracking-widest font-bold text-white transition-all cursor-pointer"
                 >
                   Create &amp; Publish
                 </button>

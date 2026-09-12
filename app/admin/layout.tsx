@@ -7,7 +7,6 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
   ShoppingBag,
-  Layers,
   FolderTree,
   Archive,
   ShoppingCart,
@@ -32,7 +31,6 @@ const ADMIN_NAV = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/products", label: "Products Catalog", icon: ShoppingBag },
   { href: "/admin/categories", label: "Categories", icon: FolderTree },
-  { href: "/admin/collections", label: "Collections", icon: Layers },
   { href: "/admin/inventory", label: "Inventory Alerts", icon: Archive },
   { href: "/admin/orders", label: "Orders & Pipeline", icon: ShoppingCart },
   { href: "/admin/customers", label: "Patrons Directory", icon: Users },

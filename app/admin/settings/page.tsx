@@ -16,18 +16,18 @@ export default function AdminSettingsPage() {
 
   return (
     <div className="space-y-8 max-w-4xl mx-auto">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-[#252D3D]">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-slate-200/80">
         <div>
-          <span className="text-[10px] uppercase tracking-[0.3em] text-[#C5A880] font-semibold">
-            System & Operations
+          <span className="text-[10px] uppercase tracking-[0.3em] text-[#C5A880] font-semibold font-mono">
+            System &amp; Operations
           </span>
-          <h1 className="font-sans text-2xl sm:text-3xl text-[#FBF9F5] uppercase tracking-[0.12em] font-medium">
-            Store Settings & Policies
+          <h1 className="font-sans text-2xl sm:text-3xl text-[#0F172A] uppercase tracking-[0.12em] font-bold mt-1">
+            Store Settings &amp; Policies
           </h1>
         </div>
 
         {saved && (
-          <span className="flex items-center gap-1.5 px-3 py-1 bg-[#10B981]/20 text-[#10B981] border border-[#10B981]/30 text-xs font-semibold">
+          <span className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold rounded-xl shadow-sm">
             <Check className="w-3.5 h-3.5" /> Settings Saved
           </span>
         )}
@@ -35,112 +35,112 @@ export default function AdminSettingsPage() {
 
       <form onSubmit={handleSubmit} className="space-y-6 text-xs">
         {/* General Store Identity */}
-        <div className="bg-[#13171F] border border-[#252D3D] p-6 space-y-4">
-          <h3 className="font-sans font-medium text-xs text-[#FBF9F5] uppercase tracking-[0.15em] pb-2 border-b border-[#252D3D]">
+        <div className="rounded-3xl neu-card bg-white border border-slate-200/80 p-6 space-y-4 shadow-sm">
+          <h3 className="font-sans font-bold text-sm text-[#0F172A] uppercase tracking-[0.15em] pb-3 border-b border-slate-200/80">
             Atelier Identity
           </h3>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <label className="text-[10px] uppercase tracking-widest text-[#8491A5]">Brand Name</label>
+            <div className="space-y-1.5">
+              <label className="text-[10px] uppercase tracking-widest text-[#475569] font-mono font-semibold">Brand Name</label>
               <input
                 type="text"
                 value={settings.brand_name}
                 onChange={(e) => setSettings({ ...settings, brand_name: e.target.value })}
-                className="w-full p-2.5 bg-[#1A202C] border border-[#252D3D] text-[#E4E8EE]"
+                className="w-full px-4 py-3 rounded-xl neu-inset bg-[#F1F5F9] text-[#0F172A] font-medium border border-slate-200/80 focus:outline-none focus:ring-1 focus:ring-[#C5A880]/50"
               />
             </div>
 
-            <div className="space-y-1">
-              <label className="text-[10px] uppercase tracking-widest text-[#8491A5]">Operating Currency</label>
+            <div className="space-y-1.5">
+              <label className="text-[10px] uppercase tracking-widest text-[#475569] font-mono font-semibold">Operating Currency</label>
               <input
                 type="text"
                 disabled
                 value="Indian Rupee (₹ INR)"
-                className="w-full p-2.5 bg-[#1A202C] border border-[#252D3D] text-[#8491A5]"
+                className="w-full px-4 py-3 rounded-xl neu-inset bg-[#F1F5F9] text-[#64748B] font-mono font-medium border border-slate-200/80 cursor-not-allowed opacity-80"
               />
             </div>
           </div>
         </div>
 
         {/* Shipping & Taxes */}
-        <div className="bg-[#13171F] border border-[#252D3D] p-6 space-y-4">
-          <h3 className="font-sans font-medium text-xs text-[#FBF9F5] uppercase tracking-[0.15em] pb-2 border-b border-[#252D3D]">
-            Shipping & Fiscal Policies
+        <div className="rounded-3xl neu-card bg-white border border-slate-200/80 p-6 space-y-4 shadow-sm">
+          <h3 className="font-sans font-bold text-sm text-[#0F172A] uppercase tracking-[0.15em] pb-3 border-b border-slate-200/80">
+            Shipping &amp; Fiscal Policies
           </h3>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="space-y-1">
-              <label className="text-[10px] uppercase tracking-widest text-[#8491A5]">
+            <div className="space-y-1.5">
+              <label className="text-[10px] uppercase tracking-widest text-[#475569] font-mono font-semibold">
                 Complimentary Shipping Threshold (₹)
               </label>
               <input
                 type="number"
                 value={settings.free_shipping_threshold}
                 onChange={(e) => setSettings({ ...settings, free_shipping_threshold: Number(e.target.value) })}
-                className="w-full p-2.5 bg-[#1A202C] border border-[#252D3D] text-[#E4E8EE]"
+                className="w-full px-4 py-3 rounded-xl neu-inset bg-[#F1F5F9] text-[#0F172A] font-mono font-medium border border-slate-200/80 focus:outline-none focus:ring-1 focus:ring-[#C5A880]/50"
               />
             </div>
 
-            <div className="space-y-1">
-              <label className="text-[10px] uppercase tracking-widest text-[#8491A5]">
+            <div className="space-y-1.5">
+              <label className="text-[10px] uppercase tracking-widest text-[#475569] font-mono font-semibold">
                 Standard Courier Charge (₹)
               </label>
               <input
                 type="number"
                 value={settings.standard_shipping_fee}
                 onChange={(e) => setSettings({ ...settings, standard_shipping_fee: Number(e.target.value) })}
-                className="w-full p-2.5 bg-[#1A202C] border border-[#252D3D] text-[#E4E8EE]"
+                className="w-full px-4 py-3 rounded-xl neu-inset bg-[#F1F5F9] text-[#0F172A] font-mono font-medium border border-slate-200/80 focus:outline-none focus:ring-1 focus:ring-[#C5A880]/50"
               />
             </div>
 
-            <div className="space-y-1">
-              <label className="text-[10px] uppercase tracking-widest text-[#8491A5]">
+            <div className="space-y-1.5">
+              <label className="text-[10px] uppercase tracking-widest text-[#475569] font-mono font-semibold">
                 Applicable GST Rate (%)
               </label>
               <input
                 type="number"
                 value={settings.tax_percentage}
                 onChange={(e) => setSettings({ ...settings, tax_percentage: Number(e.target.value) })}
-                className="w-full p-2.5 bg-[#1A202C] border border-[#252D3D] text-[#E4E8EE]"
+                className="w-full px-4 py-3 rounded-xl neu-inset bg-[#F1F5F9] text-[#0F172A] font-mono font-medium border border-slate-200/80 focus:outline-none focus:ring-1 focus:ring-[#C5A880]/50"
               />
             </div>
           </div>
         </div>
 
         {/* Client Advisory Concierge */}
-        <div className="bg-[#13171F] border border-[#252D3D] p-6 space-y-4">
-          <h3 className="font-sans font-medium text-xs text-[#FBF9F5] uppercase tracking-[0.15em] pb-2 border-b border-[#252D3D]">
+        <div className="rounded-3xl neu-card bg-white border border-slate-200/80 p-6 space-y-4 shadow-sm">
+          <h3 className="font-sans font-bold text-sm text-[#0F172A] uppercase tracking-[0.15em] pb-3 border-b border-slate-200/80">
             Concierge Support Channels
           </h3>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <label className="text-[10px] uppercase tracking-widest text-[#8491A5]">Inquiries Email</label>
+            <div className="space-y-1.5">
+              <label className="text-[10px] uppercase tracking-widest text-[#475569] font-mono font-semibold">Inquiries Email</label>
               <input
                 type="email"
                 value={settings.contact_email}
                 onChange={(e) => setSettings({ ...settings, contact_email: e.target.value })}
-                className="w-full p-2.5 bg-[#1A202C] border border-[#252D3D] text-[#E4E8EE]"
+                className="w-full px-4 py-3 rounded-xl neu-inset bg-[#F1F5F9] text-[#0F172A] font-medium border border-slate-200/80 focus:outline-none focus:ring-1 focus:ring-[#C5A880]/50"
               />
             </div>
 
-            <div className="space-y-1">
-              <label className="text-[10px] uppercase tracking-widest text-[#8491A5]">Advisory Telephone</label>
+            <div className="space-y-1.5">
+              <label className="text-[10px] uppercase tracking-widest text-[#475569] font-mono font-semibold">Advisory Telephone</label>
               <input
                 type="tel"
                 value={settings.concierge_phone}
                 onChange={(e) => setSettings({ ...settings, concierge_phone: e.target.value })}
-                className="w-full p-2.5 bg-[#1A202C] border border-[#252D3D] text-[#E4E8EE]"
+                className="w-full px-4 py-3 rounded-xl neu-inset bg-[#F1F5F9] text-[#0F172A] font-medium border border-slate-200/80 focus:outline-none focus:ring-1 focus:ring-[#C5A880]/50"
               />
             </div>
           </div>
         </div>
 
-        <div className="flex justify-end">
+        <div className="flex justify-end pt-2">
           <button
             type="submit"
-            className="px-8 py-3.5 bg-[#C5A880] text-[#111111] text-xs uppercase tracking-[0.25em] font-semibold hover:bg-[#DFCAAB] transition-colors flex items-center gap-2"
+            className="px-8 py-3.5 rounded-xl neu-btn-gold text-white text-xs uppercase tracking-[0.2em] font-bold transition-all flex items-center gap-2 cursor-pointer shadow-md"
           >
             <Save className="w-4 h-4" />
             <span>Update Store Settings</span>

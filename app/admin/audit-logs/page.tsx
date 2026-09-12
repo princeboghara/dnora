@@ -58,29 +58,29 @@ export default function AdminAuditLogsPage() {
 
   return (
     <div className="space-y-8 max-w-5xl mx-auto">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-[#252D3D]">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-slate-200/80">
         <div>
-          <span className="text-[10px] uppercase tracking-[0.3em] text-[#C5A880] font-semibold">
+          <span className="text-[10px] uppercase tracking-[0.3em] text-[#C5A880] font-semibold font-mono">
             Governance &amp; Security
           </span>
-          <h1 className="font-sans text-2xl sm:text-3xl text-[#FBF9F5] uppercase tracking-[0.12em] font-medium">
+          <h1 className="font-sans text-2xl sm:text-3xl text-[#0F172A] uppercase tracking-[0.12em] font-bold mt-1">
             Admin Activity Audit Trail
           </h1>
         </div>
-        <span className="text-xs text-[#8491A5] font-mono">
+        <span className="text-xs text-[#64748B] font-mono px-3 py-1.5 rounded-xl neu-inset bg-[#F1F5F9] font-semibold">
           {logs.length} Recorded Events
         </span>
       </div>
 
-      <div className="bg-[#13171F] border border-[#252D3D] divide-y divide-[#252D3D] text-xs">
+      <div className="rounded-3xl neu-card bg-white border border-slate-200/80 divide-y divide-slate-100 overflow-hidden shadow-sm text-xs">
         {logs.length === 0 ? (
-          <div className="p-12 text-center text-[#8491A5]">
+          <div className="p-12 text-center text-[#64748B]">
             <div className="max-w-md mx-auto space-y-2">
-              <ShieldCheck className="w-8 h-8 mx-auto text-[#C5A880]/50" />
-              <p className="text-sm font-medium text-[#FBF9F5]">
+              <ShieldCheck className="w-8 h-8 mx-auto text-[#C5A880]/60" />
+              <p className="text-sm font-semibold text-[#0F172A]">
                 {isLoading ? "Retrieving audit trails..." : "No Administrative Events Logged Yet"}
               </p>
-              <p className="text-[11px] text-[#8491A5]">
+              <p className="text-[11px] text-[#64748B]">
                 {isLoading
                   ? "Verifying security log records..."
                   : "All future governance actions (product publishing, pricing overrides, status adjustments, CMS changes) will be permanently recorded here."}
@@ -91,22 +91,22 @@ export default function AdminAuditLogsPage() {
           logs.map((log) => (
             <div
               key={log.id}
-              className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-[#1A202C]/50 transition-colors"
+              className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-slate-50 transition-colors"
             >
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <span className="px-2 py-0.5 bg-[#C5A880]/20 text-[#C5A880] text-[9px] uppercase tracking-wider font-mono font-bold">
+                  <span className="px-2.5 py-0.5 rounded-md bg-amber-50 text-amber-800 border border-amber-200 text-[10px] uppercase tracking-wider font-mono font-bold">
                     {log.action}
                   </span>
-                  <span className="font-semibold text-[#FBF9F5]">
+                  <span className="font-bold text-[#0F172A]">
                     {log.target_type}: {log.target_id}
                   </span>
                 </div>
-                {log.details && <p className="text-[#8491A5]">{log.details}</p>}
-                <p className="text-[10px] text-[#8491A5]">Initiated by: {log.admin_name}</p>
+                {log.details && <p className="text-[#64748B] font-medium">{log.details}</p>}
+                <p className="text-[10px] text-[#64748B]">Initiated by: <strong className="text-[#0F172A]">{log.admin_name}</strong></p>
               </div>
 
-              <span className="text-[10px] font-mono text-[#8491A5] whitespace-nowrap">
+              <span className="text-[11px] font-mono text-[#64748B] whitespace-nowrap">
                 {formatDate(log.created_at)}
               </span>
             </div>
