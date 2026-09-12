@@ -29,22 +29,10 @@ import {
   invalidateCatalogCache,
   getCategories,
 } from "@/lib/services/catalog-service";
-import { INITIAL_PRODUCTS } from "@/lib/seed/catalog-data";
-
-const DEFAULT_REALMS = [
-  { slug: "handbags", name: "Handbags & Clutches" },
-  { slug: "bucket-bags", name: "Bucket Bags" },
-  { slug: "shoulder-bags", name: "Shoulder Bags" },
-  { slug: "tote-bags", name: "Tote & Bowling Bags" },
-  { slug: "hobo-bags", name: "Hobo Bags" },
-  { slug: "crossbody-bags", name: "Crossbody Bags" },
-  { slug: "fragrance", name: "Haute Parfumerie" },
-  { slug: "jewellery", name: "Fine Jewellery" },
-];
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
-  const [categories, setCategories] = useState<{ slug: string; name: string }[]>(DEFAULT_REALMS);
+  const [categories, setCategories] = useState<{ id?: string; slug: string; name: string }[]>([]);
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [isLoading, setIsLoading] = useState(true);
@@ -110,7 +98,9 @@ export default function AdminProductsPage() {
         ]);
         setProducts(prods);
         if (cats && cats.length > 0) {
-          setCategories(cats.map((c) => ({ slug: c.slug, name: c.name })));
+          setCategories(cats.map((c) => ({ id: c.id, slug: c.slug, name: c.name })));
+        } else {
+          setCategories([]);
         }
       } catch (err) {
         console.error("Failed to load catalog:", err);
@@ -202,6 +192,8 @@ export default function AdminProductsPage() {
             is_featured: updatedProduct.is_featured,
             is_published: updatedProduct.is_published,
             sku: updatedProduct.sku,
+            category_slug: updatedProduct.category_slug,
+            stock_quantity: updatedProduct.stock_quantity,
           })
           .eq("id", editingProduct.id);
       } catch (err) {
@@ -269,15 +261,47 @@ export default function AdminProductsPage() {
   };
 
   // Duplicate product
-  const handleDuplicate = (product: Product) => {
+  const handleDuplicate = async (product: Product) => {
+    const dupId =
+      typeof crypto !== "undefined" && crypto.randomUUID
+        ? crypto.randomUUID()
+        : `00000000-0000-4000-8000-${Date.now().toString(16).padStart(12, "0")}`;
     const copy: Product = {
       ...product,
-      id: `prod_${Date.now()}`,
+      id: dupId,
       name: `${product.name} (Copy)`,
       slug: `${product.slug}-copy-${Date.now().toString().slice(-4)}`,
       sku: `${product.sku}-CP`,
       created_at: new Date().toISOString(),
     };
+
+    if (isSupabaseConfigured() && supabase) {
+      try {
+        await supabase.from("products").insert({
+          id: dupId,
+          slug: copy.slug,
+          name: copy.name,
+          subtitle: copy.subtitle,
+          short_description: copy.short_description,
+          full_description: copy.full_description,
+          category_slug: copy.category_slug,
+          base_price: copy.base_price,
+          sale_price: copy.sale_price,
+          sku: copy.sku,
+          is_new: copy.is_new,
+          is_bestseller: copy.is_bestseller,
+          is_featured: copy.is_featured,
+          is_published: copy.is_published,
+          stock_quantity: copy.stock_quantity ?? 50,
+          primary_image: copy.primary_image,
+          secondary_image: copy.secondary_image,
+          details: copy.details,
+        });
+      } catch (err) {
+        console.warn("Supabase duplicate notice:", err);
+      }
+    }
+
     const newProducts = [copy, ...products];
     setProducts(newProducts);
     saveAdminProductsOverride(newProducts);
@@ -285,32 +309,48 @@ export default function AdminProductsPage() {
     showNotification(`Duplicate of "${product.name}" created.`);
   };
 
-  // Reset / Sync to Live Store Default Catalog
-  const handleResetToDefaultLive = () => {
-    if (
-      confirm(
-        "Reset catalog to the 8 official live store atelier creations? Any local overrides will be refreshed to default."
-      )
-    ) {
-      setProducts(INITIAL_PRODUCTS);
-      saveAdminProductsOverride(INITIAL_PRODUCTS);
+  // Refresh Catalog directly from Supabase Database
+  const handleRefreshCatalog = async () => {
+    setIsLoading(true);
+    try {
       invalidateCatalogCache();
-      showNotification("Catalog successfully synced to live store atelier creations.");
+      const prods = await getAllAdminProducts();
+      setProducts(prods);
+      showNotification("Catalog refreshed from database.");
+    } catch {
+      showNotification("Failed to refresh catalog.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   // Create Product
   const handleCreateProduct = async (e: React.FormEvent) => {
     e.preventDefault();
+    const prodId =
+      typeof crypto !== "undefined" && crypto.randomUUID
+        ? crypto.randomUUID()
+        : `00000000-0000-4000-8000-${Date.now().toString(16).padStart(12, "0")}`;
+    const imgId =
+      typeof crypto !== "undefined" && crypto.randomUUID
+        ? crypto.randomUUID()
+        : `img-${Date.now()}`;
+    const varId =
+      typeof crypto !== "undefined" && crypto.randomUUID
+        ? crypto.randomUUID()
+        : `var-${Date.now()}`;
+
+    const matchedCat = categories.find((c) => c.slug === formData.category_slug);
+
     const newProd: Product = {
-      id: `prod_${Date.now()}`,
+      id: prodId,
       slug: formData.slug || formData.name.toLowerCase().replace(/\s+/g, "-"),
       name: formData.name,
       subtitle: formData.subtitle || "Atelier Luxury Edition",
       short_description: formData.short_description || "Handcrafted in limited atelier batches.",
       full_description: formData.short_description || "Detailed narrative of atelier craftsmanship.",
       category_slug: formData.category_slug as any,
-      category_id: `cat-${formData.category_slug}`,
+      category_id: matchedCat?.id || `cat-${formData.category_slug}`,
       base_price: Number(formData.base_price),
       sale_price: formData.sale_price ? Number(formData.sale_price) : undefined,
       is_new: formData.is_new,
@@ -323,8 +363,8 @@ export default function AdminProductsPage() {
       secondary_image: formData.primary_image,
       images: [
         {
-          id: `img_${Date.now()}`,
-          product_id: `prod_${Date.now()}`,
+          id: imgId,
+          product_id: prodId,
           url: formData.primary_image,
           alt_text: formData.name,
           display_order: 1,
@@ -333,8 +373,8 @@ export default function AdminProductsPage() {
       ],
       variants: [
         {
-          id: `var_${Date.now()}`,
-          product_id: `prod_${Date.now()}`,
+          id: varId,
+          product_id: prodId,
           sku: formData.sku,
           stock: Number(formData.stock_quantity),
           in_stock: true,
@@ -349,11 +389,14 @@ export default function AdminProductsPage() {
     if (isSupabaseConfigured() && supabase) {
       try {
         await supabase.from("products").insert({
+          id: prodId,
           slug: newProd.slug,
           name: newProd.name,
           subtitle: newProd.subtitle,
           short_description: newProd.short_description,
           full_description: newProd.full_description,
+          category_id: matchedCat?.id || null,
+          category_slug: newProd.category_slug,
           base_price: newProd.base_price,
           sale_price: newProd.sale_price,
           sku: newProd.sku,
@@ -361,6 +404,7 @@ export default function AdminProductsPage() {
           is_bestseller: newProd.is_bestseller,
           is_featured: newProd.is_featured,
           is_published: true,
+          stock_quantity: newProd.stock_quantity,
           primary_image: newProd.primary_image,
           secondary_image: newProd.secondary_image,
           details: newProd.details,
@@ -432,12 +476,12 @@ export default function AdminProductsPage() {
 
         <div className="flex items-center gap-3 flex-wrap">
           <button
-            onClick={handleResetToDefaultLive}
-            title="Sync to Default Live Store Products"
+            onClick={handleRefreshCatalog}
+            title="Refresh Catalog from Database"
             className="px-4 py-2.5 rounded-xl neu-btn text-[#475569] hover:text-[#9E7D4E] text-xs font-semibold uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer"
           >
             <RefreshCw className="w-3.5 h-3.5" />
-            <span>Sync Live Items</span>
+            <span>Refresh Catalog</span>
           </button>
 
           <button

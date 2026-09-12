@@ -691,6 +691,7 @@ export const INITIAL_BANNERS: Banner[] = [
     cta_link: "/shop",
     desktop_image_url: "/images/banners/hero-feeling.png",
     mobile_image_url: "/images/banners/hero-feeling.png",
+    video_url: "/videos/hero-banner.mp4",
     display_order: 1,
     is_active: true,
     type: "hero",

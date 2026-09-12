@@ -75,6 +75,7 @@ export function QuickViewModal({ product, isOpen, onClose }: QuickViewModalProps
                 src={selectedImage || product.primary_image}
                 alt={product.name}
                 fill
+                unoptimized
                 className="object-cover"
               />
             </div>
@@ -95,6 +96,7 @@ export function QuickViewModal({ product, isOpen, onClose }: QuickViewModalProps
                       src={img.url}
                       alt={img.alt_text}
                       fill
+                      unoptimized
                       className="object-cover"
                     />
                   </button>

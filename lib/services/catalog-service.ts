@@ -50,11 +50,6 @@ export function saveAdminCategoriesOverride(categories: Category[]): void {
 }
 
 export async function getAllAdminCategories(): Promise<Category[]> {
-  const local = getAdminCategoriesOverride();
-  if (local !== null) {
-    return local;
-  }
-
   if (isSupabaseConfigured() && supabase) {
     try {
       const { data, error } = await supabase
@@ -66,23 +61,20 @@ export async function getAllAdminCategories(): Promise<Category[]> {
         return data as Category[];
       }
     } catch {
-      // Return fallback on error
+      // Fallback below
     }
   }
 
+  const local = getAdminCategoriesOverride();
+  if (local !== null && local.length > 0) {
+    return local;
+  }
   return INITIAL_CATEGORIES;
 }
 
 export async function getCategories(): Promise<Category[]> {
   if (cachedCategories && Date.now() - cachedCategories.timestamp < CACHE_TTL_MS) {
     return cachedCategories.data;
-  }
-
-  const local = getAdminCategoriesOverride();
-  if (local !== null) {
-    const active = local.filter((c) => c.is_active !== false).sort((a, b) => a.display_order - b.display_order);
-    cachedCategories = { data: active, timestamp: Date.now() };
-    return active;
   }
 
   if (isSupabaseConfigured() && supabase) {
@@ -98,8 +90,15 @@ export async function getCategories(): Promise<Category[]> {
         return cachedCategories.data;
       }
     } catch {
-      // Return fallback on error
+      // Fallback below
     }
+  }
+
+  const local = getAdminCategoriesOverride();
+  if (local !== null && local.length > 0) {
+    const active = local.filter((c) => c.is_active !== false).sort((a, b) => a.display_order - b.display_order);
+    cachedCategories = { data: active, timestamp: Date.now() };
+    return active;
   }
 
   cachedCategories = { data: INITIAL_CATEGORIES, timestamp: Date.now() };
@@ -116,7 +115,7 @@ export async function getCategoryBySlug(slug: string): Promise<Category | null> 
     return local.find((c) => c.slug.toLowerCase() === slug.toLowerCase()) || null;
   }
 
-  return INITIAL_CATEGORIES.find((c) => c.slug.toLowerCase() === slug.toLowerCase()) || null;
+  return null;
 }
 
 const ADMIN_PRODUCTS_KEY = "dnora_admin_products_override";
@@ -146,11 +145,6 @@ export function saveAdminProductsOverride(products: Product[]): void {
 }
 
 export async function getAllAdminProducts(): Promise<Product[]> {
-  const local = getAdminProductsOverride();
-  if (local && local.length > 0) {
-    return local;
-  }
-
   if (isSupabaseConfigured() && supabase) {
     try {
       const { data, error } = await supabase
@@ -160,11 +154,10 @@ export async function getAllAdminProducts(): Promise<Product[]> {
 
       if (!error && data && data.length > 0) {
         const mapped = data.map((p: any) => {
-          const initMatch = INITIAL_PRODUCTS.find((ip) => ip.slug === p.slug || ip.id === p.id);
           const images =
             p.product_images && p.product_images.length > 0
               ? p.product_images
-              : initMatch?.images || [
+              : [
                   {
                     id: "1",
                     product_id: p.id,
@@ -174,16 +167,13 @@ export async function getAllAdminProducts(): Promise<Product[]> {
                     is_primary: true,
                   },
                 ];
-          const variants =
-            p.product_variants && p.product_variants.length > 0
-              ? p.product_variants
-              : initMatch?.variants || [];
-          const details = Array.isArray(p.details) ? p.details : initMatch?.details || [];
+          const variants = p.product_variants || [];
+          const details = Array.isArray(p.details) ? p.details : [];
 
           return {
             ...p,
-            category_slug: p.categories?.slug || initMatch?.category_slug || "handbags",
-            stock_quantity: p.stock_quantity ?? initMatch?.stock_quantity ?? 30,
+            category_slug: p.category_slug || p.categories?.slug || "handbags",
+            stock_quantity: p.stock_quantity ?? 50,
             images,
             variants,
             details,
@@ -192,8 +182,13 @@ export async function getAllAdminProducts(): Promise<Product[]> {
         return mapped;
       }
     } catch {
-      // Fallback
+      // Fallback below
     }
+  }
+
+  const local = getAdminProductsOverride();
+  if (local && local.length > 0) {
+    return local;
   }
 
   return INITIAL_PRODUCTS;
@@ -204,15 +199,6 @@ async function fetchRawProducts(): Promise<Product[]> {
     return cachedProducts.data;
   }
 
-  // 1. Check if admin has customized catalog products
-  const local = getAdminProductsOverride();
-  if (local && local.length > 0) {
-    const published = local.filter((p) => p.is_published !== false);
-    cachedProducts = { data: published, timestamp: Date.now() };
-    return published;
-  }
-
-  // 2. Fetch from Supabase
   if (isSupabaseConfigured() && supabase) {
     try {
       const { data, error } = await supabase
@@ -222,11 +208,10 @@ async function fetchRawProducts(): Promise<Product[]> {
 
       if (!error && data && data.length > 0) {
         const mapped = data.map((p: any) => {
-          const initMatch = INITIAL_PRODUCTS.find((ip) => ip.slug === p.slug || ip.id === p.id);
           const images =
             p.product_images && p.product_images.length > 0
               ? p.product_images
-              : initMatch?.images || [
+              : [
                   {
                     id: "1",
                     product_id: p.id,
@@ -236,16 +221,13 @@ async function fetchRawProducts(): Promise<Product[]> {
                     is_primary: true,
                   },
                 ];
-          const variants =
-            p.product_variants && p.product_variants.length > 0
-              ? p.product_variants
-              : initMatch?.variants || [];
-          const details = Array.isArray(p.details) ? p.details : initMatch?.details || [];
+          const variants = p.product_variants || [];
+          const details = Array.isArray(p.details) ? p.details : [];
 
           return {
             ...p,
-            category_slug: p.categories?.slug || initMatch?.category_slug || "handbags",
-            stock_quantity: p.stock_quantity ?? initMatch?.stock_quantity ?? 30,
+            category_slug: p.category_slug || p.categories?.slug || "handbags",
+            stock_quantity: p.stock_quantity ?? 50,
             images,
             variants,
             details,
@@ -255,8 +237,15 @@ async function fetchRawProducts(): Promise<Product[]> {
         return mapped;
       }
     } catch {
-      // Fall back on error
+      // Fallback below
     }
+  }
+
+  const local = getAdminProductsOverride();
+  if (local && local.length > 0) {
+    const published = local.filter((p) => p.is_published !== false);
+    cachedProducts = { data: published, timestamp: Date.now() };
+    return published;
   }
 
   cachedProducts = { data: INITIAL_PRODUCTS, timestamp: Date.now() };
@@ -372,7 +361,7 @@ export async function getCollections(): Promise<Collection[]> {
         .eq("is_active", true);
       if (!error && data && data.length > 0) return data as Collection[];
     } catch {
-      // Return fallback
+      // Fallback below
     }
   }
   return INITIAL_COLLECTIONS;

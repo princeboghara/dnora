@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Search, ShoppingBag, Heart, User, Menu, X, ChevronDown, Home } from "lucide-react";
+import { InstagramIcon } from "@/components/ui/InstagramIcon";
 import { useCart } from "@/lib/context/cart-context";
 import { useWishlist } from "@/lib/context/wishlist-context";
 import { useAuth } from "@/lib/auth/auth-context";
@@ -105,16 +106,16 @@ export function Header() {
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between gap-4">
-            {/* Left: Sidebar Menu Toggle (Mobile, Tablet, Laptop, Desktop) & Search Atelier */}
-            <div className="flex items-center gap-3 sm:gap-4 lg:w-1/4">
+            {/* Left: Sidebar Menu Toggle (Mobile: 3-line icon only; Laptop/Desktop: 3-line + Menu text) & Search */}
+            <div className="flex items-center justify-start gap-3 sm:gap-4 flex-1 lg:flex-initial lg:w-1/4">
               <button
                 type="button"
                 onClick={() => setIsMobileMenuOpen(true)}
                 className="flex items-center gap-2 p-1.5 text-[#111111] hover:text-[#C5A880] transition-colors cursor-pointer group"
                 aria-label="Open Navigation Sidebar"
               >
-                <Menu className="w-5 h-5 transition-transform group-hover:scale-110" />
-                <span className="text-[11px] uppercase tracking-[0.2em] font-semibold text-[#111111] group-hover:text-[#C5A880]">
+                <Menu className="w-5 h-5 transition-transform group-hover:scale-110 shrink-0" />
+                <span className="hidden sm:inline text-[11px] uppercase tracking-[0.2em] font-semibold text-[#111111] group-hover:text-[#C5A880]">
                   Menu
                 </span>
               </button>
@@ -129,13 +130,13 @@ export function Header() {
               </button>
             </div>
 
-            {/* Center: Brand Logo with Cinematic Video-like Reveal Animation */}
-            <div className="text-center lg:w-2/4 flex justify-center">
+            {/* Center: Brand Logo with Handwritten Reveal Animation (Symmetrically centered) */}
+            <div className="flex justify-center items-center shrink-0 lg:w-2/4">
               <AnimatedLogo />
             </div>
 
-            {/* Right: Actions (Search mobile, Wishlist, Account, Cart, Admin) */}
-            <div className="flex items-center justify-end gap-3 sm:gap-5 lg:w-1/4">
+            {/* Right: Actions (Mobile Search, Account, Cart, Admin) - Wishlist button removed */}
+            <div className="flex items-center justify-end gap-2.5 sm:gap-4 flex-1 lg:flex-initial lg:w-1/4">
               {/* Mobile search trigger */}
               <button
                 type="button"
@@ -164,20 +165,6 @@ export function Header() {
                 title={user ? `Signed in as ${user.fullName}` : "Client Sign In"}
               >
                 <User className="w-5 h-5" />
-              </Link>
-
-              {/* Wishlist */}
-              <Link
-                href="/wishlist"
-                className="p-1.5 text-[#111111] hover:text-[#9E7D4E] transition-colors relative"
-                aria-label="Wishlist"
-              >
-                <Heart className="w-5 h-5" />
-                {wishlistCount > 0 && (
-                  <span className="absolute top-0 right-0 w-4 h-4 bg-[#C5A880] text-[#111111] font-sans text-[9px] font-bold flex items-center justify-center rounded-full">
-                    {wishlistCount}
-                  </span>
-                )}
               </Link>
 
               {/* Cart Drawer Trigger */}
@@ -279,21 +266,6 @@ export function Header() {
               </span>
             </Link>
 
-            {/* Quick Patron Account Access Link */}
-            <Link
-              href={user ? "/account" : "/account/login"}
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="w-full flex items-center justify-between px-4 py-2.5 rounded-xl border border-[#E8E2D9] bg-[#FBF9F5] hover:border-[#111111] text-[#111111] text-xs uppercase tracking-wider font-medium transition-colors"
-            >
-              <div className="flex items-center gap-2.5">
-                <User className="w-4 h-4 text-[#8C7A6B]" />
-                <span className="tracking-[0.14em]">
-                  {user ? `Account (${user.fullName.split(" ")[0]})` : "Client Account / Sign In"}
-                </span>
-              </div>
-              <span className="text-[#8C7A6B] text-xs">&rarr;</span>
-            </Link>
-
             {/* Quick Search inside Drawer */}
             <button
               type="button"
@@ -324,12 +296,58 @@ export function Header() {
               ))}
             </div>
 
-
+            {/* Wishlist Link inside Navigation Drawer */}
+            <div className="pt-2">
+              <Link
+                href="/wishlist"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="flex items-center justify-between py-2.5 px-3 rounded-lg bg-[#F4F0E8]/70 hover:bg-[#F4F0E8] text-[#111111] transition-colors"
+              >
+                <div className="flex items-center gap-2.5">
+                  <Heart className="w-4 h-4 text-[#8C7A6B]" />
+                  <span className="text-xs uppercase tracking-[0.18em] font-medium">My Wishlist</span>
+                </div>
+                {wishlistCount > 0 && (
+                  <span className="px-2 py-0.5 text-[10px] bg-[#C5A880] text-[#111111] font-bold rounded-full">
+                    {wishlistCount}
+                  </span>
+                )}
+              </Link>
+            </div>
           </div>
 
-          <div className="pt-6 border-t border-[#E8E2D9] text-xs text-[#8C7A6B] text-center space-y-1">
-            <p className="font-medium text-[#111111]">Pan-India White Glove Shipping</p>
-            <p className="font-sans text-[11px] uppercase tracking-widest text-[#8C7A6B]">Crafted with enduring modern elegance.</p>
+          <div className="pt-4 border-t border-[#E8E2D9] space-y-3">
+            {/* Official Instagram Profile Showcase */}
+            <a
+              href="https://www.instagram.com/dnora_lifestyle/?utm_source=ig_web_button_share_sheet"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-[#171717] via-[#221D1A] to-[#171717] text-[#F5F2EB] border border-[#332B25] hover:border-[#C5A880] transition-all duration-300 group shadow-sm"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#FD1D1D] via-[#E1306C] to-[#833AB4] flex items-center justify-center text-white shadow-xs group-hover:scale-105 transition-transform shrink-0">
+                  <InstagramIcon className="w-4 h-4" />
+                </div>
+                <div className="text-left">
+                  <div className="flex items-center gap-1">
+                    <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[#F5F2EB]">
+                      @dnora_lifestyle
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-[#A89F91] tracking-wider">
+                    Follow us on Instagram
+                  </p>
+                </div>
+              </div>
+              <span className="text-xs text-[#C5A880] group-hover:translate-x-1 transition-transform">
+                &rarr;
+              </span>
+            </a>
+
+            <div className="text-xs text-[#8C7A6B] text-center space-y-0.5 pt-1">
+              <p className="font-medium text-[#111111]">Pan-India White Glove Shipping</p>
+              <p className="font-sans text-[10px] uppercase tracking-widest text-[#8C7A6B]">Crafted with enduring modern elegance.</p>
+            </div>
           </div>
         </div>
       </div>

@@ -85,7 +85,7 @@ export async function getOrders(): Promise<Order[]> {
         .select("*, order_items(*)")
         .order("created_at", { ascending: false });
 
-      if (!error && data && data.length > 0) {
+      if (!error && data) {
         return data.map((d: any) => ({
           id: d.id,
           order_number: d.order_number,

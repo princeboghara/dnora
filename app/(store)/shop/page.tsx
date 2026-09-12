@@ -5,8 +5,9 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Filter, X, SlidersHorizontal, ChevronDown, Check, LayoutGrid, Grid2X2 } from "lucide-react";
 import { ProductCard } from "@/components/product/ProductCard";
-import { INITIAL_CATEGORIES, INITIAL_PRODUCTS } from "@/lib/seed/catalog-data";
 import {
+  getCategories,
+  getProducts,
   getAdminCategoriesOverride,
   getAdminProductsOverride,
 } from "@/lib/services/catalog-service";
@@ -44,24 +45,17 @@ function ShopContent() {
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
   const [gridColumns, setGridColumns] = useState<2 | 4>(4);
 
-  const [categories, setCategories] = useState<Category[]>(INITIAL_CATEGORIES);
-  const [allProducts, setAllProducts] = useState<Product[]>(INITIAL_PRODUCTS);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
 
   useEffect(() => {
-    const updateCatalog = () => {
-      const adminCats = getAdminCategoriesOverride();
-      if (adminCats !== null) {
-        setCategories(adminCats.filter((c) => c.is_active !== false).sort((a, b) => a.display_order - b.display_order));
-      } else {
-        setCategories(INITIAL_CATEGORIES);
-      }
-
-      const adminProds = getAdminProductsOverride();
-      if (adminProds !== null) {
-        setAllProducts(adminProds.filter((p) => p.is_published !== false));
-      } else {
-        setAllProducts(INITIAL_PRODUCTS);
-      }
+    const updateCatalog = async () => {
+      const [cats, prods] = await Promise.all([
+        getCategories(),
+        getProducts(),
+      ]);
+      setCategories(cats);
+      setAllProducts(prods);
     };
 
     updateCatalog();

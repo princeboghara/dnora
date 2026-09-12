@@ -48,6 +48,20 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const hasRedirectedRef = useRef(false);
 
+  // Clean legacy client-side mock caches once so Supabase database is single source of truth
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const clearedKey = "dnora_db_migration_cleaned_v1";
+      if (!localStorage.getItem(clearedKey)) {
+        localStorage.removeItem("dnora_admin_products_override");
+        localStorage.removeItem("dnora_admin_categories_override");
+        localStorage.removeItem("dnora_admin_banners_override");
+        localStorage.removeItem("dnora_atelier_orders");
+        localStorage.setItem(clearedKey, "true");
+      }
+    }
+  }, []);
+
   // Safely redirect to /admin/login outside render cycle when unauthenticated
   useEffect(() => {
     if (pathname === "/admin/login") {

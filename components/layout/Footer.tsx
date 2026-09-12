@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { ArrowRight, ShieldCheck, Sparkles, Check, Heart } from "lucide-react";
+import { InstagramIcon } from "@/components/ui/InstagramIcon";
 import { DEFAULT_STORE_SETTINGS } from "@/lib/seed/catalog-data";
 
 export function Footer() {
@@ -86,135 +87,108 @@ export function Footer() {
         </div>
 
         {/* Links Navigation Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 py-12 border-b border-[#262626] text-xs">
-          {/* Shop */}
-          <div className="space-y-3">
-            <h4 className="font-sans text-xs uppercase tracking-[0.2em] text-[#F5F2EB] font-semibold">
-              Handbags & Totes
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-10 lg:gap-16 py-12 border-b border-[#262626] text-xs">
+          {/* Boutique Collections */}
+          <div className="space-y-4">
+            <h4 className="font-sans text-xs uppercase tracking-[0.25em] text-[#F5F2EB] font-semibold">
+              Boutique Collections
             </h4>
-            <ul className="space-y-2 text-[#A89F91]">
+            <ul className="space-y-2.5 text-[#A89F91]">
               <li>
                 <Link href="/shop/handbags" className="hover:text-[#C5A880] transition-colors">
-                  Shoulder Bags
+                  All Handbags
                 </Link>
               </li>
               <li>
                 <Link href="/shop/tote-bags" className="hover:text-[#C5A880] transition-colors">
-                  Tote Bags
+                  Tote & Bowling Bags
                 </Link>
               </li>
               <li>
                 <Link href="/shop/sling-bags" className="hover:text-[#C5A880] transition-colors">
-                  Crossbody Slings
+                  Sling & Crossbody Bags
                 </Link>
               </li>
               <li>
-                <Link href="/shop/satchels" className="hover:text-[#C5A880] transition-colors">
-                  Structured Satchels
+                <Link href="/shop/perfumes" className="hover:text-[#C5A880] transition-colors">
+                  Artisanal Fragrances
                 </Link>
               </li>
               <li>
-                <Link href="/shop/clutches" className="hover:text-[#C5A880] transition-colors">
-                  Clutches & Wristlets
-                </Link>
-              </li>
-              <li>
-                <Link href="/shop/backpacks" className="hover:text-[#C5A880] transition-colors">
-                  Women&apos;s Backpacks
+                <Link href="/shop?filter=bestselling" className="hover:text-[#C5A880] transition-colors">
+                  Best Sellers
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* Collections */}
-          <div className="space-y-3">
-            <h4 className="font-sans text-xs uppercase tracking-[0.2em] text-[#F5F2EB] font-semibold">
-              Curated Edits
-            </h4>
-            <ul className="space-y-2 text-[#A89F91]">
-              <li>
-                <Link href="/shop?collection=everyday-luxury" className="hover:text-[#C5A880] transition-colors">
-                  The Everyday Luxury Edit
-                </Link>
-              </li>
-              <li>
-                <Link href="/shop?collection=bridal-edit" className="hover:text-[#C5A880] transition-colors">
-                  The Royal Trousseau & Bridal
-                </Link>
-              </li>
-              <li>
-                <Link href="/shop?collection=summer-edit" className="hover:text-[#C5A880] transition-colors">
-                  Summer Solstice & Resort
-                </Link>
-              </li>
-              <li>
-                <Link href="/shop?collection=evening-collection" className="hover:text-[#C5A880] transition-colors">
-                  Nocturne Evening Glamour
-                </Link>
-              </li>
-              <li>
-                <Link href="/shop?filter=new" className="hover:text-[#C5A880] transition-colors">
-                  Debut Arrivals
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Atelier Heritage */}
-          <div className="space-y-3">
-            <h4 className="font-sans text-xs uppercase tracking-[0.2em] text-[#F5F2EB] font-semibold">
+          {/* The Maison */}
+          <div className="space-y-4">
+            <h4 className="font-sans text-xs uppercase tracking-[0.25em] text-[#F5F2EB] font-semibold">
               The Maison
             </h4>
-            <ul className="space-y-2 text-[#A89F91]">
+            <ul className="space-y-2.5 text-[#A89F91]">
               <li>
                 <Link href="/about" className="hover:text-[#C5A880] transition-colors">
-                  Atelier Heritage
-                </Link>
-              </li>
-              <li>
-                <Link href="/about" className="hover:text-[#C5A880] transition-colors">
-                  Artisanal Craftsmanship
-                </Link>
-              </li>
-              <li>
-                <Link href="/about" className="hover:text-[#C5A880] transition-colors">
-                  Sustainable Luxury
+                  Atelier Heritage & Craft
                 </Link>
               </li>
               <li>
                 <Link href="/contact" className="hover:text-[#C5A880] transition-colors">
-                  Press & Media Enquiries
+                  Contact Concierge
+                </Link>
+              </li>
+              <li>
+                <Link href="/faq" className="hover:text-[#C5A880] transition-colors">
+                  Complimentary Shipping & Care Guide
+                </Link>
+              </li>
+              <li>
+                <Link href="/wishlist" className="hover:text-[#C5A880] transition-colors">
+                  Private Wishlist
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* Concierge & Care */}
-          <div className="space-y-3">
-            <h4 className="font-sans text-xs uppercase tracking-[0.2em] text-[#F5F2EB] font-semibold">
+          {/* Concierge & Support */}
+          <div className="space-y-4">
+            <h4 className="font-sans text-xs uppercase tracking-[0.25em] text-[#F5F2EB] font-semibold">
               Client Concierge
             </h4>
-            <ul className="space-y-2 text-[#A89F91]">
-              <li>
-                <span className="text-[#F5F2EB]">Direct Line:</span> {DEFAULT_STORE_SETTINGS.concierge_phone}
+            <ul className="space-y-2.5 text-[#A89F91]">
+              <li className="flex items-center gap-2">
+                <span className="text-[#F5F2EB] font-medium">Direct Line:</span>
+                <span className="text-[#C5A880]">{DEFAULT_STORE_SETTINGS.concierge_phone}</span>
               </li>
-              <li>
-                <span className="text-[#F5F2EB]">Email:</span> {DEFAULT_STORE_SETTINGS.contact_email}
+              <li className="flex items-center gap-2">
+                <span className="text-[#F5F2EB] font-medium">Email:</span>
+                <a href={`mailto:${DEFAULT_STORE_SETTINGS.contact_email}`} className="hover:text-[#C5A880] transition-colors">
+                  {DEFAULT_STORE_SETTINGS.contact_email}
+                </a>
               </li>
-              <li>
-                <Link href="/faq" className="hover:text-[#C5A880] transition-colors">
-                  Complimentary Shipping & Returns
-                </Link>
+              <li className="pt-2">
+                <a
+                  href="https://www.instagram.com/dnora_lifestyle/?utm_source=ig_web_button_share_sheet"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2.5 px-3 py-2 rounded-lg bg-[#1A1918] border border-[#333333] text-[#E8E2D9] hover:text-[#C5A880] hover:border-[#C5A880]/60 transition-all duration-300 group"
+                >
+                  <div className="w-6 h-6 rounded-md bg-gradient-to-tr from-[#FD1D1D] via-[#E1306C] to-[#833AB4] flex items-center justify-center text-white shadow-xs group-hover:scale-105 transition-transform shrink-0">
+                    <InstagramIcon className="w-3.5 h-3.5" />
+                  </div>
+                  <div className="text-left">
+                    <span className="block text-[11px] font-semibold tracking-wider text-[#F5F2EB] group-hover:text-[#C5A880]">
+                      @dnora_lifestyle
+                    </span>
+                    <span className="block text-[9px] uppercase tracking-widest text-[#7A746B]">
+                      Follow on Instagram
+                    </span>
+                  </div>
+                </a>
               </li>
-              <li>
-                <Link href="/faq" className="hover:text-[#C5A880] transition-colors">
-                  Leather & Jewellery Care Guide
-                </Link>
-              </li>
-              <li>
-                <Link href="/account" className="hover:text-[#C5A880] transition-colors">
-                  Track Your Order
-                </Link>
+              <li className="text-[11px] text-[#736A5E] pt-1 leading-relaxed">
+                White-glove concierge available Monday to Saturday, 10:00 AM – 7:00 PM IST.
               </li>
             </ul>
           </div>
@@ -222,13 +196,25 @@ export function Footer() {
 
         {/* Bottom Bar */}
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-[#7A746B]">
-          <p>© {new Date().getFullYear()} D&apos;NORA Atelier Private Limited. All rights reserved.</p>
-          <div className="flex items-center gap-6">
-            <span>Complimentary Pan-India Shipping</span>
+          <div className="flex items-center gap-3">
+            <p>© {new Date().getFullYear()} D&apos;NORA Atelier Private Limited. All rights reserved.</p>
+            <a
+              href="https://www.instagram.com/dnora_lifestyle/?utm_source=ig_web_button_share_sheet"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[#A89F91] hover:text-[#C5A880] transition-colors p-1"
+              aria-label="DNORA Official Instagram"
+              title="Follow @dnora_lifestyle on Instagram"
+            >
+              <InstagramIcon className="w-4 h-4" />
+            </a>
+          </div>
+          <div className="flex items-center gap-4 sm:gap-6 text-[#9E9382]">
+            <span>Complimentary Pan-India Delivery</span>
             <span>•</span>
-            <span>Razorpay 256-Bit SSL Secure</span>
+            <span>100% Genuine Handcrafted Leather</span>
             <span>•</span>
-            <span>Hallmarked Authenticity</span>
+            <span>256-Bit SSL Encrypted</span>
           </div>
         </div>
       </div>

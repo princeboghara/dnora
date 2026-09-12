@@ -42,31 +42,29 @@ export async function getActiveHeroBanners(): Promise<Banner[]> {
     return cachedBanners.data;
   }
 
-  // 1. Check local override (takes priority over remote defaults)
-  const local = getAdminBannersOverride();
-  if (local !== null) {
-    const active = local.filter((b) => b.is_active && b.type === "hero");
-    cachedBanners = { data: active, timestamp: Date.now() };
-    return active;
-  }
-
-  // 2. Query Supabase
+  // Query Supabase
   if (isSupabaseConfigured() && supabase) {
     try {
       const { data, error } = await supabase
         .from("banners")
         .select("*")
         .eq("is_active", true)
-        .eq("type", "hero")
         .order("display_order", { ascending: true });
 
-      if (!error && data) {
+      if (!error && data && data.length > 0) {
         cachedBanners = { data: data as Banner[], timestamp: Date.now() };
         return data as Banner[];
       }
     } catch {
-      // Fallback
+      // Fallback below
     }
+  }
+
+  const local = getAdminBannersOverride();
+  if (local !== null && local.length > 0) {
+    const active = local.filter((b) => b.is_active);
+    cachedBanners = { data: active, timestamp: Date.now() };
+    return active;
   }
 
   cachedBanners = { data: INITIAL_BANNERS, timestamp: Date.now() };
@@ -75,11 +73,6 @@ export async function getActiveHeroBanners(): Promise<Banner[]> {
 
 // Get all banners (including drafts) for Admin CMS
 export async function getAllAdminBanners(): Promise<Banner[]> {
-  const local = getAdminBannersOverride();
-  if (local !== null) {
-    return local;
-  }
-
   if (isSupabaseConfigured() && supabase) {
     try {
       const { data, error } = await supabase
@@ -87,12 +80,17 @@ export async function getAllAdminBanners(): Promise<Banner[]> {
         .select("*")
         .order("display_order", { ascending: true });
 
-      if (!error && data) {
+      if (!error && data && data.length > 0) {
         return data as Banner[];
       }
     } catch {
-      // Fallback
+      // Fallback below
     }
+  }
+
+  const local = getAdminBannersOverride();
+  if (local !== null && local.length > 0) {
+    return local;
   }
 
   return INITIAL_BANNERS;

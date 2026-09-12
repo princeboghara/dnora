@@ -34,9 +34,11 @@ import {
   CreditCard,
   Headphones,
   Award,
+  Film,
+  Video,
 } from "lucide-react";
 import { Banner, Category } from "@/types";
-import { DEFAULT_STORE_SETTINGS, INITIAL_BANNERS } from "@/lib/seed/catalog-data";
+import { DEFAULT_STORE_SETTINGS } from "@/lib/seed/catalog-data";
 import { uploadImageToStorage } from "@/lib/supabase/storage";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase/client";
 import {
@@ -85,6 +87,7 @@ export default function AdminCMSPage() {
 
   // Form state for creating new banner
   // Notice default single fixed dimension recommendation: 1920x750 px
+  const [createMediaType, setCreateMediaType] = useState<"image" | "video">("image");
   const [createForm, setCreateForm] = useState({
     title: "",
     subtitle: "",
@@ -93,11 +96,13 @@ export default function AdminCMSPage() {
     desktop_image_url:
       "https://www.charleskeith.in/dw/image/v2/BCWJ_PRD/on/demandware.static/-/Sites-in-products/default/dw76953c89/images/hi-res/2026-L6-CK2-10160273-A-29-3.jpg?sw=1920&q=85",
     mobile_image_url: "",
+    video_url: "",
     display_order: 1,
     is_active: true,
   });
 
   // Form state for editing banner
+  const [editMediaType, setEditMediaType] = useState<"image" | "video">("image");
   const [editForm, setEditForm] = useState({
     title: "",
     subtitle: "",
@@ -105,6 +110,7 @@ export default function AdminCMSPage() {
     cta_link: "",
     desktop_image_url: "",
     mobile_image_url: "",
+    video_url: "",
     display_order: 1,
     is_active: true,
   });
@@ -157,6 +163,7 @@ export default function AdminCMSPage() {
   // Open Edit Modal
   const handleOpenEdit = (banner: Banner) => {
     setEditingBanner(banner);
+    setEditMediaType(banner.video_url ? "video" : "image");
     setEditForm({
       title: banner.title,
       subtitle: banner.subtitle || "",
@@ -164,10 +171,30 @@ export default function AdminCMSPage() {
       cta_link: banner.cta_link || "/shop",
       desktop_image_url: banner.desktop_image_url,
       mobile_image_url: banner.mobile_image_url || "",
+      video_url: banner.video_url || "",
       display_order: banner.display_order ?? 1,
       is_active: banner.is_active !== false,
     });
     setUploadError(null);
+  };
+
+  // Open Add Modal
+  const handleOpenAdd = () => {
+    setCreateMediaType("image");
+    setCreateForm({
+      title: "",
+      subtitle: "",
+      cta_text: "Shop The Collection",
+      cta_link: "/shop",
+      desktop_image_url:
+        "https://www.charleskeith.in/dw/image/v2/BCWJ_PRD/on/demandware.static/-/Sites-in-products/default/dw76953c89/images/hi-res/2026-L6-CK2-10160273-A-29-3.jpg?sw=1920&q=85",
+      mobile_image_url: "",
+      video_url: "",
+      display_order: banners.length + 1,
+      is_active: true,
+    });
+    setUploadError(null);
+    setIsAddModalOpen(true);
   };
 
   // Focus a specific banner inside the Studio Simulator
@@ -181,6 +208,11 @@ export default function AdminCMSPage() {
     e.preventDefault();
     if (!editingBanner) return;
 
+    const finalVideoUrl =
+      editMediaType === "video" && editForm.video_url?.trim()
+        ? editForm.video_url.trim()
+        : undefined;
+
     const updated: Banner = {
       ...editingBanner,
       title: editForm.title,
@@ -189,6 +221,7 @@ export default function AdminCMSPage() {
       cta_link: editForm.cta_link,
       desktop_image_url: editForm.desktop_image_url,
       mobile_image_url: editForm.mobile_image_url || undefined,
+      video_url: finalVideoUrl,
       display_order: Number(editForm.display_order),
       is_active: editForm.is_active,
     };
@@ -208,6 +241,7 @@ export default function AdminCMSPage() {
             cta_link: updated.cta_link,
             desktop_image_url: updated.desktop_image_url,
             mobile_image_url: updated.mobile_image_url,
+            video_url: updated.video_url || null,
             display_order: updated.display_order,
             is_active: updated.is_active,
           })
@@ -225,14 +259,25 @@ export default function AdminCMSPage() {
   // Add New Banner
   const handleCreateBanner = async (e: React.FormEvent) => {
     e.preventDefault();
+    const newBannerId =
+      typeof crypto !== "undefined" && crypto.randomUUID
+        ? crypto.randomUUID()
+        : `00000000-0000-4000-8000-${Date.now().toString(16).padStart(12, "0")}`;
+
+    const finalVideoUrl =
+      createMediaType === "video" && createForm.video_url?.trim()
+        ? createForm.video_url.trim()
+        : undefined;
+
     const newBanner: Banner = {
-      id: `banner_${Date.now()}`,
+      id: newBannerId,
       title: createForm.title,
       subtitle: createForm.subtitle,
       cta_text: createForm.cta_text,
       cta_link: createForm.cta_link,
       desktop_image_url: createForm.desktop_image_url,
       mobile_image_url: createForm.mobile_image_url || undefined,
+      video_url: finalVideoUrl,
       display_order: Number(createForm.display_order) || banners.length + 1,
       is_active: createForm.is_active,
       type: "hero",
@@ -252,6 +297,7 @@ export default function AdminCMSPage() {
           cta_link: newBanner.cta_link,
           desktop_image_url: newBanner.desktop_image_url,
           mobile_image_url: newBanner.mobile_image_url,
+          video_url: newBanner.video_url || null,
           display_order: newBanner.display_order,
           is_active: newBanner.is_active,
           type: "hero",
@@ -271,9 +317,11 @@ export default function AdminCMSPage() {
       desktop_image_url:
         "https://www.charleskeith.in/dw/image/v2/BCWJ_PRD/on/demandware.static/-/Sites-in-products/default/dw76953c89/images/hi-res/2026-L6-CK2-10160273-A-29-3.jpg?sw=1920&q=85",
       mobile_image_url: "",
+      video_url: "",
       display_order: newBanners.length + 1,
       is_active: true,
     });
+    setCreateMediaType("image");
     showNotification(`New Hero Banner "${newBanner.title}" created & published.`);
   };
 
@@ -334,13 +382,18 @@ export default function AdminCMSPage() {
     }
   };
 
-  // Reset to Default Store Banners
-  const handleResetToDefault = () => {
-    if (confirm("Reset hero banners to the default D'NORA atelier campaign?")) {
-      setBanners(INITIAL_BANNERS);
-      saveAdminBannersOverride(INITIAL_BANNERS);
+  // Refresh Hero Banners directly from Supabase Database
+  const handleRefreshBanners = async () => {
+    setIsLoading(true);
+    try {
       invalidateBannersCache();
-      showNotification("Hero banners reset to default atelier campaign.");
+      const b = await getAllAdminBanners();
+      setBanners(b);
+      showNotification("Hero banners refreshed from database.");
+    } catch {
+      showNotification("Failed to refresh hero banners.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -349,36 +402,50 @@ export default function AdminCMSPage() {
     showNotification("Header announcement bar updated successfully.");
   };
 
-  // Image Upload handler
-  const handleImageUpload = async (
+  // Media Upload handler (Supports Image & Video with offline preview fallback)
+  const handleMediaUpload = async (
     e: React.ChangeEvent<HTMLInputElement>,
     isEdit: boolean,
-    isMobile = false
+    mediaType: "image" | "video"
   ) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setIsUploading(true);
     setUploadError(null);
 
-    const { url, error } = await uploadImageToStorage("banners", file, "hero");
+    let finalUrl: string | null = null;
+    if (isSupabaseConfigured() && supabase) {
+      const folder = mediaType === "video" ? "hero-videos" : "hero";
+      const { url, error } = await uploadImageToStorage("banners", file, folder);
+      if (error) {
+        console.warn("Storage upload notice:", error);
+      } else if (url) {
+        finalUrl = url;
+      }
+    }
+
+    // Fallback: create an object URL so user can preview and test immediately
+    if (!finalUrl) {
+      finalUrl = URL.createObjectURL(file);
+    }
+
     setIsUploading(false);
 
-    if (error) {
-      setUploadError(error);
-    } else if (url) {
+    if (finalUrl) {
       if (isEdit) {
-        if (isMobile) {
-          setEditForm((prev) => ({ ...prev, mobile_image_url: url }));
+        if (mediaType === "video") {
+          setEditForm((prev) => ({ ...prev, video_url: finalUrl! }));
         } else {
-          setEditForm((prev) => ({ ...prev, desktop_image_url: url }));
+          setEditForm((prev) => ({ ...prev, desktop_image_url: finalUrl! }));
         }
       } else {
-        if (isMobile) {
-          setCreateForm((prev) => ({ ...prev, mobile_image_url: url }));
+        if (mediaType === "video") {
+          setCreateForm((prev) => ({ ...prev, video_url: finalUrl! }));
         } else {
-          setCreateForm((prev) => ({ ...prev, desktop_image_url: url }));
+          setCreateForm((prev) => ({ ...prev, desktop_image_url: finalUrl! }));
         }
       }
+      showNotification(`${mediaType === "video" ? "Video" : "Image"} ready for preview!`);
     }
   };
 
@@ -694,16 +761,16 @@ export default function AdminCMSPage() {
             <div className="flex items-center gap-3 flex-wrap">
               <button
                 type="button"
-                onClick={handleResetToDefault}
+                onClick={handleRefreshBanners}
                 className="px-4 py-2.5 rounded-xl neu-btn text-[#475569] hover:text-[#9E7D4E] text-xs font-semibold uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer"
               >
                 <RefreshCw className="w-3.5 h-3.5" />
-                <span>Reset Default</span>
+                <span>Refresh Banners</span>
               </button>
 
               <button
                 type="button"
-                onClick={() => setIsAddModalOpen(true)}
+                onClick={handleOpenAdd}
                 className="px-5 py-2.5 rounded-xl neu-btn-gold text-xs uppercase tracking-widest font-bold text-white transition-all flex items-center gap-2 cursor-pointer"
               >
                 <Plus className="w-4 h-4" />
@@ -720,10 +787,10 @@ export default function AdminCMSPage() {
               </div>
               <div className="space-y-0.5">
                 <p className="text-xs font-bold text-[#0F172A] uppercase tracking-wider font-sans">
-                  Universal Fixed Size: 1920 × 750 px (Single Image Auto-Scale)
+                  Universal Media Support: High-Res Image (1920 × 750) or Cinematic Video (Autoplay)
                 </p>
                 <p className="text-[11px] text-[#475569] leading-relaxed">
-                  Upload just <span className="text-[#9E7D4E] font-semibold">ONE single image</span> of 1920×750 px. Our auto-responsive engine automatically scales, crops, and centers it across <span className="text-[#0F172A] font-semibold">Smartphones, Tablets, Laptops, and 4K Ultra-Wide Desktops</span> seamlessly!
+                  Choose <span className="text-[#9E7D4E] font-semibold">Image</span> or <span className="text-[#9E7D4E] font-semibold">Video</span> for each slide. Our luxury engine autoplays cinematic campaign films with audio toggles, and auto-scales images across Smartphones, Tablets, and 4K Desktops!
                 </p>
               </div>
             </div>
@@ -792,17 +859,17 @@ export default function AdminCMSPage() {
                   <div className="pt-2 flex items-center justify-center gap-3">
                     <button
                       type="button"
-                      onClick={() => setIsAddModalOpen(true)}
+                      onClick={handleOpenAdd}
                       className="px-6 py-2.5 rounded-xl neu-btn-gold text-xs uppercase tracking-widest font-bold text-white cursor-pointer"
                     >
                       + Create New Banner
                     </button>
                     <button
                       type="button"
-                      onClick={handleResetToDefault}
+                      onClick={handleRefreshBanners}
                       className="px-5 py-2.5 rounded-xl neu-btn text-[#475569] hover:text-[#0F172A] text-xs uppercase tracking-widest font-semibold cursor-pointer"
                     >
-                      Restore Default
+                      Refresh Banners
                     </button>
                   </div>
                 </div>
@@ -921,6 +988,13 @@ export default function AdminCMSPage() {
                             <span className="px-2.5 py-1 rounded-lg neu-inset bg-[#F1F5F9] text-[10px] text-[#10B981] font-mono font-medium">
                               Auto-Scaled All Screens
                             </span>
+
+                            {banner.video_url && (
+                              <span className="px-2.5 py-1 rounded-lg neu-inset bg-[#F1F5F9] text-[10px] text-[#9E7D4E] font-mono font-medium flex items-center gap-1.5">
+                                <span className="w-1.5 h-1.5 rounded-full bg-[#9E7D4E] animate-pulse" />
+                                <span>Cinematic Video Active</span>
+                              </span>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -1016,18 +1090,29 @@ export default function AdminCMSPage() {
                         : "w-[300px] sm:w-[320px] aspect-[9/16] rounded-[36px] neu-inset p-3 shadow-2xl border border-slate-300"
                     }`}
                   >
-                    <div className="relative w-full h-full rounded-xl overflow-hidden">
-                      <Image
-                        src={
-                          previewMode === "mobile" && currentPreview.mobile_image_url
-                            ? currentPreview.mobile_image_url
-                            : currentPreview.desktop_image_url
-                        }
-                        alt={currentPreview.title}
-                        fill
-                        unoptimized
-                        className="object-cover object-center"
-                      />
+                    <div className="relative w-full h-full rounded-xl overflow-hidden bg-black">
+                      {currentPreview.video_url ? (
+                        <video
+                          src={currentPreview.video_url}
+                          autoPlay
+                          loop
+                          muted
+                          playsInline
+                          className="w-full h-full object-cover object-center"
+                        />
+                      ) : (
+                        <Image
+                          src={
+                            previewMode === "mobile" && currentPreview.mobile_image_url
+                              ? currentPreview.mobile_image_url
+                              : currentPreview.desktop_image_url
+                          }
+                          alt={currentPreview.title}
+                          fill
+                          unoptimized
+                          className="object-cover object-center"
+                        />
+                      )}
 
                       <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent flex flex-col justify-end p-6 sm:p-8 text-[#FBF9F5]">
                         <span className="text-[9px] uppercase tracking-[0.3em] text-[#C5A880] font-mono font-semibold">
@@ -1297,201 +1382,347 @@ export default function AdminCMSPage() {
       )}
 
       {/* =========================================================================
-          EDIT BANNER MODAL (WITH 1920x750 FIXED DIMENSION GUIDANCE)
+          EDIT BANNER MODAL (SIMPLE, CLEAN, LUXURY PROFESSIONAL)
           ========================================================================= */}
       {editingBanner && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="rounded-3xl neu-card bg-white p-6 sm:p-8 max-w-xl w-full max-h-[90vh] overflow-y-auto space-y-6 text-xs shadow-2xl border border-slate-200">
-            <div className="flex items-center justify-between pb-4 border-b border-slate-200/80">
-              <div className="space-y-0.5">
-                <span className="text-[10px] uppercase tracking-[0.25em] text-[#9E7D4E] font-mono font-semibold">
-                  Hero Banner Customizer
-                </span>
-                <h3 className="text-lg font-sans font-bold text-[#0F172A] uppercase tracking-wider">
-                  Edit Banner Slide
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/70 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[92vh]">
+            {/* Clean Header */}
+            <div className="px-6 py-4 bg-[#FAF8F5] border-b border-slate-200/80 flex items-center justify-between">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] uppercase tracking-[0.25em] text-[#9E7D4E] font-mono font-bold">
+                    Hero Slide Customizer
+                  </span>
+                  <span className="text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#10B981]/15 text-[#10B981] font-mono font-semibold">
+                    Editing #{editingBanner.display_order ?? 1}
+                  </span>
+                </div>
+                <h3 className="text-lg font-sans font-bold text-[#0F172A] tracking-wide mt-0.5">
+                  Edit Hero Banner
                 </h3>
               </div>
               <button
                 type="button"
                 onClick={() => setEditingBanner(null)}
-                className="p-2 rounded-xl neu-btn text-[#64748B] hover:text-[#0F172A] transition-all cursor-pointer"
+                className="w-8 h-8 rounded-xl neu-btn flex items-center justify-center text-[#64748B] hover:text-[#0F172A] transition-all cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <form onSubmit={handleSaveEdit} className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-[10px] uppercase tracking-widest text-[#475569] font-mono font-semibold">
-                  Campaign Title / Headline
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={editForm.title}
-                  onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
-                  placeholder="e.g. The Autumn Handbag Capsule"
-                  className="w-full px-4 py-3 rounded-xl neu-inset bg-[#F1F5F9] text-xs text-[#0F172A] placeholder-[#94A3B8] focus:outline-none focus:ring-1 focus:ring-[#C5A880]/50 transition-all"
-                />
+            {/* Scrollable Form Body */}
+            <form onSubmit={handleSaveEdit} className="overflow-y-auto p-5 sm:p-6 space-y-5 flex-1 text-xs">
+              
+              {/* STEP 1: MEDIA FORMAT TOGGLE (IMAGE VS VIDEO) */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-[11px] uppercase tracking-widest text-[#475569] font-mono font-bold">
+                    1. Media Format (Image or Video)
+                  </label>
+                  <span className="text-[10px] text-[#9E7D4E] font-mono font-medium">
+                    {editMediaType === "video" ? "🎬 Cinematic Video Film" : "🖼️ High-Resolution Static Image"}
+                  </span>
+                </div>
+
+                {/* Media Switcher Segmented Pills */}
+                <div className="grid grid-cols-2 gap-2 p-1 rounded-2xl neu-inset bg-[#F1F5F9]">
+                  <button
+                    type="button"
+                    onClick={() => setEditMediaType("image")}
+                    className={`py-2.5 px-4 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                      editMediaType === "image"
+                        ? "bg-white shadow-sm text-[#0F172A] border border-slate-200 font-bold"
+                        : "text-[#64748B] hover:text-[#0F172A]"
+                    }`}
+                  >
+                    <ImageIcon className="w-4 h-4 text-[#9E7D4E]" />
+                    <span>Image Banner</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setEditMediaType("video")}
+                    className={`py-2.5 px-4 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                      editMediaType === "video"
+                        ? "bg-white shadow-sm text-[#0F172A] border border-[#9E7D4E]/50 text-[#9E7D4E] font-bold"
+                        : "text-[#64748B] hover:text-[#0F172A]"
+                    }`}
+                  >
+                    <Film className="w-4 h-4 text-[#9E7D4E]" />
+                    <span className="flex items-center gap-1.5">
+                      <span>Video Campaign</span>
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#10B981] animate-pulse" />
+                    </span>
+                  </button>
+                </div>
+
+                {/* --- VIDEO CONFIGURATION PANEL --- */}
+                {editMediaType === "video" ? (
+                  <div className="p-4 rounded-2xl border border-[#C5A880]/40 bg-[#FAF8F5] space-y-3.5">
+                    {/* Live Video Preview if URL exists */}
+                    {editForm.video_url && (
+                      <div className="relative aspect-[16/7] rounded-xl overflow-hidden bg-black border border-slate-200 shadow-inner group">
+                        <video
+                          src={editForm.video_url}
+                          autoPlay
+                          loop
+                          muted
+                          playsInline
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute top-2.5 left-2.5 bg-black/75 backdrop-blur-sm px-2 py-0.5 rounded-lg text-[9px] font-mono text-emerald-400 uppercase tracking-widest flex items-center gap-1.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                          <span>Autoplay Video Active</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Upload Video File Button */}
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <label className="text-[10px] uppercase tracking-wider text-[#475569] font-mono font-semibold">
+                          Upload Video File (.mp4, .webm)
+                        </label>
+                        <span className="text-[9px] text-[#9E7D4E] font-mono">
+                          Autoplays on page load
+                        </span>
+                      </div>
+                      <div className="flex flex-col sm:flex-row items-center gap-2.5">
+                        <label className="w-full sm:w-auto px-4 py-2.5 rounded-xl neu-btn text-xs font-semibold text-[#0F172A] hover:text-[#9E7D4E] cursor-pointer flex items-center justify-center gap-2 transition-all border border-slate-200">
+                          {isUploading ? (
+                            <>
+                              <Loader2 className="w-4 h-4 animate-spin text-[#9E7D4E]" />
+                              <span>Uploading...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Upload className="w-4 h-4 text-[#9E7D4E]" />
+                              <span>Upload Video File</span>
+                            </>
+                          )}
+                          <input
+                            type="file"
+                            accept="video/mp4,video/webm,video/ogg"
+                            disabled={isUploading}
+                            onChange={(e) => handleMediaUpload(e, true, "video")}
+                            className="hidden"
+                          />
+                        </label>
+                        <span className="text-[11px] text-[#64748B] font-mono">
+                          or paste direct video URL below:
+                        </span>
+                      </div>
+                      <input
+                        type="text"
+                        value={editForm.video_url}
+                        onChange={(e) =>
+                          setEditForm({ ...editForm, video_url: e.target.value })
+                        }
+                        placeholder="/videos/hero-banner.mp4 or https://cdn.example.com/campaign.mp4"
+                        className="w-full px-3.5 py-2.5 rounded-xl neu-inset bg-[#F1F5F9] text-xs text-[#0F172A] font-mono focus:outline-none focus:ring-1 focus:ring-[#C5A880]"
+                      />
+                    </div>
+
+                    {/* Poster / Fallback Image for Video */}
+                    <div className="space-y-1.5 pt-2 border-t border-slate-200/60">
+                      <div className="flex items-center justify-between">
+                        <label className="text-[10px] uppercase tracking-wider text-[#475569] font-mono font-semibold">
+                          Poster / Fallback Image (Recommended)
+                        </label>
+                        <span className="text-[9px] text-[#64748B] font-mono">
+                          Displays while video loads
+                        </span>
+                      </div>
+                      <input
+                        type="url"
+                        required
+                        value={editForm.desktop_image_url}
+                        onChange={(e) =>
+                          setEditForm({ ...editForm, desktop_image_url: e.target.value })
+                        }
+                        placeholder="https://..."
+                        className="w-full px-3.5 py-2.5 rounded-xl neu-inset bg-[#F1F5F9] text-xs text-[#0F172A] font-mono focus:outline-none focus:ring-1 focus:ring-[#C5A880]"
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  /* --- IMAGE CONFIGURATION PANEL --- */
+                  <div className="p-4 rounded-2xl border border-slate-200 bg-[#FAF8F5] space-y-3.5">
+                    {/* Live Image Preview */}
+                    {editForm.desktop_image_url && (
+                      <div className="relative aspect-[16/7] rounded-xl overflow-hidden bg-slate-100 border border-slate-200 shadow-inner">
+                        <Image
+                          src={editForm.desktop_image_url}
+                          alt="Preview"
+                          fill
+                          unoptimized
+                          className="object-cover"
+                        />
+                        <div className="absolute top-2.5 left-2.5 bg-black/75 backdrop-blur-sm px-2 py-0.5 rounded-lg text-[9px] font-mono text-[#DFCAAB] uppercase tracking-widest">
+                          1920 × 750 Asset
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Upload Image Button */}
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <label className="text-[10px] uppercase tracking-wider text-[#475569] font-mono font-semibold">
+                          Upload Banner Image
+                        </label>
+                        <span className="text-[9px] text-[#10B981] font-mono font-medium">
+                          1920 × 750 px (Auto-Scales All Devices)
+                        </span>
+                      </div>
+                      <div className="flex flex-col sm:flex-row items-center gap-2.5">
+                        <label className="w-full sm:w-auto px-4 py-2.5 rounded-xl neu-btn text-xs font-semibold text-[#0F172A] hover:text-[#9E7D4E] cursor-pointer flex items-center justify-center gap-2 transition-all border border-slate-200">
+                          {isUploading ? (
+                            <>
+                              <Loader2 className="w-4 h-4 animate-spin text-[#9E7D4E]" />
+                              <span>Uploading...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Upload className="w-4 h-4 text-[#9E7D4E]" />
+                              <span>Upload Image File</span>
+                            </>
+                          )}
+                          <input
+                            type="file"
+                            accept="image/*"
+                            disabled={isUploading}
+                            onChange={(e) => handleMediaUpload(e, true, "image")}
+                            className="hidden"
+                          />
+                        </label>
+                        <span className="text-[11px] text-[#64748B] font-mono">
+                          or paste image link below:
+                        </span>
+                      </div>
+                      <input
+                        type="url"
+                        required
+                        value={editForm.desktop_image_url}
+                        onChange={(e) =>
+                          setEditForm({ ...editForm, desktop_image_url: e.target.value })
+                        }
+                        placeholder="https://images.unsplash.com/... or CDN link"
+                        className="w-full px-3.5 py-2.5 rounded-xl neu-inset bg-[#F1F5F9] text-xs text-[#0F172A] font-mono focus:outline-none focus:ring-1 focus:ring-[#C5A880]"
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-[10px] uppercase tracking-widest text-[#475569] font-mono font-semibold">
-                  Narrative Subtitle
+              {/* STEP 2: CAMPAIGN TITLE & SUBTITLE */}
+              <div className="space-y-3 pt-2 border-t border-slate-200/70">
+                <label className="text-[11px] uppercase tracking-widest text-[#475569] font-mono font-bold block">
+                  2. Headline &amp; Narrative
                 </label>
-                <textarea
-                  rows={2}
-                  value={editForm.subtitle}
-                  onChange={(e) => setEditForm({ ...editForm, subtitle: e.target.value })}
-                  placeholder="Explore the new sculptural silhouettes..."
-                  className="w-full px-4 py-3 rounded-xl neu-inset bg-[#F1F5F9] text-xs text-[#0F172A] placeholder-[#94A3B8] focus:outline-none focus:ring-1 focus:ring-[#C5A880]/50 transition-all"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-[10px] uppercase tracking-widest text-[#475569] font-mono font-semibold">
-                    CTA Button Text
+                
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase tracking-wider text-[#64748B] font-mono font-semibold">
+                    Campaign Title
                   </label>
                   <input
                     type="text"
                     required
-                    value={editForm.cta_text}
-                    onChange={(e) => setEditForm({ ...editForm, cta_text: e.target.value })}
-                    placeholder="Shop The Collection"
-                    className="w-full px-4 py-3 rounded-xl neu-inset bg-[#F1F5F9] text-xs text-[#0F172A] placeholder-[#94A3B8] focus:outline-none focus:ring-1 focus:ring-[#C5A880]/50 transition-all font-semibold"
+                    value={editForm.title}
+                    onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+                    placeholder="e.g. The Autumn Handbag Capsule"
+                    className="w-full px-4 py-2.5 rounded-xl neu-inset bg-[#F1F5F9] text-xs text-[#0F172A] font-medium focus:outline-none focus:ring-1 focus:ring-[#C5A880]"
                   />
                 </div>
 
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <label className="text-[10px] uppercase tracking-widest text-[#475569] font-mono font-semibold">
-                      CTA Destination Link
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase tracking-wider text-[#64748B] font-mono font-semibold">
+                    Subtitle Narrative (Optional)
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={editForm.subtitle}
+                    onChange={(e) => setEditForm({ ...editForm, subtitle: e.target.value })}
+                    placeholder="Explore new sculptural silhouettes..."
+                    className="w-full px-4 py-2 rounded-xl neu-inset bg-[#F1F5F9] text-xs text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#C5A880]"
+                  />
+                </div>
+              </div>
+
+              {/* STEP 3: CALL TO ACTION */}
+              <div className="space-y-3 pt-2 border-t border-slate-200/70">
+                <label className="text-[11px] uppercase tracking-widest text-[#475569] font-mono font-bold block">
+                  3. Call-To-Action Button
+                </label>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-[10px] uppercase tracking-wider text-[#64748B] font-mono font-semibold">
+                      Button Label
                     </label>
-                    <span className="text-[9px] text-[#9E7D4E] font-mono font-semibold">
-                      Select Available Route
-                    </span>
+                    <input
+                      type="text"
+                      required
+                      value={editForm.cta_text}
+                      onChange={(e) => setEditForm({ ...editForm, cta_text: e.target.value })}
+                      placeholder="Shop The Collection"
+                      className="w-full px-4 py-2.5 rounded-xl neu-inset bg-[#F1F5F9] text-xs text-[#0F172A] font-semibold focus:outline-none focus:ring-1 focus:ring-[#C5A880]"
+                    />
                   </div>
 
-                  {/* Available CTAs Dropdown */}
-                  <select
-                    value={
-                      isKnownDestination(editForm.cta_link)
-                        ? editForm.cta_link
-                        : "custom"
-                    }
-                    onChange={(e) => {
-                      const selectedVal = e.target.value;
-                      if (selectedVal !== "custom") {
-                        setEditForm({
-                          ...editForm,
-                          cta_link: selectedVal,
-                          cta_text: editForm.cta_text || getDestinationDefaultText(selectedVal),
-                        });
-                      }
-                    }}
-                    className="w-full px-4 py-3 rounded-xl neu-inset bg-[#F1F5F9] text-xs text-[#0F172A] font-medium focus:outline-none focus:ring-1 focus:ring-[#C5A880]/50 transition-all cursor-pointer"
-                  >
-                    <optgroup label="Storefront Hubs">
-                      {STOREFRONT_DESTINATIONS.slice(0, 3).map((item) => (
-                        <option key={item.value} value={item.value}>
-                          {item.label}
-                        </option>
-                      ))}
-                    </optgroup>
-                    {categories.length > 0 && (
-                      <optgroup label="Category Realms">
-                        {categories.map((c) => (
-                          <option key={c.slug} value={`/shop/${c.slug}`}>
-                            Category: {c.name} (/shop/{c.slug})
+                  <div className="space-y-1">
+                    <label className="text-[10px] uppercase tracking-wider text-[#64748B] font-mono font-semibold">
+                      Destination Preset
+                    </label>
+                    <select
+                      value={isKnownDestination(editForm.cta_link) ? editForm.cta_link : "custom"}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val !== "custom") {
+                          setEditForm({
+                            ...editForm,
+                            cta_link: val,
+                            cta_text: editForm.cta_text || getDestinationDefaultText(val),
+                          });
+                        }
+                      }}
+                      className="w-full px-4 py-2.5 rounded-xl neu-inset bg-[#F1F5F9] text-xs text-[#0F172A] font-medium focus:outline-none focus:ring-1 focus:ring-[#C5A880] cursor-pointer"
+                    >
+                      <optgroup label="Storefront Destinations">
+                        {STOREFRONT_DESTINATIONS.map((d) => (
+                          <option key={d.value} value={d.value}>
+                            {d.label}
                           </option>
                         ))}
                       </optgroup>
-                    )}
-                    <optgroup label="Brand &amp; Support">
-                      {STOREFRONT_DESTINATIONS.slice(3).map((item) => (
-                        <option key={item.value} value={item.value}>
-                          {item.label}
-                        </option>
-                      ))}
-                    </optgroup>
-                    <option value="custom">Custom Destination URL (Type below)...</option>
-                  </select>
-
-                  {/* Direct editable link input */}
-                  <input
-                    type="text"
-                    required
-                    value={editForm.cta_link}
-                    onChange={(e) => setEditForm({ ...editForm, cta_link: e.target.value })}
-                    placeholder="/shop or /shop/handbags"
-                    className="w-full px-4 py-2.5 rounded-xl neu-inset bg-[#F1F5F9] text-xs text-[#0F172A] font-mono focus:outline-none focus:ring-1 focus:ring-[#C5A880]/50 transition-all"
-                  />
+                      {categories.length > 0 && (
+                        <optgroup label="Product Categories">
+                          {categories.map((c) => (
+                            <option key={c.slug} value={`/shop/${c.slug}`}>
+                              Category: {c.name}
+                            </option>
+                          ))}
+                        </optgroup>
+                      )}
+                      <option value="custom">Custom URL Link...</option>
+                    </select>
+                  </div>
                 </div>
+
+                <input
+                  type="text"
+                  required
+                  value={editForm.cta_link}
+                  onChange={(e) => setEditForm({ ...editForm, cta_link: e.target.value })}
+                  placeholder="/shop or custom URL"
+                  className="w-full px-4 py-2 rounded-xl neu-inset bg-[#F1F5F9] text-xs text-[#0F172A] font-mono focus:outline-none focus:ring-1 focus:ring-[#C5A880]"
+                />
               </div>
 
-              {/* Universal Fixed 1920x750 Image Upload */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <label className="text-[10px] uppercase tracking-widest text-[#475569] font-mono font-semibold block">
-                      Universal Banner Image
-                    </label>
-                    <span className="text-[9px] text-[#10B981] font-mono font-medium">
-                      Recommended: 1920 × 750 px (Auto-Scales All Devices)
-                    </span>
-                  </div>
-                  <label className="cursor-pointer px-3 py-1.5 rounded-xl neu-btn text-[10px] font-mono text-[#9E7D4E] uppercase tracking-wider font-semibold transition-all flex items-center gap-1.5">
-                    {isUploading ? (
-                      <>
-                        <Loader2 className="w-3 h-3 animate-spin" />
-                        <span>Uploading...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Upload className="w-3 h-3" />
-                        <span>Upload File</span>
-                      </>
-                    )}
-                    <input
-                      type="file"
-                      accept="image/*"
-                      disabled={isUploading}
-                      onChange={(e) => handleImageUpload(e, true, false)}
-                      className="hidden"
-                    />
-                  </label>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <div className="relative w-20 h-12 rounded-lg neu-inset bg-[#F1F5F9] p-0.5 overflow-hidden flex-shrink-0 border border-slate-200">
-                    {editForm.desktop_image_url && (
-                      <Image
-                        src={editForm.desktop_image_url}
-                        alt="Preview"
-                        fill
-                        unoptimized
-                        className="object-cover rounded"
-                      />
-                    )}
-                  </div>
-                  <input
-                    type="url"
-                    required
-                    value={editForm.desktop_image_url}
-                    onChange={(e) =>
-                      setEditForm({ ...editForm, desktop_image_url: e.target.value })
-                    }
-                    placeholder="https://..."
-                    className="flex-1 px-4 py-3 rounded-xl neu-inset bg-[#F1F5F9] text-xs text-[#0F172A] font-mono focus:outline-none focus:ring-1 focus:ring-[#C5A880]/50 transition-all"
-                  />
-                </div>
-              </div>
-
-              {/* Display Order & Active Toggle */}
-              <div className="grid grid-cols-2 gap-4 pt-2">
-                <div className="space-y-1.5">
-                  <label className="text-[10px] uppercase tracking-widest text-[#475569] font-mono font-semibold">
+              {/* STEP 4: DISPLAY ORDER & ACTIVE STATUS */}
+              <div className="grid grid-cols-2 gap-4 pt-2 border-t border-slate-200/70">
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase tracking-wider text-[#64748B] font-mono font-semibold">
                     Display Order
                   </label>
                   <input
@@ -1501,12 +1732,12 @@ export default function AdminCMSPage() {
                     onChange={(e) =>
                       setEditForm({ ...editForm, display_order: Number(e.target.value) })
                     }
-                    className="w-full px-4 py-3 rounded-xl neu-inset bg-[#F1F5F9] text-xs text-[#0F172A] font-mono focus:outline-none focus:ring-1 focus:ring-[#C5A880]/50 transition-all font-semibold"
+                    className="w-full px-4 py-2.5 rounded-xl neu-inset bg-[#F1F5F9] text-xs text-[#0F172A] font-mono font-semibold focus:outline-none focus:ring-1 focus:ring-[#C5A880]"
                   />
                 </div>
 
-                <div className="flex items-end pb-1">
-                  <label className="flex items-center gap-2.5 cursor-pointer p-3 rounded-xl neu-inset bg-[#F1F5F9] w-full">
+                <div className="flex items-end pb-0.5">
+                  <label className="flex items-center gap-2.5 cursor-pointer p-2.5 rounded-xl neu-inset bg-[#F1F5F9] w-full select-none">
                     <input
                       type="checkbox"
                       checked={editForm.is_active}
@@ -1515,15 +1746,20 @@ export default function AdminCMSPage() {
                       }
                       className="accent-[#10B981] w-4 h-4 cursor-pointer"
                     />
-                    <span className="text-[#10B981] font-bold text-xs">
-                      Live on Site
-                    </span>
+                    <div>
+                      <span className="text-xs font-bold text-[#0F172A] block">
+                        {editForm.is_active ? "Live on Site" : "Draft (Hidden)"}
+                      </span>
+                      <span className="text-[9px] text-[#64748B] font-mono">
+                        {editForm.is_active ? "Visible to customers" : "Hidden from homepage"}
+                      </span>
+                    </div>
                   </label>
                 </div>
               </div>
 
-              {/* Modal Footer Buttons */}
-              <div className="flex justify-end gap-3 pt-4 border-t border-slate-200/80">
+              {/* MODAL FOOTER */}
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
                 <button
                   type="button"
                   onClick={() => setEditingBanner(null)}
@@ -1533,9 +1769,9 @@ export default function AdminCMSPage() {
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2.5 rounded-xl neu-btn-gold text-xs uppercase tracking-widest font-bold text-white transition-all cursor-pointer"
+                  className="px-7 py-2.5 rounded-xl neu-btn-gold text-xs uppercase tracking-widest font-bold text-white shadow-md hover:shadow-lg transition-all cursor-pointer"
                 >
-                  Save Changes
+                  Save Slide Changes
                 </button>
               </div>
             </form>
@@ -1544,198 +1780,347 @@ export default function AdminCMSPage() {
       )}
 
       {/* =========================================================================
-          ADD NEW BANNER MODAL (WITH 1920x750 FIXED DIMENSION GUIDANCE)
+          ADD NEW BANNER MODAL (SIMPLE, CLEAN, LUXURY PROFESSIONAL)
           ========================================================================= */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="rounded-3xl neu-card bg-white p-6 sm:p-8 max-w-xl w-full max-h-[90vh] overflow-y-auto space-y-6 text-xs shadow-2xl border border-slate-200">
-            <div className="flex items-center justify-between pb-4 border-b border-slate-200/80">
-              <div className="space-y-0.5">
-                <span className="text-[10px] uppercase tracking-[0.25em] text-[#9E7D4E] font-mono font-semibold">
-                  New Campaign
-                </span>
-                <h3 className="font-sans font-bold text-lg text-[#0F172A] uppercase tracking-wider">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/70 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[92vh]">
+            {/* Clean Header */}
+            <div className="px-6 py-4 bg-[#FAF8F5] border-b border-slate-200/80 flex items-center justify-between">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] uppercase tracking-[0.25em] text-[#9E7D4E] font-mono font-bold">
+                    Hero Campaign Creator
+                  </span>
+                  <span className="text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#9E7D4E]/15 text-[#9E7D4E] font-mono font-semibold">
+                    New Slide
+                  </span>
+                </div>
+                <h3 className="text-lg font-sans font-bold text-[#0F172A] tracking-wide mt-0.5">
                   Create Hero Banner
                 </h3>
               </div>
               <button
                 type="button"
                 onClick={() => setIsAddModalOpen(false)}
-                className="p-2 rounded-xl neu-btn text-[#64748B] hover:text-[#0F172A] transition-all cursor-pointer"
+                className="w-8 h-8 rounded-xl neu-btn flex items-center justify-center text-[#64748B] hover:text-[#0F172A] transition-all cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <form onSubmit={handleCreateBanner} className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-[10px] uppercase tracking-widest text-[#475569] font-mono font-semibold">
-                  Campaign Title / Headline
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={createForm.title}
-                  onChange={(e) =>
-                    setCreateForm({ ...createForm, title: e.target.value })
-                  }
-                  placeholder="e.g. The Royal Trousseau Capsule"
-                  className="w-full px-4 py-3 rounded-xl neu-inset bg-[#F1F5F9] text-xs text-[#0F172A] placeholder-[#94A3B8] focus:outline-none focus:ring-1 focus:ring-[#C5A880]/50 transition-all"
-                />
+            {/* Scrollable Form Body */}
+            <form onSubmit={handleCreateBanner} className="overflow-y-auto p-5 sm:p-6 space-y-5 flex-1 text-xs">
+              
+              {/* STEP 1: MEDIA FORMAT TOGGLE (IMAGE VS VIDEO) */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-[11px] uppercase tracking-widest text-[#475569] font-mono font-bold">
+                    1. Media Format (Image or Video)
+                  </label>
+                  <span className="text-[10px] text-[#9E7D4E] font-mono font-medium">
+                    {createMediaType === "video" ? "🎬 Cinematic Video Film" : "🖼️ High-Resolution Static Image"}
+                  </span>
+                </div>
+
+                {/* Media Switcher Segmented Pills */}
+                <div className="grid grid-cols-2 gap-2 p-1 rounded-2xl neu-inset bg-[#F1F5F9]">
+                  <button
+                    type="button"
+                    onClick={() => setCreateMediaType("image")}
+                    className={`py-2.5 px-4 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                      createMediaType === "image"
+                        ? "bg-white shadow-sm text-[#0F172A] border border-slate-200 font-bold"
+                        : "text-[#64748B] hover:text-[#0F172A]"
+                    }`}
+                  >
+                    <ImageIcon className="w-4 h-4 text-[#9E7D4E]" />
+                    <span>Image Banner</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setCreateMediaType("video")}
+                    className={`py-2.5 px-4 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                      createMediaType === "video"
+                        ? "bg-white shadow-sm text-[#0F172A] border border-[#9E7D4E]/50 text-[#9E7D4E] font-bold"
+                        : "text-[#64748B] hover:text-[#0F172A]"
+                    }`}
+                  >
+                    <Film className="w-4 h-4 text-[#9E7D4E]" />
+                    <span className="flex items-center gap-1.5">
+                      <span>Video Campaign</span>
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#10B981] animate-pulse" />
+                    </span>
+                  </button>
+                </div>
+
+                {/* --- VIDEO CONFIGURATION PANEL --- */}
+                {createMediaType === "video" ? (
+                  <div className="p-4 rounded-2xl border border-[#C5A880]/40 bg-[#FAF8F5] space-y-3.5">
+                    {/* Live Video Preview if URL exists */}
+                    {createForm.video_url && (
+                      <div className="relative aspect-[16/7] rounded-xl overflow-hidden bg-black border border-slate-200 shadow-inner group">
+                        <video
+                          src={createForm.video_url}
+                          autoPlay
+                          loop
+                          muted
+                          playsInline
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute top-2.5 left-2.5 bg-black/75 backdrop-blur-sm px-2 py-0.5 rounded-lg text-[9px] font-mono text-emerald-400 uppercase tracking-widest flex items-center gap-1.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                          <span>Autoplay Video Active</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Upload Video File Button */}
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <label className="text-[10px] uppercase tracking-wider text-[#475569] font-mono font-semibold">
+                          Upload Video File (.mp4, .webm)
+                        </label>
+                        <span className="text-[9px] text-[#9E7D4E] font-mono">
+                          Autoplays on page load
+                        </span>
+                      </div>
+                      <div className="flex flex-col sm:flex-row items-center gap-2.5">
+                        <label className="w-full sm:w-auto px-4 py-2.5 rounded-xl neu-btn text-xs font-semibold text-[#0F172A] hover:text-[#9E7D4E] cursor-pointer flex items-center justify-center gap-2 transition-all border border-slate-200">
+                          {isUploading ? (
+                            <>
+                              <Loader2 className="w-4 h-4 animate-spin text-[#9E7D4E]" />
+                              <span>Uploading...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Upload className="w-4 h-4 text-[#9E7D4E]" />
+                              <span>Upload Video File</span>
+                            </>
+                          )}
+                          <input
+                            type="file"
+                            accept="video/mp4,video/webm,video/ogg"
+                            disabled={isUploading}
+                            onChange={(e) => handleMediaUpload(e, false, "video")}
+                            className="hidden"
+                          />
+                        </label>
+                        <span className="text-[11px] text-[#64748B] font-mono">
+                          or paste direct video URL below:
+                        </span>
+                      </div>
+                      <input
+                        type="text"
+                        value={createForm.video_url}
+                        onChange={(e) =>
+                          setCreateForm({ ...createForm, video_url: e.target.value })
+                        }
+                        placeholder="/videos/hero-banner.mp4 or https://cdn.example.com/campaign.mp4"
+                        className="w-full px-3.5 py-2.5 rounded-xl neu-inset bg-[#F1F5F9] text-xs text-[#0F172A] font-mono focus:outline-none focus:ring-1 focus:ring-[#C5A880]"
+                      />
+                    </div>
+
+                    {/* Poster / Fallback Image for Video */}
+                    <div className="space-y-1.5 pt-2 border-t border-slate-200/60">
+                      <div className="flex items-center justify-between">
+                        <label className="text-[10px] uppercase tracking-wider text-[#475569] font-mono font-semibold">
+                          Poster / Fallback Image (Recommended)
+                        </label>
+                        <span className="text-[9px] text-[#64748B] font-mono">
+                          Displays while video loads
+                        </span>
+                      </div>
+                      <input
+                        type="url"
+                        required
+                        value={createForm.desktop_image_url}
+                        onChange={(e) =>
+                          setCreateForm({ ...createForm, desktop_image_url: e.target.value })
+                        }
+                        placeholder="https://..."
+                        className="w-full px-3.5 py-2.5 rounded-xl neu-inset bg-[#F1F5F9] text-xs text-[#0F172A] font-mono focus:outline-none focus:ring-1 focus:ring-[#C5A880]"
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  /* --- IMAGE CONFIGURATION PANEL --- */
+                  <div className="p-4 rounded-2xl border border-slate-200 bg-[#FAF8F5] space-y-3.5">
+                    {/* Live Image Preview */}
+                    {createForm.desktop_image_url && (
+                      <div className="relative aspect-[16/7] rounded-xl overflow-hidden bg-slate-100 border border-slate-200 shadow-inner">
+                        <Image
+                          src={createForm.desktop_image_url}
+                          alt="Preview"
+                          fill
+                          unoptimized
+                          className="object-cover"
+                        />
+                        <div className="absolute top-2.5 left-2.5 bg-black/75 backdrop-blur-sm px-2 py-0.5 rounded-lg text-[9px] font-mono text-[#DFCAAB] uppercase tracking-widest">
+                          1920 × 750 Asset
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Upload Image Button */}
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <label className="text-[10px] uppercase tracking-wider text-[#475569] font-mono font-semibold">
+                          Upload Banner Image
+                        </label>
+                        <span className="text-[9px] text-[#10B981] font-mono font-medium">
+                          1920 × 750 px (Auto-Scales All Devices)
+                        </span>
+                      </div>
+                      <div className="flex flex-col sm:flex-row items-center gap-2.5">
+                        <label className="w-full sm:w-auto px-4 py-2.5 rounded-xl neu-btn text-xs font-semibold text-[#0F172A] hover:text-[#9E7D4E] cursor-pointer flex items-center justify-center gap-2 transition-all border border-slate-200">
+                          {isUploading ? (
+                            <>
+                              <Loader2 className="w-4 h-4 animate-spin text-[#9E7D4E]" />
+                              <span>Uploading...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Upload className="w-4 h-4 text-[#9E7D4E]" />
+                              <span>Upload Image File</span>
+                            </>
+                          )}
+                          <input
+                            type="file"
+                            accept="image/*"
+                            disabled={isUploading}
+                            onChange={(e) => handleMediaUpload(e, false, "image")}
+                            className="hidden"
+                          />
+                        </label>
+                        <span className="text-[11px] text-[#64748B] font-mono">
+                          or paste image link below:
+                        </span>
+                      </div>
+                      <input
+                        type="url"
+                        required
+                        value={createForm.desktop_image_url}
+                        onChange={(e) =>
+                          setCreateForm({ ...createForm, desktop_image_url: e.target.value })
+                        }
+                        placeholder="https://images.unsplash.com/... or CDN link"
+                        className="w-full px-3.5 py-2.5 rounded-xl neu-inset bg-[#F1F5F9] text-xs text-[#0F172A] font-mono focus:outline-none focus:ring-1 focus:ring-[#C5A880]"
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-[10px] uppercase tracking-widest text-[#475569] font-mono font-semibold">
-                  Narrative Subtitle
+              {/* STEP 2: CAMPAIGN TITLE & SUBTITLE */}
+              <div className="space-y-3 pt-2 border-t border-slate-200/70">
+                <label className="text-[11px] uppercase tracking-widest text-[#475569] font-mono font-bold block">
+                  2. Headline &amp; Narrative
                 </label>
-                <textarea
-                  rows={2}
-                  value={createForm.subtitle}
-                  onChange={(e) =>
-                    setCreateForm({ ...createForm, subtitle: e.target.value })
-                  }
-                  placeholder="Architectural silhouettes tailored in noble full-grain leathers..."
-                  className="w-full px-4 py-3 rounded-xl neu-inset bg-[#F1F5F9] text-xs text-[#0F172A] placeholder-[#94A3B8] focus:outline-none focus:ring-1 focus:ring-[#C5A880]/50 transition-all"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-[10px] uppercase tracking-widest text-[#475569] font-mono font-semibold">
-                    CTA Button Text
+                
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase tracking-wider text-[#64748B] font-mono font-semibold">
+                    Campaign Title
                   </label>
                   <input
                     type="text"
                     required
-                    value={createForm.cta_text}
-                    onChange={(e) =>
-                      setCreateForm({ ...createForm, cta_text: e.target.value })
-                    }
-                    placeholder="Shop The Collection"
-                    className="w-full px-4 py-3 rounded-xl neu-inset bg-[#F1F5F9] text-xs text-[#0F172A] placeholder-[#94A3B8] focus:outline-none focus:ring-1 focus:ring-[#C5A880]/50 transition-all font-semibold"
+                    value={createForm.title}
+                    onChange={(e) => setCreateForm({ ...createForm, title: e.target.value })}
+                    placeholder="e.g. The Royal Capsule"
+                    className="w-full px-4 py-2.5 rounded-xl neu-inset bg-[#F1F5F9] text-xs text-[#0F172A] font-medium focus:outline-none focus:ring-1 focus:ring-[#C5A880]"
                   />
                 </div>
 
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <label className="text-[10px] uppercase tracking-widest text-[#475569] font-mono font-semibold">
-                      CTA Destination Link
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase tracking-wider text-[#64748B] font-mono font-semibold">
+                    Subtitle Narrative (Optional)
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={createForm.subtitle}
+                    onChange={(e) => setCreateForm({ ...createForm, subtitle: e.target.value })}
+                    placeholder="Architectural silhouettes tailored in noble leathers..."
+                    className="w-full px-4 py-2 rounded-xl neu-inset bg-[#F1F5F9] text-xs text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#C5A880]"
+                  />
+                </div>
+              </div>
+
+              {/* STEP 3: CALL TO ACTION */}
+              <div className="space-y-3 pt-2 border-t border-slate-200/70">
+                <label className="text-[11px] uppercase tracking-widest text-[#475569] font-mono font-bold block">
+                  3. Call-To-Action Button
+                </label>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-[10px] uppercase tracking-wider text-[#64748B] font-mono font-semibold">
+                      Button Label
                     </label>
-                    <span className="text-[9px] text-[#9E7D4E] font-mono font-semibold">
-                      Select Available Route
-                    </span>
+                    <input
+                      type="text"
+                      required
+                      value={createForm.cta_text}
+                      onChange={(e) => setCreateForm({ ...createForm, cta_text: e.target.value })}
+                      placeholder="Shop The Collection"
+                      className="w-full px-4 py-2.5 rounded-xl neu-inset bg-[#F1F5F9] text-xs text-[#0F172A] font-semibold focus:outline-none focus:ring-1 focus:ring-[#C5A880]"
+                    />
                   </div>
 
-                  {/* Available CTAs Dropdown */}
-                  <select
-                    value={
-                      isKnownDestination(createForm.cta_link)
-                        ? createForm.cta_link
-                        : "custom"
-                    }
-                    onChange={(e) => {
-                      const selectedVal = e.target.value;
-                      if (selectedVal !== "custom") {
-                        setCreateForm({
-                          ...createForm,
-                          cta_link: selectedVal,
-                          cta_text: createForm.cta_text || getDestinationDefaultText(selectedVal),
-                        });
-                      }
-                    }}
-                    className="w-full px-4 py-3 rounded-xl neu-inset bg-[#F1F5F9] text-xs text-[#0F172A] font-medium focus:outline-none focus:ring-1 focus:ring-[#C5A880]/50 transition-all cursor-pointer"
-                  >
-                    <optgroup label="Storefront Hubs">
-                      {STOREFRONT_DESTINATIONS.slice(0, 3).map((item) => (
-                        <option key={item.value} value={item.value}>
-                          {item.label}
-                        </option>
-                      ))}
-                    </optgroup>
-                    {categories.length > 0 && (
-                      <optgroup label="Category Realms">
-                        {categories.map((c) => (
-                          <option key={c.slug} value={`/shop/${c.slug}`}>
-                            Category: {c.name} (/shop/{c.slug})
+                  <div className="space-y-1">
+                    <label className="text-[10px] uppercase tracking-wider text-[#64748B] font-mono font-semibold">
+                      Destination Preset
+                    </label>
+                    <select
+                      value={isKnownDestination(createForm.cta_link) ? createForm.cta_link : "custom"}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val !== "custom") {
+                          setCreateForm({
+                            ...createForm,
+                            cta_link: val,
+                            cta_text: createForm.cta_text || getDestinationDefaultText(val),
+                          });
+                        }
+                      }}
+                      className="w-full px-4 py-2.5 rounded-xl neu-inset bg-[#F1F5F9] text-xs text-[#0F172A] font-medium focus:outline-none focus:ring-1 focus:ring-[#C5A880] cursor-pointer"
+                    >
+                      <optgroup label="Storefront Destinations">
+                        {STOREFRONT_DESTINATIONS.map((d) => (
+                          <option key={d.value} value={d.value}>
+                            {d.label}
                           </option>
                         ))}
                       </optgroup>
-                    )}
-                    <optgroup label="Brand &amp; Support">
-                      {STOREFRONT_DESTINATIONS.slice(3).map((item) => (
-                        <option key={item.value} value={item.value}>
-                          {item.label}
-                        </option>
-                      ))}
-                    </optgroup>
-                    <option value="custom">Custom Destination URL (Type below)...</option>
-                  </select>
-
-                  {/* Direct editable link input */}
-                  <input
-                    type="text"
-                    required
-                    value={createForm.cta_link}
-                    onChange={(e) =>
-                      setCreateForm({ ...createForm, cta_link: e.target.value })
-                    }
-                    placeholder="/shop or /shop/handbags"
-                    className="w-full px-4 py-2.5 rounded-xl neu-inset bg-[#F1F5F9] text-xs text-[#0F172A] font-mono focus:outline-none focus:ring-1 focus:ring-[#C5A880]/50 transition-all"
-                  />
-                </div>
-              </div>
-
-              {/* Universal Fixed 1920x750 Image Upload */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <label className="text-[10px] uppercase tracking-widest text-[#475569] font-mono font-semibold block">
-                      Universal Banner Image
-                    </label>
-                    <span className="text-[9px] text-[#10B981] font-mono font-medium">
-                      Recommended: 1920 × 750 px (Auto-Scales All Devices)
-                    </span>
+                      {categories.length > 0 && (
+                        <optgroup label="Product Categories">
+                          {categories.map((c) => (
+                            <option key={c.slug} value={`/shop/${c.slug}`}>
+                              Category: {c.name}
+                            </option>
+                          ))}
+                        </optgroup>
+                      )}
+                      <option value="custom">Custom URL Link...</option>
+                    </select>
                   </div>
-                  <label className="cursor-pointer px-3 py-1.5 rounded-xl neu-btn text-[10px] font-mono text-[#9E7D4E] uppercase tracking-wider font-semibold transition-all flex items-center gap-1.5">
-                    {isUploading ? (
-                      <>
-                        <Loader2 className="w-3 h-3 animate-spin" />
-                        <span>Uploading...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Upload className="w-3 h-3" />
-                        <span>Upload File</span>
-                      </>
-                    )}
-                    <input
-                      type="file"
-                      accept="image/*"
-                      disabled={isUploading}
-                      onChange={(e) => handleImageUpload(e, false, false)}
-                      className="hidden"
-                    />
-                  </label>
                 </div>
+
                 <input
-                  type="url"
+                  type="text"
                   required
-                  value={createForm.desktop_image_url}
-                  onChange={(e) =>
-                    setCreateForm({
-                      ...createForm,
-                      desktop_image_url: e.target.value,
-                    })
-                  }
-                  placeholder="https://images.unsplash.com/... or upload directly"
-                  className="w-full px-4 py-3 rounded-xl neu-inset bg-[#F1F5F9] text-xs text-[#0F172A] font-mono focus:outline-none focus:ring-1 focus:ring-[#C5A880]/50 transition-all"
+                  value={createForm.cta_link}
+                  onChange={(e) => setCreateForm({ ...createForm, cta_link: e.target.value })}
+                  placeholder="/shop or custom URL"
+                  className="w-full px-4 py-2 rounded-xl neu-inset bg-[#F1F5F9] text-xs text-[#0F172A] font-mono focus:outline-none focus:ring-1 focus:ring-[#C5A880]"
                 />
               </div>
 
-              {/* Display Order & Active Toggle */}
-              <div className="grid grid-cols-2 gap-4 pt-2">
-                <div className="space-y-1.5">
-                  <label className="text-[10px] uppercase tracking-widest text-[#475569] font-mono font-semibold">
+              {/* STEP 4: DISPLAY ORDER & ACTIVE STATUS */}
+              <div className="grid grid-cols-2 gap-4 pt-2 border-t border-slate-200/70">
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase tracking-wider text-[#64748B] font-mono font-semibold">
                     Display Order
                   </label>
                   <input
@@ -1743,17 +2128,14 @@ export default function AdminCMSPage() {
                     min={1}
                     value={createForm.display_order}
                     onChange={(e) =>
-                      setCreateForm({
-                        ...createForm,
-                        display_order: Number(e.target.value),
-                      })
+                      setCreateForm({ ...createForm, display_order: Number(e.target.value) })
                     }
-                    className="w-full px-4 py-3 rounded-xl neu-inset bg-[#F1F5F9] text-xs text-[#0F172A] font-mono focus:outline-none focus:ring-1 focus:ring-[#C5A880]/50 transition-all font-semibold"
+                    className="w-full px-4 py-2.5 rounded-xl neu-inset bg-[#F1F5F9] text-xs text-[#0F172A] font-mono font-semibold focus:outline-none focus:ring-1 focus:ring-[#C5A880]"
                   />
                 </div>
 
-                <div className="flex items-end pb-1">
-                  <label className="flex items-center gap-2.5 cursor-pointer p-3 rounded-xl neu-inset bg-[#F1F5F9] w-full">
+                <div className="flex items-end pb-0.5">
+                  <label className="flex items-center gap-2.5 cursor-pointer p-2.5 rounded-xl neu-inset bg-[#F1F5F9] w-full select-none">
                     <input
                       type="checkbox"
                       checked={createForm.is_active}
@@ -1765,15 +2147,20 @@ export default function AdminCMSPage() {
                       }
                       className="accent-[#10B981] w-4 h-4 cursor-pointer"
                     />
-                    <span className="text-[#10B981] font-bold text-xs">
-                      Live on Site
-                    </span>
+                    <div>
+                      <span className="text-xs font-bold text-[#0F172A] block">
+                        {createForm.is_active ? "Live on Site" : "Draft (Hidden)"}
+                      </span>
+                      <span className="text-[9px] text-[#64748B] font-mono">
+                        {createForm.is_active ? "Visible to customers" : "Hidden from homepage"}
+                      </span>
+                    </div>
                   </label>
                 </div>
               </div>
 
-              {/* Modal Footer Buttons */}
-              <div className="flex justify-end gap-3 pt-4 border-t border-slate-200/80">
+              {/* MODAL FOOTER */}
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
                 <button
                   type="button"
                   onClick={() => setIsAddModalOpen(false)}
@@ -1783,7 +2170,7 @@ export default function AdminCMSPage() {
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2.5 rounded-xl neu-btn-gold text-xs uppercase tracking-widest font-bold text-white transition-all cursor-pointer"
+                  className="px-7 py-2.5 rounded-xl neu-btn-gold text-xs uppercase tracking-widest font-bold text-white shadow-md hover:shadow-lg transition-all cursor-pointer"
                 >
                   Create &amp; Publish
                 </button>

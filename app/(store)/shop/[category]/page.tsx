@@ -5,10 +5,10 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   getCategoryBySlug,
+  getProducts,
   getAdminCategoriesOverride,
   getAdminProductsOverride,
 } from "@/lib/services/catalog-service";
-import { INITIAL_CATEGORIES, INITIAL_PRODUCTS } from "@/lib/seed/catalog-data";
 import { ProductCard } from "@/components/product/ProductCard";
 import { Category, Product } from "@/types";
 
@@ -64,12 +64,8 @@ export default function CategoryPage({
 
       setCategory(matchedCategory);
 
-      // 4. Resolve products for this category
-      const adminProducts = getAdminProductsOverride();
-      const allProductsList =
-        adminProducts && adminProducts.length > 0
-          ? adminProducts
-          : INITIAL_PRODUCTS;
+      // 4. Resolve products for this category directly from Supabase
+      const allProductsList = await getProducts();
 
       const matchedProducts = allProductsList.filter(
         (p) =>

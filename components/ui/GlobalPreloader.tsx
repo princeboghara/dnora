@@ -118,7 +118,7 @@ export function GlobalPreloader() {
               {/* Golden Atelier Monogram */}
               <div className="relative w-9 h-9 rounded-full bg-gradient-to-tr from-[#C5A880] via-[#E2CEB2] to-[#9E7D4E] p-[1.5px] shadow-sm flex-shrink-0">
                 <div className="w-full h-full rounded-full bg-[#141414] flex items-center justify-center">
-                  <span className="font-serif italic text-sm font-bold text-[#C5A880] tracking-tighter">
+                  <span className="font-sans text-sm font-bold text-[#C5A880] tracking-tight">
                     D
                   </span>
                 </div>

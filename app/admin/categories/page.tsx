@@ -22,7 +22,6 @@ import {
   getAllAdminCategories,
   saveAdminCategoriesOverride,
 } from "@/lib/services/catalog-service";
-import { INITIAL_CATEGORIES } from "@/lib/seed/catalog-data";
 import { uploadImageToStorage } from "@/lib/supabase/storage";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase/client";
 
@@ -160,7 +159,7 @@ export default function AdminCategoriesPage() {
       createForm.name.trim().toLowerCase().replace(/\s+/g, "-");
 
     const newCat: Category = {
-      id: `cat_${Date.now()}`,
+      id: typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `cat_${Date.now()}`,
       name: createForm.name.trim(),
       slug,
       tagline: createForm.tagline.trim(),
@@ -223,18 +222,6 @@ export default function AdminCategoriesPage() {
     );
   };
 
-  // Reset to Default
-  const handleResetToDefault = async () => {
-    if (
-      !confirm(
-        "Reset all categories to the default 8 official DNORA atelier realms?"
-      )
-    ) {
-      return;
-    }
-    await persistCategories(INITIAL_CATEGORIES);
-    showNotification("Restored official default 8 category realms.");
-  };
 
   // Image Upload handler
   const handleImageUpload = async (

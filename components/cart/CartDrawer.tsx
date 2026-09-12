@@ -76,7 +76,7 @@ export function CartDrawer() {
       {/* Slide-out Panel */}
       <div className="fixed inset-y-0 right-0 max-w-full flex pl-10 pointer-events-none">
         <div
-          className={`w-screen max-w-md bg-[#FBF9F5] border-l border-[#E8E2D9] shadow-2xl flex flex-col justify-between pointer-events-auto transform transition-transform duration-400 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+          className={`w-full max-w-md bg-[#FBF9F5] border-l border-[#E8E2D9] shadow-2xl flex flex-col justify-between pointer-events-auto transform transition-transform duration-400 ease-[cubic-bezier(0.16,1,0.3,1)] ${
             isOpen ? "translate-x-0" : "translate-x-full"
           }`}
         >

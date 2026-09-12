@@ -4,12 +4,14 @@ import { ArrowRight, Star, Sparkles, CheckCircle2, Quote } from "lucide-react";
 import { HeroBanner } from "@/components/store/HeroBanner";
 import { CategoryGrid } from "@/components/store/CategoryGrid";
 import { ProductCard } from "@/components/product/ProductCard";
+import { SeenOnYou } from "@/components/store/SeenOnYou";
 import {
   getCategories,
   getNewArrivals,
   getBestSellers,
   getProducts,
 } from "@/lib/services/catalog-service";
+import { getActiveHeroBanners } from "@/lib/services/cms-service";
 
 const VERIFIED_REVIEWS = [
   {
@@ -42,11 +44,12 @@ const VERIFIED_REVIEWS = [
 ];
 
 export default async function HomePage() {
-  const [categories, newArrivals, bestSellers, allProducts] = await Promise.all([
+  const [categories, newArrivals, bestSellers, allProducts, banners] = await Promise.all([
     getCategories(),
     getNewArrivals(8),
     getBestSellers(8),
     getProducts({ limit: 12 }),
+    getActiveHeroBanners(),
   ]);
 
   const hasProducts = allProducts.length > 0;
@@ -54,7 +57,7 @@ export default async function HomePage() {
   return (
     <div className="space-y-0 bg-[#FCFAF7]">
       {/* 1. Full-Width Campaign Hero Banner */}
-      <HeroBanner />
+      <HeroBanner initialBanners={banners} />
 
       {/* 2. Categories Showcase */}
       <CategoryGrid categories={categories} />
@@ -117,7 +120,10 @@ export default async function HomePage() {
             </section>
           )}
 
-          {/* 4. New Arrivals Section */}
+          {/* 4. "Seen on you - Styled by real people." Customer Reels Section */}
+          <SeenOnYou />
+
+          {/* 5. New Arrivals Section */}
           {newArrivals.length > 0 && (
             <section className="py-16 sm:py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
               <div className="flex flex-col sm:flex-row items-baseline justify-between mb-8 sm:mb-10 gap-3 border-b border-[#EAE5DC] pb-4">

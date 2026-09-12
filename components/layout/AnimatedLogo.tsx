@@ -382,11 +382,11 @@ export function AnimatedLogo({
         />
       </div>
 
-      {/* Subtitle: "LUXURY ESSENTIALS" */}
+      {/* Subtitle: "LUXURY ESSENTIALS" - guaranteed single line on all mobile screens */}
       {showSubtitle && (
-        <div className="flex items-center gap-1.5 mt-0.5">
+        <div className="flex items-center gap-1 mt-0.5 whitespace-nowrap shrink-0 max-w-full">
           <span
-            className={`text-[8px] sm:text-[9px] uppercase tracking-[0.38em] text-[#8C7A6B] font-medium transition-all duration-700 group-hover:text-[#C5A880] group-hover:tracking-[0.44em] ${
+            className={`text-[7.5px] sm:text-[9px] uppercase tracking-[0.26em] sm:tracking-[0.38em] text-[#8C7A6B] font-medium transition-all duration-700 group-hover:text-[#C5A880] group-hover:tracking-[0.32em] sm:group-hover:tracking-[0.44em] whitespace-nowrap select-none ${
               !isComplete ? "opacity-40" : "opacity-100"
             }`}
           >
@@ -398,7 +398,7 @@ export function AnimatedLogo({
             type="button"
             onClick={replayWriting}
             title="Click to replay calligraphy writing animation"
-            className="w-1.5 h-1.5 rounded-full bg-[#C5A880]/30 hover:bg-[#C5A880] transition-colors ml-0.5 cursor-pointer opacity-30 hover:opacity-100"
+            className="w-1.5 h-1.5 rounded-full bg-[#C5A880]/30 hover:bg-[#C5A880] transition-colors ml-0.5 cursor-pointer opacity-30 hover:opacity-100 shrink-0"
             aria-label="Replay logo writing animation"
           />
         </div>

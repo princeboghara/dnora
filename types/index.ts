@@ -299,6 +299,7 @@ export interface Banner {
   cta_link: string;
   desktop_image_url: string;
   mobile_image_url?: string;
+  video_url?: string;
   is_active: boolean;
   display_order: number;
   type: "hero" | "promo" | "editorial";
@@ -337,4 +338,20 @@ export interface StoreSettings {
   contact_email: string;
   concierge_phone: string;
   announcement_text: string;
+}
+
+export interface StyleReel {
+  id: string;
+  creator_name: string;
+  creator_handle: string;
+  avatar_url?: string;
+  caption: string;
+  video_url: string;
+  poster_url: string;
+  likes_count?: string;
+  product_id: string;
+  product_slug: string;
+  product_name: string;
+  product_price: number;
+  product_image: string;
 }
