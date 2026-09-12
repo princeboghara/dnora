@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Search, ShoppingBag, Heart, User, Menu, X, ChevronDown } from "lucide-react";
+import { Search, ShoppingBag, Heart, User, Menu, X, ChevronDown, Home } from "lucide-react";
 import { useCart } from "@/lib/context/cart-context";
 import { useWishlist } from "@/lib/context/wishlist-context";
 import { useAuth } from "@/lib/auth/auth-context";
@@ -254,6 +254,45 @@ export function Header() {
                 <X className="w-5 h-5" />
               </button>
             </div>
+
+            {/* Top Primary Home Page Navigation Button */}
+            <Link
+              href="/"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="w-full flex items-center justify-between px-4 py-3.5 rounded-xl bg-[#141414] text-[#F5F2EB] hover:bg-[#C5A880] hover:text-[#111111] transition-all duration-300 shadow-sm group"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-7 h-7 rounded-lg bg-[#242424] group-hover:bg-[#111111] flex items-center justify-center transition-colors">
+                  <Home className="w-4 h-4 text-[#C5A880] group-hover:text-[#F5F2EB] transition-colors" />
+                </div>
+                <div className="text-left">
+                  <span className="block uppercase tracking-[0.22em] font-semibold text-xs">
+                    Home Page
+                  </span>
+                  <span className="block text-[9px] uppercase tracking-widest text-[#8C7A6B] group-hover:text-[#222222]">
+                    Atelier Entrance
+                  </span>
+                </div>
+              </div>
+              <span className="text-xs tracking-widest text-[#C5A880] group-hover:text-[#111111] transition-transform group-hover:translate-x-0.5">
+                &rarr;
+              </span>
+            </Link>
+
+            {/* Quick Patron Account Access Link */}
+            <Link
+              href={user ? "/account" : "/account/login"}
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="w-full flex items-center justify-between px-4 py-2.5 rounded-xl border border-[#E8E2D9] bg-[#FBF9F5] hover:border-[#111111] text-[#111111] text-xs uppercase tracking-wider font-medium transition-colors"
+            >
+              <div className="flex items-center gap-2.5">
+                <User className="w-4 h-4 text-[#8C7A6B]" />
+                <span className="tracking-[0.14em]">
+                  {user ? `Account (${user.fullName.split(" ")[0]})` : "Client Account / Sign In"}
+                </span>
+              </div>
+              <span className="text-[#8C7A6B] text-xs">&rarr;</span>
+            </Link>
 
             {/* Quick Search inside Drawer */}
             <button
