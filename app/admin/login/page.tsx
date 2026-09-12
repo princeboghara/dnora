@@ -18,7 +18,10 @@ export default function AdminLoginPage() {
 
   useEffect(() => {
     if (isAdmin) {
-      router.push("/admin");
+      const timer = setTimeout(() => {
+        router.replace("/admin");
+      }, 0);
+      return () => clearTimeout(timer);
     }
   }, [isAdmin, router]);
 

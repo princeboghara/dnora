@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
@@ -48,11 +48,21 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const { adminUser, isAdmin, adminSignOut, isLoading } = useAuth();
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
+  const hasRedirectedRef = useRef(false);
 
-  // Safely redirect to /admin/login inside useEffect when unauthenticated
+  // Safely redirect to /admin/login outside render cycle when unauthenticated
   useEffect(() => {
-    if (!isLoading && !isAdmin && pathname !== "/admin/login") {
-      router.push("/admin/login");
+    if (pathname === "/admin/login") {
+      hasRedirectedRef.current = false;
+      return;
+    }
+
+    if (!isLoading && !isAdmin && !hasRedirectedRef.current) {
+      hasRedirectedRef.current = true;
+      const timer = setTimeout(() => {
+        router.replace("/admin/login");
+      }, 0);
+      return () => clearTimeout(timer);
     }
   }, [isLoading, isAdmin, pathname, router]);
 
