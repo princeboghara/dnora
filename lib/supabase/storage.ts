@@ -19,17 +19,26 @@ export async function uploadImageToStorage(
   }
 
   try {
+    // Route "videos" bucket to "banners" bucket (which is configured for video assets) to prevent Bucket Not Found error
+    let targetBucket: string = bucket;
+    let targetFolder: string = folder;
+    if (bucket === "videos") {
+      targetBucket = "banners";
+      targetFolder = folder || "reels-videos";
+    }
+
     const sanitizedName = file.name
       .replace(/[^a-zA-Z0-9.-]/g, "_")
       .toLowerCase();
     const fileName = `${Date.now()}_${sanitizedName}`;
-    const filePath = folder ? `${folder}/${fileName}` : fileName;
+    const filePath = targetFolder ? `${targetFolder}/${fileName}` : fileName;
 
     const { data, error } = await supabase.storage
-      .from(bucket)
+      .from(targetBucket)
       .upload(filePath, file, {
         cacheControl: "3600",
         upsert: false,
+        contentType: file.type || undefined,
       });
 
     if (error) {
@@ -38,7 +47,7 @@ export async function uploadImageToStorage(
 
     // Retrieve public CDN URL
     const { data: publicUrlData } = supabase.storage
-      .from(bucket)
+      .from(targetBucket)
       .getPublicUrl(data.path);
 
     return { url: publicUrlData.publicUrl, error: null };

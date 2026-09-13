@@ -34,7 +34,7 @@ import {
   saveAdminReels,
 } from "@/lib/services/reels-service";
 import { getProducts } from "@/lib/services/catalog-service";
-import { uploadImageToStorage } from "@/lib/supabase/storage";
+import { uploadImageToStorage, StorageBucket } from "@/lib/supabase/storage";
 import { formatINR } from "@/lib/utils";
 
 export default function AdminReelsPage() {
@@ -272,8 +272,10 @@ export default function AdminReelsPage() {
     setIsUploading(true);
     setUploadError(null);
     try {
-      const bucket = field === "video_url" ? "videos" : "categories";
-      const res = await uploadImageToStorage(bucket, file);
+      // Use existing "banners" bucket with dedicated folders for reels videos and posters
+      const bucket: StorageBucket = "banners";
+      const folder = field === "video_url" ? "reels-videos" : "reels-posters";
+      const res = await uploadImageToStorage(bucket, file, folder);
       if (res.url) {
         setFormData((prev) => ({ ...prev, [field]: res.url! }));
         showNotification(`${field === "video_url" ? "Video" : "Poster"} uploaded successfully.`);
@@ -379,39 +381,68 @@ export default function AdminReelsPage() {
           </button>
         </div>
 
-        <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-none">
-          {reels.map((reel, idx) => {
-            const isPlaying = idx === simulatorPlayingIdx;
-            return (
-              <div
-                key={reel.id}
-                onClick={() => setSimulatorPlayingIdx(idx)}
-                className={`relative shrink-0 w-36 sm:w-44 aspect-[9/16] rounded-2xl overflow-hidden bg-black cursor-pointer border transition-all ${
-                  isPlaying
-                    ? "ring-2 ring-[#C5A880] border-[#C5A880] shadow-md"
-                    : "opacity-75 border-slate-200 hover:opacity-100"
-                }`}
+        {reels.length === 0 ? (
+          <div className="p-8 sm:p-10 text-center border-2 border-dashed border-[#EAE5DC] bg-[#FAF7F2]/70 rounded-2xl space-y-3.5">
+            <div className="w-10 h-10 mx-auto rounded-full bg-white border border-[#C5A880]/50 flex items-center justify-center text-[#C5A880] shadow-xs">
+              <Sparkles className="w-4 h-4" />
+            </div>
+            <div className="space-y-1">
+              <span className="text-[10px] font-mono uppercase tracking-widest text-[#9E7D4E] font-semibold block">
+                Storefront Preview (Empty State)
+              </span>
+              <h4 className="font-sans text-sm sm:text-base text-[#0F172A] font-semibold uppercase tracking-wider">
+                Fresh Styling Reels Arriving Soon
+              </h4>
+            </div>
+            <p className="text-xs text-[#64748B] max-w-md mx-auto leading-relaxed">
+              Customers currently see: &ldquo;Our patrons and atelier stylists are currently curating new community styling videos and daily carry inspirations. New reels will be uploaded shortly.&rdquo;
+            </p>
+            <div className="pt-1 flex justify-center">
+              <button
+                type="button"
+                onClick={handleOpenCreate}
+                className="px-4 py-2 rounded-xl bg-[#0F172A] text-white text-xs font-semibold hover:bg-[#9E7D4E] transition-all cursor-pointer inline-flex items-center gap-2 shadow-xs"
               >
-                <video
-                  ref={(el) => {
-                    simulatorVideoRefs.current[idx] = el;
-                  }}
-                  src={reel.video_url}
-                  poster={reel.poster_url}
-                  muted={isSimulatorMuted}
-                  playsInline
-                  autoPlay={isPlaying}
-                  onEnded={() => setSimulatorPlayingIdx((idx + 1) % reels.length)}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-2.5 text-white">
-                  <span className="text-[10px] font-semibold truncate block">{reel.product_name}</span>
-                  <span className="text-[9px] font-mono text-[#C5A880]">{formatINR(reel.product_price)}</span>
+                <Plus className="w-3.5 h-3.5" />
+                <span>Upload First Styling Reel</span>
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-none">
+            {reels.map((reel, idx) => {
+              const isPlaying = idx === simulatorPlayingIdx;
+              return (
+                <div
+                  key={reel.id}
+                  onClick={() => setSimulatorPlayingIdx(idx)}
+                  className={`relative shrink-0 w-36 sm:w-44 aspect-[9/16] rounded-2xl overflow-hidden bg-black cursor-pointer border transition-all ${
+                    isPlaying
+                      ? "ring-2 ring-[#C5A880] border-[#C5A880] shadow-md"
+                      : "opacity-75 border-slate-200 hover:opacity-100"
+                  }`}
+                >
+                  <video
+                    ref={(el) => {
+                      simulatorVideoRefs.current[idx] = el;
+                    }}
+                    src={reel.video_url}
+                    poster={reel.poster_url}
+                    muted={isSimulatorMuted}
+                    playsInline
+                    autoPlay={isPlaying}
+                    onEnded={() => setSimulatorPlayingIdx((idx + 1) % reels.length)}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-2.5 text-white">
+                    <span className="text-[10px] font-semibold truncate block">{reel.product_name}</span>
+                    <span className="text-[9px] font-mono text-[#C5A880]">{formatINR(reel.product_price)}</span>
+                  </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Search & Quick Stats Bar */}

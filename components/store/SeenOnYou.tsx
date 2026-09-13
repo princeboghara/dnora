@@ -348,7 +348,58 @@ export function SeenOnYou({ initialReels }: SeenOnYouProps) {
 
   const activeReel = activeModalIndex !== null ? reels[activeModalIndex] : null;
 
-  if (reels.length === 0) return null;
+  // Empty state when all videos are deleted: Show refined English announcement
+  if (reels.length === 0) {
+    return (
+      <section
+        ref={sectionRef}
+        className="py-12 sm:py-16 bg-[#FAF7F2] border-t border-b border-[#EAE5DC] overflow-hidden"
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Header - Centered Middle on Page */}
+          <div className="text-center max-w-2xl mx-auto mb-8 space-y-1.5">
+            <div className="inline-flex items-center justify-center gap-2 text-[10px] uppercase tracking-[0.3em] text-[#8C7A6B] font-semibold font-mono">
+              <Sparkles className="w-3.5 h-3.5 text-[#C5A880]" />
+              <span>Community &amp; Atelier Styling</span>
+            </div>
+            <h2 className="font-sans text-2xl sm:text-3xl lg:text-4xl text-[#111111] font-light uppercase tracking-[0.14em]">
+              Seen on you
+            </h2>
+            <p className="text-xs sm:text-sm text-[#736357] font-light tracking-wide">
+              Styled by real people.
+            </p>
+            <div className="w-10 h-[1.5px] bg-[#C5A880] mx-auto mt-2" />
+          </div>
+
+          {/* Luxury Empty State Box */}
+          <div className="max-w-xl mx-auto bg-white/80 backdrop-blur-md rounded-2xl border border-[#EAE5DC] p-8 sm:p-10 text-center shadow-xs space-y-4">
+            <div className="w-12 h-12 mx-auto rounded-full bg-[#FAF7F2] border border-[#C5A880]/40 flex items-center justify-center text-[#C5A880]">
+              <Sparkles className="w-5 h-5" />
+            </div>
+            <div className="space-y-1.5">
+              <span className="text-[10px] uppercase tracking-[0.25em] font-mono text-[#8C7A6B] font-semibold block">
+                New Lookbooks In Preparation
+              </span>
+              <h3 className="font-sans text-lg sm:text-xl text-[#111111] uppercase tracking-[0.12em] font-light">
+                Fresh Styling Reels Arriving Soon
+              </h3>
+            </div>
+            <p className="text-xs sm:text-sm text-[#736357] leading-relaxed font-light max-w-md mx-auto">
+              Our patrons and atelier stylists are currently curating new community styling videos and daily carry inspirations. New reels will be uploaded shortly.
+            </p>
+            <div className="pt-2 flex justify-center">
+              <Link
+                href="/shop"
+                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-[#111111] text-[#FAF7F2] text-xs font-semibold uppercase tracking-wider hover:bg-[#C5A880] hover:text-[#111111] transition-all"
+              >
+                <span>Explore Current Collection</span>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section

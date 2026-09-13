@@ -21,9 +21,9 @@ export function getAllAdminReels(): StyleReel[] {
 
   try {
     const raw = localStorage.getItem(REELS_STORAGE_KEY);
-    if (raw) {
+    if (raw !== null) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) {
+      if (Array.isArray(parsed)) {
         return parsed;
       }
     }
