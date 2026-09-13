@@ -29,6 +29,9 @@ export interface Category {
   seo_title?: string;
   seo_description?: string;
   product_count?: number;
+  image_zoom?: number;
+  image_x?: number;
+  image_y?: number;
 }
 
 export interface ProductVariant {
@@ -293,16 +296,18 @@ export interface Review {
 
 export interface Banner {
   id: string;
-  title: string;
-  subtitle: string;
-  cta_text: string;
-  cta_link: string;
+  title?: string;
+  subtitle?: string;
+  cta_text?: string;
+  cta_link?: string;
   desktop_image_url: string;
   mobile_image_url?: string;
   video_url?: string;
   is_active: boolean;
   display_order: number;
+  duration_seconds?: number;
   type: "hero" | "promo" | "editorial";
+  created_at?: string;
 }
 
 export type AdminRole = "super_admin" | "admin" | "manager" | "staff";
@@ -340,6 +345,13 @@ export interface StoreSettings {
   announcement_text: string;
 }
 
+export interface ReelComment {
+  id: string;
+  user_name: string;
+  comment: string;
+  created_at: string;
+}
+
 export interface StyleReel {
   id: string;
   creator_name: string;
@@ -349,9 +361,13 @@ export interface StyleReel {
   video_url: string;
   poster_url: string;
   likes_count?: string;
+  numeric_likes?: number;
   product_id: string;
   product_slug: string;
   product_name: string;
   product_price: number;
   product_image: string;
+  display_order?: number;
+  is_active?: boolean;
+  comments?: ReelComment[];
 }

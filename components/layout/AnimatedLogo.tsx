@@ -46,7 +46,6 @@ export function AnimatedLogo({
 
   const [isImageLoaded, setIsImageLoaded] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
-  const [animTrigger, setAnimTrigger] = useState(0);
 
   // Preload authentic DNORA logo
   useEffect(() => {
@@ -345,25 +344,11 @@ export function AnimatedLogo({
         cancelAnimationFrame(animFrameIdRef.current);
       }
     };
-  }, [isImageLoaded, animTrigger]);
-
-  // Replay handwriting on hover
-  const handleMouseEnter = () => {
-    if (isComplete) {
-      setAnimTrigger((prev) => prev + 1);
-    }
-  };
-
-  const replayWriting = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setAnimTrigger((prev) => prev + 1);
-  };
+  }, [isImageLoaded]);
 
   return (
     <Link
       href="/"
-      onMouseEnter={handleMouseEnter}
       className={`inline-flex flex-col items-center group py-0.5 relative select-none cursor-pointer ${className}`}
       aria-label="D'NORA Home"
     >
@@ -374,7 +359,7 @@ export function AnimatedLogo({
           aspectRatio: `${LOGO_WIDTH} / ${LOGO_HEIGHT}`,
         }}
       >
-        {/* Dynamic Stroke Handwriting Canvas */}
+        {/* Dynamic Stroke Handwriting Canvas (Plays once on initial site open) */}
         <canvas
           ref={canvasRef}
           className="w-full h-full object-contain pointer-events-none"
@@ -392,15 +377,6 @@ export function AnimatedLogo({
           >
             LUXURY ESSENTIALS
           </span>
-
-          {/* Micro Replay Trigger Dot */}
-          <button
-            type="button"
-            onClick={replayWriting}
-            title="Click to replay calligraphy writing animation"
-            className="w-1.5 h-1.5 rounded-full bg-[#C5A880]/30 hover:bg-[#C5A880] transition-colors ml-0.5 cursor-pointer opacity-30 hover:opacity-100 shrink-0"
-            aria-label="Replay logo writing animation"
-          />
         </div>
       )}
     </Link>

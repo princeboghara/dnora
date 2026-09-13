@@ -101,43 +101,14 @@ export function GlobalPreloader() {
         </div>
       )}
 
-      {/* Luxury Route Navigation Transition Effects */}
+      {/* Luxury Route Navigation Transition Screen */}
       {isRouteNavigating && (
-        <div className="fixed inset-0 z-[9995] pointer-events-none">
-          {/* 1. Top High-Precision Golden Shimmer Rail */}
-          <div className="absolute top-0 left-0 right-0 h-[3px] bg-[#FAF8F5]/80 overflow-hidden shadow-[0_0_18px_rgba(197,168,128,0.9)]">
-            <div className="h-full bg-gradient-to-r from-[#C5A880] via-[#F3E5D0] to-[#9E7D4E] animate-[shimmer_1.2s_infinite_linear] w-full" />
-          </div>
-
-          {/* 2. Ambient Silk Blur Backdrop */}
-          <div className="absolute inset-0 bg-[#111111]/15 backdrop-blur-[2px] transition-opacity duration-300" />
-
-          {/* 3. Centered Luxury Atelier Transition Capsule */}
-          <div className="absolute inset-0 flex items-center justify-center p-4">
-            <div className="bg-[#141414]/95 text-[#F5F2EB] border border-[#C5A880]/50 backdrop-blur-xl px-6 py-4 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.35)] flex items-center gap-4 transform animate-in fade-in zoom-in-95 duration-200">
-              {/* Golden Atelier Monogram */}
-              <div className="relative w-9 h-9 rounded-full bg-gradient-to-tr from-[#C5A880] via-[#E2CEB2] to-[#9E7D4E] p-[1.5px] shadow-sm flex-shrink-0">
-                <div className="w-full h-full rounded-full bg-[#141414] flex items-center justify-center">
-                  <span className="font-sans text-sm font-bold text-[#C5A880] tracking-tight">
-                    D
-                  </span>
-                </div>
-              </div>
-
-              {/* Transition Text & Status */}
-              <div className="text-left space-y-0.5">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs uppercase tracking-[0.25em] font-bold text-[#F5F2EB]">
-                    D&apos;NORA
-                  </span>
-                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#C5A880] animate-ping" />
-                </div>
-                <p className="text-[10px] uppercase tracking-[0.18em] text-[#C5A880] font-medium font-sans">
-                  Entering Atelier Collection...
-                </p>
-              </div>
-            </div>
-          </div>
+        <div className="fixed inset-0 z-[9995] pointer-events-auto animate-in fade-in duration-200">
+          <DnoraLoadingScreen
+            fullScreen
+            text="D'NORA LUXURY ESSENTIALS"
+            subtitle="ENTERING ATELIER COLLECTION..."
+          />
         </div>
       )}
     </>

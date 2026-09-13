@@ -1,6 +1,6 @@
 import { supabase, isSupabaseConfigured } from "./client";
 
-export type StorageBucket = "products" | "banners" | "categories" | "site-assets";
+export type StorageBucket = "products" | "banners" | "categories" | "site-assets" | "videos";
 
 /**
  * Upload an image file to a designated Supabase Storage bucket.

@@ -12,6 +12,7 @@ import {
   getProducts,
 } from "@/lib/services/catalog-service";
 import { getActiveHeroBanners } from "@/lib/services/cms-service";
+import { INITIAL_STYLE_REELS } from "@/lib/seed/reels-data";
 
 const VERIFIED_REVIEWS = [
   {
@@ -91,25 +92,25 @@ export default async function HomePage() {
         <>
           {/* 3. Best Sellers Section */}
           {bestSellers.length > 0 && (
-            <section className="py-16 sm:py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-              <div className="flex flex-col sm:flex-row items-baseline justify-between mb-8 sm:mb-10 gap-3 border-b border-[#EAE5DC] pb-4">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.25em] text-[#8C7A6B] font-semibold">
-                    <Sparkles className="w-3 h-3 text-[#C5A880]" />
-                    <span>Most Coveted Silhouettes</span>
-                  </div>
-                  <h2 className="font-sans text-2xl sm:text-3xl lg:text-4xl text-[#111111] font-light uppercase tracking-[0.12em]">
-                    Best Sellers
-                  </h2>
+            <section className="py-8 sm:py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+              <div className="text-center max-w-2xl mx-auto mb-6 sm:mb-8 space-y-1.5">
+                <div className="inline-flex items-center justify-center gap-1.5 text-[10px] uppercase tracking-[0.3em] text-[#8C7A6B] font-semibold font-mono">
+                  <Sparkles className="w-3.5 h-3.5 text-[#C5A880]" />
+                  <span>Most Coveted Silhouettes</span>
                 </div>
-
-                <Link
-                  href="/shop?filter=bestselling"
-                  className="inline-flex items-center gap-1.5 text-xs uppercase tracking-[0.2em] font-semibold text-[#111111] hover:text-[#C5A880] transition-colors"
-                >
-                  <span>Explore All Best Sellers</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </Link>
+                <h2 className="font-sans text-2xl sm:text-3xl lg:text-4xl text-[#111111] font-light uppercase tracking-[0.14em]">
+                  Best Sellers
+                </h2>
+                <div className="w-10 h-[1.5px] bg-[#C5A880] mx-auto mt-2" />
+                <div className="pt-2">
+                  <Link
+                    href="/shop?filter=bestselling"
+                    className="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-[0.2em] font-semibold text-[#111111] hover:text-[#C5A880] transition-colors"
+                  >
+                    <span>Explore All Best Sellers</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
@@ -120,29 +121,26 @@ export default async function HomePage() {
             </section>
           )}
 
-          {/* 4. "Seen on you - Styled by real people." Customer Reels Section */}
-          <SeenOnYou />
-
-          {/* 5. New Arrivals Section */}
+          {/* 4. New Arrivals Section (Now directly after Best Sellers) */}
           {newArrivals.length > 0 && (
-            <section className="py-16 sm:py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-              <div className="flex flex-col sm:flex-row items-baseline justify-between mb-8 sm:mb-10 gap-3 border-b border-[#EAE5DC] pb-4">
-                <div className="space-y-1">
-                  <span className="text-[10px] uppercase tracking-[0.25em] text-[#8C7A6B] font-semibold">
-                    Fresh In The Atelier
-                  </span>
-                  <h2 className="font-sans text-2xl sm:text-3xl lg:text-4xl text-[#111111] font-light uppercase tracking-[0.12em]">
-                    New Arrivals
-                  </h2>
+            <section className="py-8 sm:py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+              <div className="text-center max-w-2xl mx-auto mb-6 sm:mb-8 space-y-1.5">
+                <span className="text-[10px] uppercase tracking-[0.3em] text-[#8C7A6B] font-semibold font-mono block">
+                  Fresh In The Atelier
+                </span>
+                <h2 className="font-sans text-2xl sm:text-3xl lg:text-4xl text-[#111111] font-light uppercase tracking-[0.14em]">
+                  New Arrivals
+                </h2>
+                <div className="w-10 h-[1.5px] bg-[#C5A880] mx-auto mt-2" />
+                <div className="pt-2">
+                  <Link
+                    href="/shop?filter=new"
+                    className="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-[0.2em] font-semibold text-[#111111] hover:text-[#C5A880] transition-colors"
+                  >
+                    <span>View All New Releases</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
                 </div>
-
-                <Link
-                  href="/shop?filter=new"
-                  className="inline-flex items-center gap-1.5 text-xs uppercase tracking-[0.2em] font-semibold text-[#111111] hover:text-[#C5A880] transition-colors"
-                >
-                  <span>View All New Releases</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </Link>
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
@@ -152,11 +150,14 @@ export default async function HomePage() {
               </div>
             </section>
           )}
+
+          {/* 5. "Seen on you - Styled by real people." Customer Reels Section (Now after New Arrivals) */}
+          <SeenOnYou initialReels={INITIAL_STYLE_REELS} />
         </>
       )}
 
-      {/* 5. Customer Reviews Section */}
-      <section className="py-16 sm:py-24 bg-[#FAF7F2] border-t border-[#E8E2D9]">
+      {/* 6. Customer Reviews Section */}
+      <section className="py-8 sm:py-12 bg-[#FAF7F2] border-t border-[#E8E2D9]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
           {/* Reviews Header */}
           <div className="text-center max-w-2xl mx-auto space-y-3">

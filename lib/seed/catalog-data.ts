@@ -682,21 +682,7 @@ export const INITIAL_COLLECTIONS: Collection[] = [
   },
 ];
 
-export const INITIAL_BANNERS: Banner[] = [
-  {
-    id: "banner_1",
-    title: "More Than a Bag, It's a Feeling.",
-    subtitle: "Elegant designs, premium craftsmanship for every chapter of your life.",
-    cta_text: "SHOP NOW",
-    cta_link: "/shop",
-    desktop_image_url: "/images/banners/hero-feeling.png",
-    mobile_image_url: "/images/banners/hero-feeling.png",
-    video_url: "/videos/hero-banner.mp4",
-    display_order: 1,
-    is_active: true,
-    type: "hero",
-  },
-];
+export const INITIAL_BANNERS: Banner[] = [];
 
 export const INITIAL_COUPONS: Coupon[] = [
   {

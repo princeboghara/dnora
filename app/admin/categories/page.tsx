@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import {
   FolderTree,
@@ -10,12 +10,19 @@ import {
   Check,
   Upload,
   Loader2,
-  RefreshCw,
   X,
   Eye,
   EyeOff,
   ExternalLink,
   Search,
+  Lock,
+  GripVertical,
+  ChevronUp,
+  ChevronDown,
+  ZoomIn,
+  Move,
+  RotateCcw,
+  Sparkles,
 } from "lucide-react";
 import { Category } from "@/types";
 import {
@@ -25,31 +32,257 @@ import {
 import { uploadImageToStorage } from "@/lib/supabase/storage";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase/client";
 
+// =========================================================================
+// SUB-COMPONENT: Instagram-Style Circular Profile Picture Adjuster
+// =========================================================================
+interface CircularPfpEditorProps {
+  imageUrl: string;
+  zoom: number;
+  x: number;
+  y: number;
+  name?: string;
+  onZoomChange: (z: number) => void;
+  onXChange: (x: number) => void;
+  onYChange: (y: number) => void;
+  onReset: () => void;
+}
+
+function CircularPfpEditor({
+  imageUrl,
+  zoom,
+  x,
+  y,
+  name,
+  onZoomChange,
+  onXChange,
+  onYChange,
+  onReset,
+}: CircularPfpEditorProps) {
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStart = useRef({ mouseX: 0, mouseY: 0, startX: 0, startY: 0 });
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!imageUrl) return;
+    setIsDragging(true);
+    dragStart.current = {
+      mouseX: e.clientX,
+      mouseY: e.clientY,
+      startX: x,
+      startY: y,
+    };
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging) return;
+    const deltaX = (e.clientX - dragStart.current.mouseX) * 0.35;
+    const deltaY = (e.clientY - dragStart.current.mouseY) * 0.35;
+    const nextX = Math.round(Math.max(-45, Math.min(45, dragStart.current.startX + deltaX)));
+    const nextY = Math.round(Math.max(-45, Math.min(45, dragStart.current.startY + deltaY)));
+    onXChange(nextX);
+    onYChange(nextY);
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  return (
+    <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-4">
+      {/* Header */}
+      <div className="flex items-center justify-between border-b border-slate-200/60 pb-2.5">
+        <div className="flex items-center gap-2">
+          <div className="w-5 h-5 rounded-full bg-[#C5A880]/20 flex items-center justify-center text-[#9E7D4E]">
+            <Sparkles className="w-3 h-3" />
+          </div>
+          <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-[#0F172A]">
+            Circular Avatar Adjuster (Instagram PFP Style)
+          </span>
+        </div>
+        <span className="text-[10px] font-mono text-[#9E7D4E] bg-[#C5A880]/15 px-2 py-0.5 rounded-full border border-[#C5A880]/30 font-medium">
+          Storefront Mirror
+        </span>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+        {/* Instagram Circular Viewport */}
+        <div className="flex flex-col items-center justify-center space-y-2">
+          <div
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseUp}
+            className={`relative w-40 h-40 sm:w-44 sm:h-44 rounded-full overflow-hidden border-4 border-[#C5A880] shadow-xl bg-slate-900 select-none ${
+              imageUrl ? "cursor-grab active:cursor-grabbing" : "cursor-not-allowed"
+            }`}
+          >
+            {imageUrl ? (
+              <div
+                className="w-full h-full relative"
+                style={{
+                  transform: `scale(${zoom}) translate(${x}%, ${y}%)`,
+                  transformOrigin: "center center",
+                  transition: isDragging ? "none" : "transform 0.15s ease-out",
+                }}
+              >
+                <Image
+                  src={imageUrl}
+                  alt={name || "Category frame"}
+                  fill
+                  unoptimized
+                  className="object-cover pointer-events-none"
+                />
+              </div>
+            ) : (
+              <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 p-4 text-center">
+                <Upload className="w-6 h-6 mb-1 text-slate-500" />
+                <span className="text-[10px] font-mono">Upload image to adjust circular avatar</span>
+              </div>
+            )}
+
+            {/* Subtle Instagram Centering Crosshairs */}
+            {imageUrl && (
+              <div className="absolute inset-0 pointer-events-none border border-white/20 rounded-full flex items-center justify-center">
+                <div className="w-full h-[1px] bg-white/20" />
+                <div className="h-full w-[1px] bg-white/20 absolute" />
+              </div>
+            )}
+          </div>
+
+          <p className="text-[10px] text-[#64748B] font-mono text-center">
+            {imageUrl ? "👆 Click & drag inside circle to pan position" : "Provide image URL or upload file"}
+          </p>
+        </div>
+
+        {/* Controls: Zoom, Pan X/Y, Reset */}
+        <div className="space-y-3">
+          {/* Zoom Slider */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between text-[11px] font-mono">
+              <span className="text-[#64748B] flex items-center gap-1">
+                <ZoomIn className="w-3.5 h-3.5 text-[#9E7D4E]" />
+                Zoom (Scale)
+              </span>
+              <span className="text-[#0F172A] font-bold">{(zoom * 100).toFixed(0)}%</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => onZoomChange(Math.max(1, +(zoom - 0.05).toFixed(2)))}
+                className="w-7 h-7 rounded-lg neu-btn flex items-center justify-center text-xs font-bold text-[#64748B] hover:text-[#0F172A]"
+              >
+                -
+              </button>
+              <input
+                type="range"
+                min={1}
+                max={2.5}
+                step={0.02}
+                value={zoom}
+                onChange={(e) => onZoomChange(parseFloat(e.target.value))}
+                className="flex-1 accent-[#C5A880] cursor-pointer"
+              />
+              <button
+                type="button"
+                onClick={() => onZoomChange(Math.min(2.5, +(zoom + 0.05).toFixed(2)))}
+                className="w-7 h-7 rounded-lg neu-btn flex items-center justify-center text-xs font-bold text-[#64748B] hover:text-[#0F172A]"
+              >
+                +
+              </button>
+            </div>
+          </div>
+
+          {/* Horizontal Pan X */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between text-[11px] font-mono">
+              <span className="text-[#64748B] flex items-center gap-1">
+                <Move className="w-3.5 h-3.5 text-[#9E7D4E]" />
+                Horizontal Pan (X)
+              </span>
+              <span className="text-[#0F172A] font-bold">{x > 0 ? `+${x}%` : `${x}%`}</span>
+            </div>
+            <input
+              type="range"
+              min={-40}
+              max={40}
+              step={1}
+              value={x}
+              onChange={(e) => onXChange(parseInt(e.target.value))}
+              className="w-full accent-[#C5A880] cursor-pointer"
+            />
+          </div>
+
+          {/* Vertical Pan Y */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between text-[11px] font-mono">
+              <span className="text-[#64748B] flex items-center gap-1">
+                <Move className="w-3.5 h-3.5 text-[#9E7D4E] rotate-90" />
+                Vertical Pan (Y)
+              </span>
+              <span className="text-[#0F172A] font-bold">{y > 0 ? `+${y}%` : `${y}%`}</span>
+            </div>
+            <input
+              type="range"
+              min={-40}
+              max={40}
+              step={1}
+              value={y}
+              onChange={(e) => onYChange(parseInt(e.target.value))}
+              className="w-full accent-[#C5A880] cursor-pointer"
+            />
+          </div>
+
+          {/* Reset button */}
+          <div className="pt-1 flex items-center justify-between">
+            <button
+              type="button"
+              onClick={onReset}
+              className="px-3 py-1.5 rounded-xl neu-btn text-[11px] font-mono font-medium text-[#64748B] hover:text-[#0F172A] flex items-center gap-1.5"
+            >
+              <RotateCcw className="w-3 h-3 text-[#9E7D4E]" />
+              <span>Center &amp; Reset (1.0x)</span>
+            </button>
+            <span className="text-[10px] font-mono text-[#94A3B8]">
+              Synced to Homepage Rail
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// =========================================================================
+// MAIN COMPONENT: Admin Categories Page
+// =========================================================================
 export default function AdminCategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [notification, setNotification] = useState<string | null>(null);
 
+  // Drag-and-drop state
+  const [draggedIdx, setDraggedIdx] = useState<number | null>(null);
+
   // Modals
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   // Upload states
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
-  // New Category Form state
+  // New Category Form state (empty image_url, no dummy URLs)
   const [createForm, setCreateForm] = useState({
     name: "",
     slug: "",
     tagline: "",
     description: "",
-    image_url:
-      "https://www.charleskeith.in/dw/image/v2/BCWJ_PRD/on/demandware.static/-/Sites-in-products/default/dw0c35245a/images/hi-res/2026-L6-CK2-10160273-A-29-1.jpg?sw=600&q=80",
+    image_url: "",
     display_order: 1,
     is_active: true,
+    image_zoom: 1,
+    image_x: 0,
+    image_y: 0,
   });
 
   // Edit Category Form state
@@ -61,6 +294,9 @@ export default function AdminCategoriesPage() {
     image_url: "",
     display_order: 1,
     is_active: true,
+    image_zoom: 1,
+    image_x: 0,
+    image_y: 0,
   });
 
   const showNotification = (msg: string) => {
@@ -99,6 +335,9 @@ export default function AdminCategoriesPage() {
             image_url: c.image_url,
             display_order: c.display_order,
             is_active: c.is_active,
+            image_zoom: c.image_zoom || 1,
+            image_x: c.image_x || 0,
+            image_y: c.image_y || 0,
           }))
         );
       } catch (err) {
@@ -107,7 +346,51 @@ export default function AdminCategoriesPage() {
     }
   };
 
-  // Open Edit Modal
+  // Drag and drop reordering
+  const handleDragStart = (idx: number) => {
+    setDraggedIdx(idx);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = async (dropIdx: number) => {
+    if (draggedIdx === null || draggedIdx === dropIdx) return;
+    const reordered = [...categories];
+    const [moved] = reordered.splice(draggedIdx, 1);
+    reordered.splice(dropIdx, 0, moved);
+
+    const finalOrdered = reordered.map((c, i) => ({
+      ...c,
+      display_order: i + 1,
+    }));
+
+    setDraggedIdx(null);
+    await persistCategories(finalOrdered);
+    showNotification("Category realms reordered successfully.");
+  };
+
+  // Quick Move Up / Down
+  const handleMove = async (idx: number, direction: "up" | "down") => {
+    const targetIdx = direction === "up" ? idx - 1 : idx + 1;
+    if (targetIdx < 0 || targetIdx >= categories.length) return;
+
+    const reordered = [...categories];
+    const temp = reordered[idx];
+    reordered[idx] = reordered[targetIdx];
+    reordered[targetIdx] = temp;
+
+    const finalOrdered = reordered.map((c, i) => ({
+      ...c,
+      display_order: i + 1,
+    }));
+
+    await persistCategories(finalOrdered);
+    showNotification("Category order updated.");
+  };
+
+  // Open Edit Modal (Category Realm Slug locked)
   const handleOpenEdit = (cat: Category) => {
     setEditingCategory(cat);
     setEditForm({
@@ -118,6 +401,9 @@ export default function AdminCategoriesPage() {
       image_url: cat.image_url,
       display_order: cat.display_order,
       is_active: cat.is_active !== false,
+      image_zoom: cat.image_zoom || 1,
+      image_x: cat.image_x || 0,
+      image_y: cat.image_y || 0,
     });
     setUploadError(null);
   };
@@ -132,13 +418,17 @@ export default function AdminCategoriesPage() {
         return {
           ...cat,
           name: editForm.name.trim(),
-          slug: editForm.slug.trim().toLowerCase().replace(/\s+/g, "-"),
+          // Slug remains locked to editingCategory.slug to preserve links
+          slug: editingCategory.slug,
           tagline: editForm.tagline.trim(),
           description: editForm.description.trim(),
           image_url: editForm.image_url.trim(),
           hero_image_url: cat.hero_image_url || editForm.image_url.trim(),
           display_order: Number(editForm.display_order) || 1,
           is_active: editForm.is_active,
+          image_zoom: editForm.image_zoom || 1,
+          image_x: editForm.image_x || 0,
+          image_y: editForm.image_y || 0,
         };
       }
       return cat;
@@ -149,14 +439,14 @@ export default function AdminCategoriesPage() {
     showNotification(`Category "${editForm.name}" updated successfully.`);
   };
 
-  // Create Category
+  // Create Category (Slug auto-generated and locked)
   const handleCreateCategory = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!createForm.name.trim()) return;
 
     const slug =
       createForm.slug.trim().toLowerCase().replace(/\s+/g, "-") ||
-      createForm.name.trim().toLowerCase().replace(/\s+/g, "-");
+      createForm.name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
 
     const newCat: Category = {
       id: typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `cat_${Date.now()}`,
@@ -168,6 +458,9 @@ export default function AdminCategoriesPage() {
       hero_image_url: createForm.image_url.trim(),
       display_order: Number(createForm.display_order) || categories.length + 1,
       is_active: createForm.is_active,
+      image_zoom: createForm.image_zoom || 1,
+      image_x: createForm.image_x || 0,
+      image_y: createForm.image_y || 0,
     };
 
     const updated = [...categories, newCat].sort(
@@ -181,10 +474,12 @@ export default function AdminCategoriesPage() {
       slug: "",
       tagline: "",
       description: "",
-      image_url:
-        "https://www.charleskeith.in/dw/image/v2/BCWJ_PRD/on/demandware.static/-/Sites-in-products/default/dw0c35245a/images/hi-res/2026-L6-CK2-10160273-A-29-1.jpg?sw=600&q=80",
+      image_url: "",
       display_order: updated.length + 1,
       is_active: true,
+      image_zoom: 1,
+      image_x: 0,
+      image_y: 0,
     });
     showNotification(`New category "${newCat.name}" created successfully.`);
   };
@@ -221,7 +516,6 @@ export default function AdminCategoriesPage() {
       `Category "${cat?.name}" is now ${cat?.is_active ? "Live" : "Hidden"}.`
     );
   };
-
 
   // Image Upload handler
   const handleImageUpload = async (
@@ -284,7 +578,7 @@ export default function AdminCategoriesPage() {
             Category Realms
           </h1>
           <p className="text-xs text-[#64748B] mt-1">
-            Curate category showcases, edit titles, upload realm imagery, adjust display order, and remove categories.
+            Reorder category sequences via drag-and-drop, adjust circular Instagram avatars, and lock realm identifiers.
           </p>
         </div>
 
@@ -297,7 +591,7 @@ export default function AdminCategoriesPage() {
               }));
               setIsCreateModalOpen(true);
             }}
-            className="px-5 py-2.5 rounded-xl neu-btn-gold text-xs uppercase tracking-widest font-bold text-white transition-all flex items-center gap-2 cursor-pointer"
+            className="px-5 py-2.5 rounded-xl neu-btn-gold text-xs uppercase tracking-widest font-bold text-white transition-all flex items-center gap-2 cursor-pointer shadow-md hover:shadow-lg"
           >
             <Plus className="w-4 h-4" />
             <span>New Category</span>
@@ -328,10 +622,13 @@ export default function AdminCategoriesPage() {
               {categories.filter((c) => c.is_active !== false).length}
             </strong>
           </span>
+          <span className="px-3 py-1.5 rounded-xl neu-inset-sm bg-[#F1F5F9] hidden sm:inline-block">
+            Drag to Reorder Enabled
+          </span>
         </div>
       </div>
 
-      {/* Category Grid */}
+      {/* Category Grid / Drag-and-Drop List */}
       {isLoading ? (
         <div className="p-16 text-center text-[#64748B] neu-card bg-white rounded-3xl">
           <Loader2 className="w-8 h-8 mx-auto animate-spin text-[#9E7D4E] mb-3" />
@@ -351,69 +648,134 @@ export default function AdminCategoriesPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filtered.map((cat) => (
+          {filtered.map((cat, idx) => (
             <div
               key={cat.id}
-              className="bg-white rounded-3xl neu-card p-5 space-y-4 border border-slate-200/80 hover:shadow-lg transition-all flex flex-col justify-between"
+              draggable={true}
+              onDragStart={() => handleDragStart(idx)}
+              onDragOver={handleDragOver}
+              onDrop={() => handleDrop(idx)}
+              className={`bg-white rounded-3xl neu-card p-5 space-y-4 border transition-all flex flex-col justify-between select-none ${
+                draggedIdx === idx
+                  ? "opacity-50 ring-2 ring-[#C5A880] border-[#C5A880]"
+                  : "border-slate-200/80 hover:shadow-lg hover:border-[#C5A880]/50"
+              }`}
             >
               <div className="space-y-3">
-                {/* Category Image Preview & Order Badge */}
-                <div className="relative aspect-[16/10] w-full bg-[#F1F5F9] overflow-hidden rounded-2xl border border-slate-200/70">
-                  <Image
-                    src={cat.image_url}
-                    alt={cat.name}
-                    fill
-                    className="object-cover"
-                  />
-                  <span className="absolute top-2.5 left-2.5 px-2.5 py-1 bg-white/90 backdrop-blur-xs text-[#0F172A] text-[10px] font-mono font-bold rounded-lg shadow-sm">
-                    Rank #{cat.display_order}
-                  </span>
+                {/* Top Action & Reorder Bar */}
+                <div className="flex items-center justify-between gap-2 pb-2 border-b border-slate-100">
+                  <div className="flex items-center gap-1.5">
+                    {/* Drag Grip Handle */}
+                    <div
+                      className="cursor-grab active:cursor-grabbing p-1 rounded-lg hover:bg-slate-100 text-[#64748B] hover:text-[#0F172A] transition-colors"
+                      title="Drag to reorder category"
+                    >
+                      <GripVertical className="w-4 h-4" />
+                    </div>
+                    <span className="px-2.5 py-0.5 bg-[#FAF8F5] border border-[#E0D8CC] text-[#0F172A] text-[10px] font-mono font-bold rounded-lg shadow-xs">
+                      #{cat.display_order}
+                    </span>
+                    {/* Quick Move Up/Down buttons */}
+                    <div className="flex items-center gap-0.5">
+                      <button
+                        type="button"
+                        onClick={() => handleMove(idx, "up")}
+                        disabled={idx === 0}
+                        title="Move Up"
+                        className="p-1 rounded-md hover:bg-slate-100 text-[#64748B] disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer"
+                      >
+                        <ChevronUp className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleMove(idx, "down")}
+                        disabled={idx === filtered.length - 1}
+                        title="Move Down"
+                        className="p-1 rounded-md hover:bg-slate-100 text-[#64748B] disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer"
+                      >
+                        <ChevronDown className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
 
+                  {/* Visibility toggle badge */}
                   <button
                     onClick={() => handleToggleActive(cat.id)}
                     title={cat.is_active !== false ? "Click to Hide" : "Click to Publish"}
-                    className={`absolute top-2.5 right-2.5 px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold flex items-center gap-1 backdrop-blur-xs cursor-pointer shadow-sm ${
+                    className={`px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold flex items-center gap-1 cursor-pointer transition-all shadow-xs ${
                       cat.is_active !== false
-                        ? "bg-emerald-500/90 text-white"
-                        : "bg-slate-700/80 text-white"
+                        ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                        : "bg-slate-100 text-slate-600 border border-slate-200"
                     }`}
                   >
                     {cat.is_active !== false ? (
-                      <Eye className="w-3 h-3" />
+                      <Eye className="w-3 h-3 text-emerald-600" />
                     ) : (
-                      <EyeOff className="w-3 h-3" />
+                      <EyeOff className="w-3 h-3 text-slate-500" />
                     )}
                     <span>{cat.is_active !== false ? "Live" : "Draft"}</span>
                   </button>
                 </div>
 
-                {/* Text Information */}
-                <div className="space-y-1.5">
-                  <div className="flex items-baseline justify-between gap-2">
-                    <h3 className="font-sans font-bold text-base text-[#0F172A] uppercase tracking-wider">
-                      {cat.name}
-                    </h3>
+                {/* Circular Instagram Avatar Preview & Info */}
+                <div className="flex items-center gap-4 py-2">
+                  <div className="relative w-20 h-20 shrink-0 rounded-full border-2 border-[#C5A880] p-0.5 bg-white shadow-xs overflow-hidden">
+                    <div className="w-full h-full rounded-full overflow-hidden relative bg-[#FAF7F2]">
+                      {cat.image_url ? (
+                        <Image
+                          src={cat.image_url}
+                          alt={cat.name}
+                          fill
+                          unoptimized
+                          style={{
+                            transform: `scale(${cat.image_zoom || 1}) translate(${cat.image_x || 0}%, ${cat.image_y || 0}%)`,
+                            transformOrigin: "center center",
+                          }}
+                          className="object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-slate-400 text-[9px] font-mono">
+                          No img
+                        </div>
+                      )}
+                    </div>
                   </div>
 
-                  {cat.tagline && (
-                    <p className="text-xs font-mono text-[#9E7D4E] font-medium">
-                      {cat.tagline}
-                    </p>
-                  )}
+                  <div className="flex-1 min-w-0 space-y-1">
+                    <div className="flex items-center gap-1.5">
+                      <h3 className="font-sans font-bold text-sm text-[#0F172A] uppercase tracking-wider truncate">
+                        {cat.name}
+                      </h3>
+                    </div>
+                    {cat.tagline && (
+                      <p className="text-[11px] font-mono text-[#9E7D4E] font-medium truncate">
+                        {cat.tagline}
+                      </p>
+                    )}
+                    <div className="flex items-center gap-1 text-[10px] font-mono text-[#64748B]">
+                      <span className="bg-[#F1F5F9] px-2 py-0.5 rounded text-[#0F172A] truncate">
+                        /shop/{cat.slug}
+                      </span>
+                    </div>
+                  </div>
+                </div>
 
+                {/* Description & Storefront Link */}
+                <div className="space-y-2 pt-1 border-t border-slate-100">
                   <p className="text-[#64748B] text-xs line-clamp-2 leading-relaxed">
                     {cat.description || "No description provided."}
                   </p>
 
-                  <div className="pt-1 flex items-center justify-between text-[11px] font-mono text-[#64748B]">
-                    <span className="bg-[#F1F5F9] px-2 py-0.5 rounded text-[#0F172A]">
-                      /shop/{cat.slug}
-                    </span>
+                  <div className="flex items-center justify-between text-[11px] font-mono text-[#64748B]">
+                    <div className="flex items-center gap-1 text-[#9E7D4E]">
+                      <Lock className="w-3 h-3" />
+                      <span className="text-[10px]">Realm Locked</span>
+                    </div>
                     <a
                       href={`/shop/${cat.slug}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="hover:text-[#9E7D4E] flex items-center gap-1"
+                      className="hover:text-[#9E7D4E] flex items-center gap-1 transition-colors"
                     >
                       <span>Storefront</span>
                       <ExternalLink className="w-3 h-3" />
@@ -446,15 +808,15 @@ export default function AdminCategoriesPage() {
       )}
 
       {/* =========================================================================
-          MODAL 1: EDIT CATEGORY
+          MODAL 1: EDIT CATEGORY (Realm Locked + Instagram PFP Adjuster)
           ========================================================================= */}
       {editingCategory && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
-          <div className="rounded-3xl neu-card bg-white p-6 sm:p-8 max-w-xl w-full max-h-[90vh] overflow-y-auto text-xs space-y-6 shadow-2xl border border-slate-200">
+          <div className="rounded-3xl neu-card bg-white p-6 sm:p-8 max-w-2xl w-full max-h-[92vh] overflow-y-auto text-xs space-y-6 shadow-2xl border border-slate-200">
             <div className="flex items-center justify-between pb-4 border-b border-slate-200">
               <div>
                 <span className="text-[10px] uppercase tracking-[0.25em] text-[#9E7D4E] font-mono font-semibold">
-                  Taxonomy Editor
+                  Taxonomy &amp; Realm Editor
                 </span>
                 <h3 className="font-sans font-bold text-lg text-[#0F172A] uppercase tracking-wider mt-0.5">
                   Edit Category: {editingCategory.name}
@@ -468,7 +830,7 @@ export default function AdminCategoriesPage() {
               </button>
             </div>
 
-            <form onSubmit={handleSaveEdit} className="space-y-4">
+            <form onSubmit={handleSaveEdit} className="space-y-5">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <label className="text-[10px] uppercase tracking-widest text-[#64748B] font-mono font-semibold">
@@ -485,19 +847,30 @@ export default function AdminCategoriesPage() {
                   />
                 </div>
 
+                {/* LOCKED Category Realm Slug Field */}
                 <div className="space-y-1.5">
-                  <label className="text-[10px] uppercase tracking-widest text-[#64748B] font-mono font-semibold">
-                    URL Slug *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={editForm.slug}
-                    onChange={(e) =>
-                      setEditForm({ ...editForm, slug: e.target.value })
-                    }
-                    className="w-full p-3 rounded-xl neu-inset bg-[#F1F5F9] text-xs text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#C5A880]/50 font-mono"
-                  />
+                  <div className="flex items-center justify-between">
+                    <label className="text-[10px] uppercase tracking-widest text-[#64748B] font-mono font-semibold flex items-center gap-1.5">
+                      <Lock className="w-3 h-3 text-[#C5A880]" />
+                      <span>Category Realm</span>
+                    </label>
+                    <span className="text-[9px] uppercase tracking-wider font-mono text-[#9E7D4E] bg-[#C5A880]/15 px-2 py-0.5 rounded-md border border-[#C5A880]/30 font-semibold">
+                      Realm Locked
+                    </span>
+                  </div>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      disabled
+                      readOnly
+                      value={editForm.slug}
+                      className="w-full p-3 pl-9 rounded-xl neu-inset bg-slate-100 text-xs text-[#64748B] font-mono cursor-not-allowed border border-slate-200"
+                    />
+                    <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  </div>
+                  <p className="text-[10px] text-[#94A3B8] font-mono">
+                    Category realm key (/shop/{editForm.slug}) is locked to preserve catalog &amp; URL structure.
+                  </p>
                 </div>
               </div>
 
@@ -521,7 +894,7 @@ export default function AdminCategoriesPage() {
                   Description
                 </label>
                 <textarea
-                  rows={3}
+                  rows={2}
                   value={editForm.description}
                   onChange={(e) =>
                     setEditForm({ ...editForm, description: e.target.value })
@@ -530,64 +903,63 @@ export default function AdminCategoriesPage() {
                 />
               </div>
 
-              {/* Category Image URL & Upload */}
+              {/* Image URL & File Upload */}
               <div className="space-y-2">
                 <label className="text-[10px] uppercase tracking-widest text-[#64748B] font-mono font-semibold">
                   Category Showcase Image *
                 </label>
 
-                <div className="flex gap-4 items-center">
-                  <div className="relative w-20 h-16 rounded-xl neu-inset bg-[#F1F5F9] overflow-hidden flex-shrink-0 border border-slate-200">
-                    {editForm.image_url ? (
-                      <Image
-                        src={editForm.image_url}
-                        alt="Preview"
-                        fill
-                        className="object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-[#94A3B8] text-[10px]">
-                        No img
-                      </div>
-                    )}
-                  </div>
+                <div className="flex gap-3 items-center">
+                  <input
+                    type="url"
+                    required
+                    value={editForm.image_url}
+                    onChange={(e) =>
+                      setEditForm({ ...editForm, image_url: e.target.value })
+                    }
+                    placeholder="https://..."
+                    className="flex-1 p-2.5 rounded-xl neu-inset bg-[#F1F5F9] text-xs text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#C5A880]/50 font-mono"
+                  />
 
-                  <div className="flex-1 space-y-2">
+                  <label className="px-4 py-2.5 rounded-xl neu-btn text-[11px] text-[#0F172A] font-medium cursor-pointer flex items-center gap-1.5 hover:text-[#9E7D4E] shrink-0">
+                    <Upload className="w-3.5 h-3.5" />
+                    <span>{isUploading ? "Uploading..." : "Upload Image"}</span>
                     <input
-                      type="url"
-                      required
-                      value={editForm.image_url}
-                      onChange={(e) =>
-                        setEditForm({ ...editForm, image_url: e.target.value })
-                      }
-                      placeholder="https://..."
-                      className="w-full p-2.5 rounded-xl neu-inset bg-[#F1F5F9] text-xs text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#C5A880]/50 font-mono"
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        if (e.target.files?.[0]) {
+                          handleImageUpload(e.target.files[0], "edit");
+                        }
+                      }}
                     />
-
-                    <div className="flex items-center gap-2">
-                      <label className="px-3 py-1.5 rounded-xl neu-btn text-[11px] text-[#0F172A] font-medium cursor-pointer flex items-center gap-1.5 hover:text-[#9E7D4E]">
-                        <Upload className="w-3.5 h-3.5" />
-                        <span>{isUploading ? "Uploading..." : "Upload New File"}</span>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={(e) => {
-                            if (e.target.files?.[0]) {
-                              handleImageUpload(e.target.files[0], "edit");
-                            }
-                          }}
-                        />
-                      </label>
-                      {uploadError && (
-                        <span className="text-[10px] text-red-500 font-mono">
-                          {uploadError}
-                        </span>
-                      )}
-                    </div>
-                  </div>
+                  </label>
                 </div>
+                {uploadError && (
+                  <p className="text-[10px] text-red-500 font-mono">{uploadError}</p>
+                )}
               </div>
+
+              {/* Instagram-Style Circular PFP Adjuster */}
+              <CircularPfpEditor
+                imageUrl={editForm.image_url}
+                zoom={editForm.image_zoom}
+                x={editForm.image_x}
+                y={editForm.image_y}
+                name={editForm.name}
+                onZoomChange={(zoom) => setEditForm((prev) => ({ ...prev, image_zoom: zoom }))}
+                onXChange={(x) => setEditForm((prev) => ({ ...prev, image_x: x }))}
+                onYChange={(y) => setEditForm((prev) => ({ ...prev, image_y: y }))}
+                onReset={() =>
+                  setEditForm((prev) => ({
+                    ...prev,
+                    image_zoom: 1,
+                    image_x: 0,
+                    image_y: 0,
+                  }))
+                }
+              />
 
               <div className="grid grid-cols-2 gap-4 pt-2">
                 <div className="space-y-1.5">
@@ -645,7 +1017,7 @@ export default function AdminCategoriesPage() {
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2.5 rounded-xl neu-btn-gold text-xs font-bold uppercase tracking-wider text-white cursor-pointer"
+                  className="px-6 py-2.5 rounded-xl neu-btn-gold text-xs font-bold uppercase tracking-wider text-white cursor-pointer shadow-md hover:shadow-lg"
                 >
                   Save Category Changes
                 </button>
@@ -656,11 +1028,11 @@ export default function AdminCategoriesPage() {
       )}
 
       {/* =========================================================================
-          MODAL 2: ADD NEW CATEGORY
+          MODAL 2: ADD NEW CATEGORY (Auto-Locked Realm + Instagram PFP Adjuster)
           ========================================================================= */}
       {isCreateModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
-          <div className="rounded-3xl neu-card bg-white p-6 sm:p-8 max-w-xl w-full max-h-[90vh] overflow-y-auto text-xs space-y-6 shadow-2xl border border-slate-200">
+          <div className="rounded-3xl neu-card bg-white p-6 sm:p-8 max-w-2xl w-full max-h-[92vh] overflow-y-auto text-xs space-y-6 shadow-2xl border border-slate-200">
             <div className="flex items-center justify-between pb-4 border-b border-slate-200">
               <div>
                 <span className="text-[10px] uppercase tracking-[0.25em] text-[#9E7D4E] font-mono font-semibold">
@@ -678,7 +1050,7 @@ export default function AdminCategoriesPage() {
               </button>
             </div>
 
-            <form onSubmit={handleCreateCategory} className="space-y-4">
+            <form onSubmit={handleCreateCategory} className="space-y-5">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <label className="text-[10px] uppercase tracking-widest text-[#64748B] font-mono font-semibold">
@@ -690,7 +1062,10 @@ export default function AdminCategoriesPage() {
                     value={createForm.name}
                     onChange={(e) => {
                       const name = e.target.value;
-                      const slug = name.toLowerCase().replace(/\s+/g, "-");
+                      const slug = name
+                        .toLowerCase()
+                        .trim()
+                        .replace(/[^a-z0-9]+/g, "-");
                       setCreateForm({ ...createForm, name, slug });
                     }}
                     placeholder="e.g. Crossbody Bags"
@@ -698,20 +1073,30 @@ export default function AdminCategoriesPage() {
                   />
                 </div>
 
+                {/* Auto-Locked Realm Slug Field */}
                 <div className="space-y-1.5">
-                  <label className="text-[10px] uppercase tracking-widest text-[#64748B] font-mono font-semibold">
-                    URL Slug *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={createForm.slug}
-                    onChange={(e) =>
-                      setCreateForm({ ...createForm, slug: e.target.value })
-                    }
-                    placeholder="e.g. crossbody-bags"
-                    className="w-full p-3 rounded-xl neu-inset bg-[#F1F5F9] text-xs text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#C5A880]/50 font-mono"
-                  />
+                  <div className="flex items-center justify-between">
+                    <label className="text-[10px] uppercase tracking-widest text-[#64748B] font-mono font-semibold flex items-center gap-1.5">
+                      <Lock className="w-3 h-3 text-[#C5A880]" />
+                      <span>Category Realm (Locked)</span>
+                    </label>
+                    <span className="text-[9px] uppercase tracking-wider font-mono text-[#9E7D4E] bg-[#C5A880]/15 px-2 py-0.5 rounded-md border border-[#C5A880]/30 font-semibold">
+                      Auto-Derived
+                    </span>
+                  </div>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      readOnly
+                      value={createForm.slug}
+                      placeholder="Auto-generated from name"
+                      className="w-full p-3 pl-9 rounded-xl neu-inset bg-slate-100 text-xs text-[#475569] font-mono border border-slate-200 cursor-not-allowed"
+                    />
+                    <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  </div>
+                  <p className="text-[10px] text-[#94A3B8] font-mono">
+                    Automatically designated as /shop/{createForm.slug || "[slug]"} to prevent route conflicts.
+                  </p>
                 </div>
               </div>
 
@@ -735,7 +1120,7 @@ export default function AdminCategoriesPage() {
                   Description
                 </label>
                 <textarea
-                  rows={3}
+                  rows={2}
                   value={createForm.description}
                   onChange={(e) =>
                     setCreateForm({
@@ -748,67 +1133,66 @@ export default function AdminCategoriesPage() {
                 />
               </div>
 
-              {/* Image URL & Upload */}
+              {/* Image URL & File Upload */}
               <div className="space-y-2">
                 <label className="text-[10px] uppercase tracking-widest text-[#64748B] font-mono font-semibold">
                   Category Showcase Image *
                 </label>
 
-                <div className="flex gap-4 items-center">
-                  <div className="relative w-20 h-16 rounded-xl neu-inset bg-[#F1F5F9] overflow-hidden flex-shrink-0 border border-slate-200">
-                    {createForm.image_url ? (
-                      <Image
-                        src={createForm.image_url}
-                        alt="Preview"
-                        fill
-                        className="object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-[#94A3B8] text-[10px]">
-                        No img
-                      </div>
-                    )}
-                  </div>
+                <div className="flex gap-3 items-center">
+                  <input
+                    type="url"
+                    required
+                    value={createForm.image_url}
+                    onChange={(e) =>
+                      setCreateForm({
+                        ...createForm,
+                        image_url: e.target.value,
+                      })
+                    }
+                    placeholder="https://... or upload below"
+                    className="flex-1 p-2.5 rounded-xl neu-inset bg-[#F1F5F9] text-xs text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#C5A880]/50 font-mono"
+                  />
 
-                  <div className="flex-1 space-y-2">
+                  <label className="px-4 py-2.5 rounded-xl neu-btn text-[11px] text-[#0F172A] font-medium cursor-pointer flex items-center gap-1.5 hover:text-[#9E7D4E] shrink-0">
+                    <Upload className="w-3.5 h-3.5" />
+                    <span>{isUploading ? "Uploading..." : "Upload Image"}</span>
                     <input
-                      type="url"
-                      required
-                      value={createForm.image_url}
-                      onChange={(e) =>
-                        setCreateForm({
-                          ...createForm,
-                          image_url: e.target.value,
-                        })
-                      }
-                      placeholder="https://..."
-                      className="w-full p-2.5 rounded-xl neu-inset bg-[#F1F5F9] text-xs text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#C5A880]/50 font-mono"
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        if (e.target.files?.[0]) {
+                          handleImageUpload(e.target.files[0], "create");
+                        }
+                      }}
                     />
-
-                    <div className="flex items-center gap-2">
-                      <label className="px-3 py-1.5 rounded-xl neu-btn text-[11px] text-[#0F172A] font-medium cursor-pointer flex items-center gap-1.5 hover:text-[#9E7D4E]">
-                        <Upload className="w-3.5 h-3.5" />
-                        <span>{isUploading ? "Uploading..." : "Upload New File"}</span>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={(e) => {
-                            if (e.target.files?.[0]) {
-                              handleImageUpload(e.target.files[0], "create");
-                            }
-                          }}
-                        />
-                      </label>
-                      {uploadError && (
-                        <span className="text-[10px] text-red-500 font-mono">
-                          {uploadError}
-                        </span>
-                      )}
-                    </div>
-                  </div>
+                  </label>
                 </div>
+                {uploadError && (
+                  <p className="text-[10px] text-red-500 font-mono">{uploadError}</p>
+                )}
               </div>
+
+              {/* Instagram-Style Circular PFP Adjuster */}
+              <CircularPfpEditor
+                imageUrl={createForm.image_url}
+                zoom={createForm.image_zoom}
+                x={createForm.image_x}
+                y={createForm.image_y}
+                name={createForm.name}
+                onZoomChange={(zoom) => setCreateForm((prev) => ({ ...prev, image_zoom: zoom }))}
+                onXChange={(x) => setCreateForm((prev) => ({ ...prev, image_x: x }))}
+                onYChange={(y) => setCreateForm((prev) => ({ ...prev, image_y: y }))}
+                onReset={() =>
+                  setCreateForm((prev) => ({
+                    ...prev,
+                    image_zoom: 1,
+                    image_x: 0,
+                    image_y: 0,
+                  }))
+                }
+              />
 
               <div className="grid grid-cols-2 gap-4 pt-2">
                 <div className="space-y-1.5">
@@ -866,7 +1250,7 @@ export default function AdminCategoriesPage() {
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2.5 rounded-xl neu-btn-gold text-xs font-bold uppercase tracking-wider text-white cursor-pointer"
+                  className="px-6 py-2.5 rounded-xl neu-btn-gold text-xs font-bold uppercase tracking-wider text-white cursor-pointer shadow-md hover:shadow-lg"
                 >
                   Create Category Realm
                 </button>

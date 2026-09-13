@@ -22,6 +22,12 @@ import {
   Menu,
   X,
   Loader2,
+  ChevronDown,
+  ChevronRight,
+  ImageIcon,
+  Layers,
+  Megaphone,
+  Film,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
 import { Providers } from "@/components/providers";
@@ -35,7 +41,18 @@ const ADMIN_NAV = [
   { href: "/admin/orders", label: "Orders & Pipeline", icon: ShoppingCart },
   { href: "/admin/customers", label: "Patrons Directory", icon: Users },
   { href: "/admin/coupons", label: "Coupons & Privileges", icon: Tag },
-  { href: "/admin/cms", label: "Homepage CMS", icon: Sliders },
+  {
+    href: "/admin/cms",
+    label: "Homepage CMS",
+    icon: Sliders,
+    subItems: [
+      { href: "/admin/cms/hero", label: "Hero Banner", icon: ImageIcon },
+      { href: "/admin/categories", label: "Curated Categories", icon: FolderTree },
+      { href: "/admin/cms/reels", label: "Seen on You (Reels)", icon: Film },
+      { href: "/admin/cms?section=pillars", label: "Brand Pillars", icon: Layers },
+      { href: "/admin/cms?section=announcement", label: "Announcement Bar", icon: Megaphone },
+    ],
+  },
   { href: "/admin/reviews", label: "Reviews Moderation", icon: MessageSquare },
   { href: "/admin/audit-logs", label: "Audit Trail", icon: History },
   { href: "/admin/settings", label: "Store Settings", icon: Settings },
@@ -46,6 +63,7 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const { adminUser, isAdmin, adminSignOut, isLoading } = useAuth();
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
+  const [isCmsSubmenuOpen, setIsCmsSubmenuOpen] = useState(true);
   const hasRedirectedRef = useRef(false);
 
   // Clean legacy client-side mock caches once so Supabase database is single source of truth
@@ -108,7 +126,7 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen bg-[#F1F5F9] flex flex-col lg:flex-row text-[#334155] font-sans antialiased selection:bg-[#C5A880]/30 selection:text-[#0F172A]">
+    <div className="h-screen overflow-hidden bg-[#F1F5F9] flex flex-col lg:flex-row text-[#334155] font-sans antialiased selection:bg-[#C5A880]/30 selection:text-[#0F172A]">
       {/* Mobile Top App Bar with Light Neumorphism */}
       <header className="lg:hidden sticky top-0 z-30 bg-[#F8FAFC]/90 backdrop-blur-md px-4 py-3 border-b border-slate-200/80 flex items-center justify-between shadow-xs">
         <div className="flex items-center gap-2.5">
@@ -185,20 +203,80 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
           {/* Navigation Links with White Neumorphic States */}
           <nav className="space-y-1.5 text-xs">
             {ADMIN_NAV.map((item) => {
-              const isActive = pathname === item.href;
+              const hasSub = Boolean(item.subItems && item.subItems.length > 0);
+              const isItemActive =
+                pathname === item.href ||
+                (hasSub && pathname.startsWith("/admin/cms"));
               const Icon = item.icon;
+
+              if (hasSub) {
+                return (
+                  <div key={item.href} className="space-y-1">
+                    <button
+                      type="button"
+                      onClick={() => setIsCmsSubmenuOpen(!isCmsSubmenuOpen)}
+                      className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-medium transition-all cursor-pointer ${
+                        isItemActive
+                          ? "neu-inset bg-[#F1F5F9] text-[#9E7D4E] font-semibold border-l-3 border-[#C5A880] shadow-[inset_3px_3px_6px_rgba(166,178,198,0.35),inset_-2px_-2px_6px_#FFFFFF]"
+                          : "neu-btn text-[#475569] hover:text-[#0F172A]"
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <Icon className={`w-4 h-4 flex-shrink-0 ${isItemActive ? "text-[#9E7D4E]" : "text-[#64748B]"}`} />
+                        <span className="tracking-wide">{item.label}</span>
+                      </div>
+                      {isCmsSubmenuOpen ? (
+                        <ChevronDown className="w-3.5 h-3.5 text-[#9E7D4E]" />
+                      ) : (
+                        <ChevronRight className="w-3.5 h-3.5 text-[#94A3B8]" />
+                      )}
+                    </button>
+
+                    {/* Accordion Submenu */}
+                    {isCmsSubmenuOpen && (
+                      <div className="pl-5 pr-1 py-1 space-y-1 border-l-2 border-[#C5A880]/30 ml-4 my-1">
+                        {item.subItems!.map((sub) => {
+                          const isSubActive =
+                            pathname === sub.href ||
+                            (sub.href === "/admin/cms/hero" &&
+                              (pathname === "/admin/cms" ||
+                                pathname === "/admin/cms/hero" ||
+                                pathname.startsWith("/admin/cms/hero/")));
+                          const SubIcon = sub.icon;
+                          return (
+                            <Link
+                              key={sub.href}
+                              href={sub.href}
+                              onClick={() => setIsMobileNavOpen(false)}
+                              className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-[11px] font-medium transition-all ${
+                                isSubActive
+                                  ? "neu-inset bg-[#F8FAFC] text-[#9E7D4E] font-semibold shadow-[inset_2px_2px_4px_rgba(166,178,198,0.3),inset_-2px_-2px_4px_#FFFFFF]"
+                                  : "text-[#64748B] hover:text-[#0F172A] hover:bg-slate-200/40"
+                              }`}
+                            >
+                              <SubIcon className={`w-3.5 h-3.5 ${isSubActive ? "text-[#9E7D4E]" : "text-[#94A3B8]"}`} />
+                              <span>{sub.label}</span>
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+
               return (
                 <Link
                   key={item.href}
                   href={item.href}
                   onClick={() => setIsMobileNavOpen(false)}
                   className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium transition-all ${
-                    isActive
+                    isItemActive
                       ? "neu-inset bg-[#F1F5F9] text-[#9E7D4E] font-semibold border-l-3 border-[#C5A880] shadow-[inset_3px_3px_6px_rgba(166,178,198,0.35),inset_-2px_-2px_6px_#FFFFFF]"
                       : "neu-btn text-[#475569] hover:text-[#0F172A]"
                   }`}
                 >
-                  <Icon className={`w-4 h-4 flex-shrink-0 ${isActive ? "text-[#9E7D4E]" : "text-[#64748B]"}`} />
+                  <Icon className={`w-4 h-4 flex-shrink-0 ${isItemActive ? "text-[#9E7D4E]" : "text-[#64748B]"}`} />
                   <span className="tracking-wide">{item.label}</span>
                 </Link>
               );
@@ -247,7 +325,7 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
       </aside>
 
       {/* Main Admin Content Canvas with White Neumorphic Feel */}
-      <main className="flex-1 min-w-0 overflow-y-auto bg-[#EEF2F6] p-4 sm:p-6 lg:p-8">
+      <main className="flex-1 min-w-0 h-full overflow-y-auto bg-[#EEF2F6] p-4 sm:p-6 lg:p-8">
         {children}
       </main>
     </div>

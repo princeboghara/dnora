@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Check,
   Sparkles,
@@ -61,6 +62,7 @@ export const STOREFRONT_DESTINATIONS = [
 ];
 
 export default function AdminCMSPage() {
+  const router = useRouter();
   // Navigation: "hub" shows section selector cards. Selecting a card opens that section.
   const [currentSection, setCurrentSection] = useState<SectionType>("hub");
   const [heroSubTab, setHeroSubTab] = useState<HeroSubTab>("banners");
@@ -93,8 +95,7 @@ export default function AdminCMSPage() {
     subtitle: "",
     cta_text: "Shop The Collection",
     cta_link: "/shop",
-    desktop_image_url:
-      "https://www.charleskeith.in/dw/image/v2/BCWJ_PRD/on/demandware.static/-/Sites-in-products/default/dw76953c89/images/hi-res/2026-L6-CK2-10160273-A-29-3.jpg?sw=1920&q=85",
+    desktop_image_url: "",
     mobile_image_url: "",
     video_url: "",
     display_order: 1,
@@ -165,7 +166,7 @@ export default function AdminCMSPage() {
     setEditingBanner(banner);
     setEditMediaType(banner.video_url ? "video" : "image");
     setEditForm({
-      title: banner.title,
+      title: banner.title || "",
       subtitle: banner.subtitle || "",
       cta_text: banner.cta_text || "Shop The Collection",
       cta_link: banner.cta_link || "/shop",
@@ -186,8 +187,7 @@ export default function AdminCMSPage() {
       subtitle: "",
       cta_text: "Shop The Collection",
       cta_link: "/shop",
-      desktop_image_url:
-        "https://www.charleskeith.in/dw/image/v2/BCWJ_PRD/on/demandware.static/-/Sites-in-products/default/dw76953c89/images/hi-res/2026-L6-CK2-10160273-A-29-3.jpg?sw=1920&q=85",
+      desktop_image_url: "",
       mobile_image_url: "",
       video_url: "",
       display_order: banners.length + 1,
@@ -314,8 +314,7 @@ export default function AdminCMSPage() {
       subtitle: "",
       cta_text: "Shop The Collection",
       cta_link: "/shop",
-      desktop_image_url:
-        "https://www.charleskeith.in/dw/image/v2/BCWJ_PRD/on/demandware.static/-/Sites-in-products/default/dw76953c89/images/hi-res/2026-L6-CK2-10160273-A-29-3.jpg?sw=1920&q=85",
+      desktop_image_url: "",
       mobile_image_url: "",
       video_url: "",
       display_order: newBanners.length + 1,
@@ -332,7 +331,7 @@ export default function AdminCMSPage() {
 
     const newBanners = banners.map((b) => {
       if (b.id === id) {
-        bannerTitle = b.title;
+        bannerTitle = b.title || "Banner";
         nextState = !b.is_active;
         return { ...b, is_active: nextState };
       }
@@ -555,7 +554,7 @@ export default function AdminCMSPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               {/* SECTION CARD 1: HERO BANNER CAROUSEL */}
               <div
-                onClick={() => setCurrentSection("hero")}
+                onClick={() => router.push("/admin/cms/hero")}
                 className="p-6 sm:p-7 rounded-3xl neu-card bg-white border border-slate-200/80 hover:border-[#C5A880]/60 transition-all duration-300 cursor-pointer space-y-4 group"
               >
                 <div className="flex items-start justify-between">
@@ -934,7 +933,7 @@ export default function AdminCMSPage() {
 
                           <button
                             type="button"
-                            onClick={() => handleDeleteBanner(banner.id, banner.title)}
+                            onClick={() => handleDeleteBanner(banner.id, banner.title || "Banner")}
                             className="p-2 rounded-xl neu-btn text-[#475569] hover:text-[#EF4444] transition-all cursor-pointer"
                             title="Delete Banner"
                           >
@@ -949,7 +948,7 @@ export default function AdminCMSPage() {
                           <div className="relative w-full h-full rounded-lg overflow-hidden">
                             <Image
                               src={banner.desktop_image_url}
-                              alt={banner.title}
+                              alt={banner.title || "Banner"}
                               fill
                               unoptimized
                               className="object-cover group-hover:scale-105 transition-transform duration-500"
@@ -1107,7 +1106,7 @@ export default function AdminCMSPage() {
                               ? currentPreview.mobile_image_url
                               : currentPreview.desktop_image_url
                           }
-                          alt={currentPreview.title}
+                          alt={currentPreview.title || "Banner"}
                           fill
                           unoptimized
                           className="object-cover object-center"
