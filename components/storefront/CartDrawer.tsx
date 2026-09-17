@@ -4,10 +4,12 @@ import React, { useEffect } from "react";
 import { X, Trash2, Plus, Minus, ShoppingBag, ArrowRight, ShieldCheck } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCart } from "@/lib/store/cart-store";
 import { formatPrice } from "@/lib/utils";
 
 export function CartDrawer() {
+  const router = useRouter();
   const {
     isOpen,
     closeCart,
@@ -19,6 +21,21 @@ export function CartDrawer() {
     freeShippingProgress,
     amountToFreeShipping,
   } = useCart();
+
+  const handleProceedToCheckout = async () => {
+    closeCart();
+    try {
+      const res = await fetch("/api/auth/me", { cache: "no-store" });
+      const data = await res.json();
+      if (data?.isAuthenticated) {
+        router.push("/checkout");
+      } else {
+        router.push(`/login?redirect=${encodeURIComponent("/checkout")}`);
+      }
+    } catch {
+      router.push("/checkout");
+    }
+  };
 
   useEffect(() => {
     if (isOpen) {
@@ -181,8 +198,8 @@ export function CartDrawer() {
                 Taxes and complimentary express duties calculated during checkout.
               </p>
               <button
-                onClick={() => alert("Checkout flow: Demo mode active. Secure payment processor will initialize here.")}
-                className="w-full flex items-center justify-center gap-2 py-4 bg-[#0E0E0E] text-[#FAF9F6] text-xs font-semibold uppercase tracking-widest hover:bg-[#2C2B29] transition-all rounded shadow-md"
+                onClick={handleProceedToCheckout}
+                className="w-full flex items-center justify-center gap-2 py-4 bg-[#0E0E0E] text-[#FAF9F6] text-xs font-semibold uppercase tracking-widest hover:bg-[#2C2B29] transition-all rounded shadow-md cursor-pointer active:scale-[0.99]"
               >
                 <span>Proceed to Checkout</span>
                 <ArrowRight className="w-4 h-4" />

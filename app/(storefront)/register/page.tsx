@@ -176,7 +176,7 @@ export default function RegisterPage() {
         {/* Header */}
         <div className="text-center">
           <span className="text-[11px] uppercase tracking-[0.25em] text-[#C5A880] font-semibold block mb-2">
-            DNORA Privé
+            DNORA Atelier
           </span>
           <h1 className="text-3xl font-heading font-extrabold text-[#0E0E0E] tracking-tight">
             {step === "form" ? "Create an Account" : "Verify Your Email"}

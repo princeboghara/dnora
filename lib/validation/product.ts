@@ -9,6 +9,13 @@ export const productImageSchema = z.object({
   sort_order: z.number().default(0),
 });
 
+export const productColorVariantSchema = z.object({
+  id: z.string(),
+  name: z.string().min(1, "Color name is required"),
+  color_hex: z.string().min(3, "Valid color code required"),
+  images: z.array(productImageSchema).default([]),
+});
+
 export const productSchema = z.object({
   name: z.string().min(2, "Product name must be at least 2 characters").max(120),
   slug: z.string().min(2).max(150).optional(),
@@ -23,6 +30,7 @@ export const productSchema = z.object({
   is_new_arrival: z.boolean().default(false),
   status: z.enum(["draft", "active", "archived"]).default("active"),
   images: z.array(productImageSchema).min(1, "At least one product image is required"),
+  color_variants: z.array(productColorVariantSchema).optional().default([]),
 });
 
 export type ProductInput = z.infer<typeof productSchema>;

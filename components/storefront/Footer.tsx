@@ -102,8 +102,8 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/admin" className="hover:text-[#C5A880] transition-colors">
-                  Admin Portal
+                <Link href="/shop" className="hover:text-[#C5A880] transition-colors">
+                  Authenticity Guarantee
                 </Link>
               </li>
             </ul>

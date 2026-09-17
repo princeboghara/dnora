@@ -4,6 +4,8 @@ import React, { useState, useRef } from "react";
 import { Upload, Video, Image as ImageIcon, Check, Loader2 } from "lucide-react";
 import { HeroBanner } from "@/types";
 import { useToast } from "@/components/ui/Toast";
+import { CircularProgress } from "@/components/ui/CircularProgress";
+import { uploadFileWithProgress } from "@/lib/upload-utils";
 
 interface HeroBannerFormProps {
   initialData?: HeroBanner | null;
@@ -23,45 +25,52 @@ export function HeroBannerForm({ initialData, onSuccess, onCancel }: HeroBannerF
   const [buttonText, setButtonText] = useState(initialData?.button_text || "Explore Collection");
   const [buttonLink, setButtonLink] = useState(initialData?.button_link || "/shop");
   const [durationSeconds, setDurationSeconds] = useState(initialData?.duration_seconds || 5);
-  const [sortOrder, setSortOrder] = useState(initialData?.sort_order || 1);
-  const [status, setStatus] = useState<"draft" | "published">(
-    initialData?.status === "published" ? "published" : "draft"
-  );
+  const [sortOrder, setSortOrder] = useState(initialData?.sort_order || 0);
   const [textAlignment, setTextAlignment] = useState<"left" | "center" | "right">(
     initialData?.text_alignment || "left"
   );
+  const [isActive, setIsActive] = useState(initialData ? initialData.is_active : true);
+  const [status, setStatus] = useState<"draft" | "published" | "archived">(
+    initialData?.status || "published"
+  );
 
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [submitting, setSubmitting] = useState(false);
 
-  // File upload to Cloudinary via server API
+  // File upload to Cloudinary via server API with live CircularProgress
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     setUploading(true);
+    setUploadProgress(10);
     try {
       const formData = new FormData();
       formData.append("file", file);
       formData.append("folder", "dnora/heroes");
       formData.append("resource_type", mediaType);
 
-      const res = await fetch("/api/media/upload", {
-        method: "POST",
-        body: formData,
-      });
+      const data = await uploadFileWithProgress<{ success: boolean; media: { secure_url: string }; error?: string }>(
+        "/api/media/upload",
+        formData,
+        (percent) => {
+          setUploadProgress(percent);
+        }
+      );
 
-      const data = await res.json();
-      if (!res.ok) {
+      if (!data.success || !data.media) {
         throw new Error(data.error || "Upload failed");
       }
 
       setMediaUrl(data.media.secure_url);
+      setUploadProgress(100);
       success("Media uploaded successfully.");
     } catch (err: unknown) {
       error(err instanceof Error ? err.message : "Failed to upload media");
     } finally {
       setUploading(false);
+      setUploadProgress(0);
     }
   };
 
@@ -169,14 +178,19 @@ export function HeroBannerForm({ initialData, onSuccess, onCancel }: HeroBannerF
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
-            className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#FAF9F6] border border-[#E8E5DE] hover:border-[#0E0E0E] text-xs font-semibold text-[#0E0E0E] rounded transition-all shrink-0"
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#FAF9F6] border border-[#E8E5DE] hover:border-[#0E0E0E] text-xs font-semibold text-[#0E0E0E] rounded transition-all shrink-0 disabled:opacity-80"
           >
             {uploading ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
+              <>
+                <CircularProgress progress={uploadProgress} size={16} strokeWidth={2.5} />
+                <span>Uploading {uploadProgress}%</span>
+              </>
             ) : (
-              <Upload className="w-4 h-4 text-[#C5A880]" />
+              <>
+                <Upload className="w-4 h-4 text-[#C5A880]" />
+                <span>Upload {mediaType === "video" ? "Video" : "Image"}</span>
+              </>
             )}
-            <span>Upload {mediaType === "video" ? "Video" : "Image"}</span>
           </button>
           <input
             ref={fileInputRef}

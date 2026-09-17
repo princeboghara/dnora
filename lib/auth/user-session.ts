@@ -37,7 +37,7 @@ interface AdminCookiePayload {
 export async function getUserSession(): Promise<UserSession | null> {
   const cookieStore = await cookies();
 
-  // 1. First priority: Check cryptographically signed HTTP-only user cookie (instant, zero network latency)
+  // 1. Check cryptographically signed HTTP-only user cookie (instant, zero network latency)
   const userCookie = cookieStore.get(USER_COOKIE_NAME);
   if (userCookie?.value) {
     const decoded = verifySessionToken<UserCookiePayload>(userCookie.value);
@@ -54,22 +54,7 @@ export async function getUserSession(): Promise<UserSession | null> {
     }
   }
 
-  // 2. Second priority: Check cryptographically signed admin cookie if present
-  const adminCookie = cookieStore.get(ADMIN_COOKIE_NAME);
-  if (adminCookie?.value) {
-    const decoded = verifySessionToken<AdminCookiePayload>(adminCookie.value);
-    if (decoded && decoded.role === "admin") {
-      return {
-        id: "admin-master",
-        email: decoded.email,
-        full_name: "DNORA Admin",
-        role: "admin",
-        isAuthenticated: true,
-      };
-    }
-  }
-
-  // 3. Third priority: Try Supabase Auth ONLY if a Supabase cookie is actually present
+  // 2. Try Supabase Auth ONLY if a Supabase cookie is actually present
   const hasSupabaseCookie = cookieStore.getAll().some((c) => c.name.startsWith("sb-"));
   if (hasSupabaseCookie && process.env.NEXT_PUBLIC_SUPABASE_URL) {
     try {
@@ -94,7 +79,7 @@ export async function getUserSession(): Promise<UserSession | null> {
         };
       }
     } catch {
-      // Supabase auth check error (e.g. timeout or network error)
+      // Supabase auth check error
     }
   }
 

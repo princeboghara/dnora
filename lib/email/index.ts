@@ -55,7 +55,7 @@ export async function sendVerificationOtpEmail({ email, name, otp }: SendOtpOpti
     <body>
       <div class="container">
         <div class="brand">DNORA</div>
-        <div class="subbrand">Client Privé Concierge</div>
+        <div class="subbrand">Client Concierge</div>
         <div class="title">Email Verification Code</div>
         <p class="text">
           Dear ${recipientName},<br>
@@ -76,11 +76,13 @@ export async function sendVerificationOtpEmail({ email, name, otp }: SendOtpOpti
     </html>
   `;
 
+  let lastError: string | null = null;
+
   // 1. Long Scale Production: Official Resend SDK
   if (resendApiKey) {
     try {
       const resend = new Resend(resendApiKey);
-      const fromEmail = process.env.EMAIL_FROM || "DNORA Privé <onboarding@resend.dev>";
+      const fromEmail = process.env.EMAIL_FROM || "DNORA Atelier <onboarding@resend.dev>";
       const { data, error } = await resend.emails.send({
         from: fromEmail,
         to: [email],
@@ -88,23 +90,22 @@ export async function sendVerificationOtpEmail({ email, name, otp }: SendOtpOpti
         html: htmlContent,
       });
 
-      if (error) {
-        console.error("Resend API error:", error);
+      if (!error && data?.id) {
+        console.log("Resend successfully dispatched email:", data.id);
         return {
           success: true,
-          delivered: false,
-          message: error.message || "Failed to send via Resend.",
+          delivered: true,
+          message: "Verification code sent to your email inbox via Resend.",
         };
       }
 
-      console.log("Resend successfully dispatched email:", data?.id);
-      return {
-        success: true,
-        delivered: true,
-        message: "Verification code sent to your email inbox via Resend.",
-      };
+      if (error) {
+        console.error("Resend API error:", error);
+        lastError = error.message;
+      }
     } catch (resendErr: unknown) {
       console.error("Resend dispatch error:", resendErr);
+      lastError = resendErr instanceof Error ? resendErr.message : String(resendErr);
     }
   }
 
@@ -134,8 +135,8 @@ export async function sendVerificationOtpEmail({ email, name, otp }: SendOtpOpti
 
       await transporter.sendMail({
         from: hasGmail
-          ? `"DNORA Privé" <${gmailUser}>`
-          : process.env.EMAIL_FROM || `"DNORA Privé" <${smtpUser}>`,
+          ? `"DNORA Atelier" <${gmailUser}>`
+          : process.env.EMAIL_FROM || `"DNORA Atelier" <${smtpUser}>`,
         to: email,
         subject: `Your DNORA Verification Code: ${otp}`,
         text: `Your DNORA one-time verification code is: ${otp}. It will expire in 10 minutes.`,
@@ -149,19 +150,17 @@ export async function sendVerificationOtpEmail({ email, name, otp }: SendOtpOpti
       };
     } catch (err: unknown) {
       console.error("Failed to send verification email via nodemailer:", err);
-      return {
-        success: true,
-        delivered: false,
-        message: "Email dispatch failed, but verification code was generated.",
-      };
+      lastError = err instanceof Error ? err.message : String(err);
     }
   }
 
-  // 3. Fallback Development Mode (No email provider configured yet)
+  // 3. Fallback: Email could not be dispatched
   return {
-    success: true,
+    success: false,
     delivered: false,
-    message: "Development mode: OTP generated and logged to console.",
+    message:
+      lastError ||
+      "No email provider configured. Please set RESEND_API_KEY, GMAIL_USER/GMAIL_PASS, or SMTP credentials.",
   };
 }
 
@@ -218,21 +217,21 @@ export async function sendWelcomeEmail({ email, name }: SendWelcomeOptions): Pro
     <body>
       <div class="container">
         <div class="brand">DNORA</div>
-        <div class="subbrand">Client Privé Concierge</div>
+        <div class="subbrand">Client Concierge</div>
         
         <div class="hero-banner">
-          <div class="title">Welcome to DNORA Privé</div>
+          <div class="title">Welcome to DNORA</div>
           <div class="subtitle">Membership Confirmed & Activated</div>
         </div>
 
         <p class="text">
           Dear ${recipientName},<br><br>
-          It is an absolute pleasure to welcome you to the exclusive <strong>DNORA Privé Client Registry</strong>. Your account has been successfully verified and is now fully active.
+          It is an absolute pleasure to welcome you to the exclusive <strong>DNORA Client Registry</strong>. Your account has been successfully verified and is now fully active.
         </p>
 
         <div class="perks">
           <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; color: #73706A; margin-bottom: 12px;">
-            Your Privé Privileges
+            Your Member Privileges
           </div>
           <div class="perk-item">
             <span class="perk-bullet">&#9670;</span>
@@ -265,27 +264,32 @@ export async function sendWelcomeEmail({ email, name }: SendWelcomeOptions): Pro
     </html>
   `;
 
+  let lastError: string | null = null;
+
   // 1. Resend API
   if (resendApiKey) {
     try {
       const resend = new Resend(resendApiKey);
-      const fromEmail = process.env.EMAIL_FROM || "DNORA Privé <onboarding@resend.dev>";
+      const fromEmail = process.env.EMAIL_FROM || "DNORA Atelier <onboarding@resend.dev>";
       const { data, error } = await resend.emails.send({
         from: fromEmail,
         to: [email],
-        subject: "Welcome to DNORA Privé — Your Membership is Active",
+        subject: "Welcome to DNORA — Your Membership is Active",
         html: htmlContent,
       });
 
-      if (error) {
-        console.error("Resend Welcome Email error:", error);
-        return { success: true, delivered: false, message: error.message };
+      if (!error && data?.id) {
+        console.log("Resend Welcome Email sent successfully:", data.id);
+        return { success: true, delivered: true, message: "Welcome email delivered via Resend." };
       }
 
-      console.log("Resend Welcome Email sent successfully:", data?.id);
-      return { success: true, delivered: true, message: "Welcome email delivered via Resend." };
-    } catch (err) {
+      if (error) {
+        console.error("Resend Welcome Email error:", error);
+        lastError = error.message;
+      }
+    } catch (err: unknown) {
       console.error("Resend welcome email error:", err);
+      lastError = err instanceof Error ? err.message : String(err);
     }
   }
 
@@ -309,25 +313,25 @@ export async function sendWelcomeEmail({ email, name }: SendWelcomeOptions): Pro
 
       await transporter.sendMail({
         from: hasGmail
-          ? `"DNORA Privé" <${gmailUser}>`
-          : process.env.EMAIL_FROM || `"DNORA Privé" <${smtpUser}>`,
+          ? `"DNORA Atelier" <${gmailUser}>`
+          : process.env.EMAIL_FROM || `"DNORA Atelier" <${smtpUser}>`,
         to: email,
-        subject: "Welcome to DNORA Privé — Your Membership is Active",
-        text: `Dear ${recipientName},\n\nWelcome to DNORA Privé. Your membership account has been verified and is active.\n\nExplore our collections: ${siteUrl}/shop`,
+        subject: "Welcome to DNORA — Your Membership is Active",
+        text: `Dear ${recipientName},\n\nWelcome to DNORA. Your membership account has been verified and is active.\n\nExplore our collections: ${siteUrl}/shop`,
         html: htmlContent,
       });
 
       return { success: true, delivered: true, message: "Welcome email delivered via SMTP." };
     } catch (err: unknown) {
       console.error("SMTP Welcome email error:", err);
-      return {
-        success: true,
-        delivered: false,
-        message: err instanceof Error ? err.message : "SMTP delivery failed",
-      };
+      lastError = err instanceof Error ? err.message : "SMTP delivery failed";
     }
   }
 
-  return { success: true, delivered: false, message: "Welcome email logged in development mode." };
+  return {
+    success: false,
+    delivered: false,
+    message: lastError || "Welcome email could not be dispatched (no email provider configured).",
+  };
 }
 

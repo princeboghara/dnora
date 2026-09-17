@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
         createUserSession({
           id: "admin-master",
           email: adminEmail,
-          full_name: "DNORA Administrator",
+          full_name: "Administrator",
           role: "admin",
         }),
       ]);

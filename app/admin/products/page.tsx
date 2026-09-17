@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import {
   Plus,
   Search,
@@ -13,8 +14,6 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { Product } from "@/types";
-import { ProductForm } from "@/components/admin/ProductForm";
-import { Modal } from "@/components/ui/Modal";
 import { useToast } from "@/components/ui/Toast";
 import { formatPrice } from "@/lib/utils";
 
@@ -28,9 +27,6 @@ export default function ProductManagerPage() {
   const [categoryFilter, setCategoryFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
 
-  // Modals
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   useEffect(() => {
@@ -129,13 +125,13 @@ export default function ProductManagerPage() {
           </p>
         </div>
 
-        <button
-          onClick={() => setIsCreateOpen(true)}
+        <Link
+          href="/admin/products/new"
           className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#0E0E0E] hover:bg-[#2C2B29] text-xs font-bold uppercase tracking-wider text-[#FAF9F6] rounded transition-all shadow-md shrink-0"
         >
           <Plus className="w-4 h-4 text-[#C5A880]" />
           <span>Add New Handbag</span>
-        </button>
+        </Link>
       </div>
 
       {/* Filter and Search Bar */}
@@ -310,13 +306,13 @@ export default function ProductManagerPage() {
                     {/* Actions */}
                     <td className="py-3.5 px-4 sm:px-6 text-right">
                       <div className="flex items-center justify-end gap-2">
-                        <button
-                          onClick={() => setEditingProduct(product)}
+                        <Link
+                          href={`/admin/products/${product.id}/edit`}
                           className="p-1.5 rounded hover:bg-[#F5F3EF] text-[#3A3835] hover:text-[#0E0E0E]"
                           title="Edit Handbag"
                         >
                           <Edit2 className="w-4 h-4" />
-                        </button>
+                        </Link>
                         <button
                           onClick={() => handleDelete(product.id, product.name)}
                           className="p-1.5 rounded hover:bg-rose-50 text-[#73706A] hover:text-rose-600"
@@ -333,41 +329,6 @@ export default function ProductManagerPage() {
           </div>
         )}
       </div>
-
-      {/* Create Modal */}
-      <Modal
-        isOpen={isCreateOpen}
-        onClose={() => setIsCreateOpen(false)}
-        title="Add New Handbag to Catalog"
-        maxWidth="2xl"
-      >
-        <ProductForm
-          onSuccess={() => {
-            setIsCreateOpen(false);
-            refreshProducts();
-          }}
-          onCancel={() => setIsCreateOpen(false)}
-        />
-      </Modal>
-
-      {/* Edit Modal */}
-      <Modal
-        isOpen={Boolean(editingProduct)}
-        onClose={() => setEditingProduct(null)}
-        title="Edit Handbag Details"
-        maxWidth="2xl"
-      >
-        {editingProduct && (
-          <ProductForm
-            initialData={editingProduct}
-            onSuccess={() => {
-              setEditingProduct(null);
-              refreshProducts();
-            }}
-            onCancel={() => setEditingProduct(null)}
-          />
-        )}
-      </Modal>
     </div>
   );
 }

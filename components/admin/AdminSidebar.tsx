@@ -147,23 +147,7 @@ export function AdminSidebar({
                   const hasSubmenus =
                     Array.isArray(item.submenus) && item.submenus.length > 0;
 
-                  const isAutoExpanded =
-                    hasSubmenus &&
-                    (item.submenus!.some(
-                      (sub) =>
-                        sub.href === pathname ||
-                        pathname.startsWith(sub.href + "?")
-                    ) ||
-                      Boolean(
-                        item.href &&
-                          item.href !== "/admin" &&
-                          pathname.startsWith(item.href)
-                      ));
-
-                  const isExpanded =
-                    userExpandedOverrides[item.id] !== undefined
-                      ? userExpandedOverrides[item.id]
-                      : isAutoExpanded;
+                  const isExpanded = Boolean(userExpandedOverrides[item.id]);
 
                   // Active state calculation
                   const isDirectActive =
@@ -304,6 +288,34 @@ export function AdminSidebar({
                                 pathname === sub.href ||
                                 (sub.href !== "/admin" &&
                                   pathname.startsWith(sub.href + "?"));
+
+                              const isCustomizeTrigger = sub.href.includes("customize=true");
+
+                              if (isCustomizeTrigger) {
+                                return (
+                                  <button
+                                    key={sub.id}
+                                    type="button"
+                                    onClick={() => {
+                                      if (onCloseMobile) onCloseMobile();
+                                      handleOpenCustomizer();
+                                    }}
+                                    className={cn(
+                                      "w-full flex items-center justify-between px-3 py-1.5 rounded-md text-[11px] font-medium transition-all duration-200 text-left",
+                                      isSubActive
+                                        ? "bg-[#C5A880]/20 text-[#C5A880] font-semibold"
+                                        : "text-[#A8A49C] hover:text-[#FAF9F6] hover:bg-[#1C1B1A]"
+                                    )}
+                                  >
+                                    <span className="truncate">{sub.label}</span>
+                                    {sub.badge && (
+                                      <span className="text-[9px] uppercase tracking-wider bg-[#1C1B1A] px-1.5 py-0.5 rounded text-[#73706A]">
+                                        {sub.badge}
+                                      </span>
+                                    )}
+                                  </button>
+                                );
+                              }
 
                               return (
                                 <Link

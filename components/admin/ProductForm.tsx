@@ -6,6 +6,8 @@ import { Upload, X, Loader2, Check, Sparkles, Flame } from "lucide-react";
 import { Product, ProductCategory, ProductImage } from "@/types";
 import { useToast } from "@/components/ui/Toast";
 import { slugify } from "@/lib/utils";
+import { CircularProgress } from "@/components/ui/CircularProgress";
+import { uploadFileWithProgress } from "@/lib/upload-utils";
 
 interface ProductFormProps {
   initialData?: Product | null;
@@ -34,22 +36,23 @@ export function ProductForm({ initialData, onSuccess, onCancel }: ProductFormPro
   );
   const [images, setImages] = useState<ProductImage[]>(initialData?.images || []);
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [submitting, setSubmitting] = useState(false);
 
-  // Load categories
+  // Load real categories from API
   useEffect(() => {
-    fetch("/api/heroes") // categories can be fetched from categories endpoint or seed
-      .then(() => {
-        // Fallback categories list
-        setCategories([
-          { id: "cat-1", name: "Shoulder Bags", slug: "shoulder-bags" },
-          { id: "cat-2", name: "Tote Bags", slug: "tote-bags" },
-          { id: "cat-3", name: "Crossbody Bags", slug: "crossbody-bags" },
-          { id: "cat-4", name: "Handbags", slug: "handbags" },
-          { id: "cat-5", name: "Mini Bags", slug: "mini-bags" },
-        ]);
-      });
-  }, []);
+    fetch("/api/categories")
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.success && Array.isArray(json.data)) {
+          setCategories(json.data);
+          if (!categoryId && json.data.length > 0) {
+            setCategoryId(json.data[0].id);
+          }
+        }
+      })
+      .catch((err) => console.error("Failed to load categories in ProductForm:", err));
+  }, [categoryId]);
 
   // Auto-slug when name changes (if not editing existing slug)
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -60,12 +63,12 @@ export function ProductForm({ initialData, onSuccess, onCancel }: ProductFormPro
     }
   };
 
-  // Image Upload Handler
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
     setUploading(true);
+    setUploadProgress(10);
     try {
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
@@ -74,13 +77,17 @@ export function ProductForm({ initialData, onSuccess, onCancel }: ProductFormPro
         formData.append("folder", "dnora/products");
         formData.append("resource_type", "image");
 
-        const res = await fetch("/api/media/upload", {
-          method: "POST",
-          body: formData,
-        });
+        // Live upload tracking with progress
+        const data = await uploadFileWithProgress<{ success: boolean; media: { public_id: string; secure_url: string }; error?: string }>(
+          "/api/media/upload",
+          formData,
+          (percent) => {
+            const overall = Math.round(((i + percent / 100) / files.length) * 100);
+            setUploadProgress(overall);
+          }
+        );
 
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Upload failed");
+        if (!data.success || !data.media) throw new Error(data.error || "Upload failed");
 
         const newImg: ProductImage = {
           id: `img-${Date.now()}-${i}`,
@@ -93,11 +100,13 @@ export function ProductForm({ initialData, onSuccess, onCancel }: ProductFormPro
 
         setImages((prev) => [...prev, newImg]);
       }
+      setUploadProgress(100);
       success("Product images uploaded successfully.");
     } catch (err: unknown) {
       error(err instanceof Error ? err.message : "Failed to upload product image");
     } finally {
       setUploading(false);
+      setUploadProgress(0);
     }
   };
 
@@ -115,6 +124,11 @@ export function ProductForm({ initialData, onSuccess, onCancel }: ProductFormPro
       return;
     }
 
+    if (!categoryId) {
+      error("Please select a valid category for this product.");
+      return;
+    }
+
     setSubmitting(true);
     try {
       const payload = {
@@ -126,7 +140,7 @@ export function ProductForm({ initialData, onSuccess, onCancel }: ProductFormPro
         compare_at_price: comparePrice ? Number(comparePrice) : null,
         sku: sku || `DNR-${Date.now().toString().slice(-4)}`,
         stock: Number(stock),
-        category_id: categoryId || "cat-1",
+        category_id: categoryId,
         is_best_seller: isBestSeller,
         is_new_arrival: isNewArrival,
         status,
@@ -143,7 +157,12 @@ export function ProductForm({ initialData, onSuccess, onCancel }: ProductFormPro
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to save handbag");
+      if (!res.ok) {
+        const detailMsg = Array.isArray(data.details)
+          ? data.details.map((d: { message: string }) => d.message).join(", ")
+          : null;
+        throw new Error(detailMsg || data.error || "Failed to save product");
+      }
 
       success(
         initialData?.id
@@ -227,7 +246,7 @@ export function ProductForm({ initialData, onSuccess, onCancel }: ProductFormPro
 
         <div>
           <label className="block text-xs uppercase tracking-wider font-semibold text-[#0E0E0E] mb-1">
-            Price (USD)
+            Price (₹ INR)
           </label>
           <input
             type="number"
@@ -241,7 +260,7 @@ export function ProductForm({ initialData, onSuccess, onCancel }: ProductFormPro
 
         <div>
           <label className="block text-xs uppercase tracking-wider font-semibold text-[#0E0E0E] mb-1">
-            Compare Price ($)
+            Compare Price (₹)
           </label>
           <input
             type="number"
@@ -351,19 +370,29 @@ export function ProductForm({ initialData, onSuccess, onCancel }: ProductFormPro
           <label className="block text-xs uppercase tracking-wider font-semibold text-[#0E0E0E]">
             Product Imagery (Cloudinary Media)
           </label>
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={uploading}
-            className="inline-flex items-center gap-1.5 text-xs text-[#0E0E0E] hover:text-[#C5A880] font-semibold uppercase tracking-wider"
-          >
-            {uploading ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            ) : (
-              <Upload className="w-3.5 h-3.5 text-[#C5A880]" />
+          <div className="flex items-center gap-3">
+            {uploading && (
+              <div className="flex items-center gap-2 bg-white px-2.5 py-1 rounded border border-[#E8E5DE] shadow-xs">
+                <CircularProgress progress={uploadProgress} size={28} strokeWidth={3} />
+                <span className="text-[11px] font-semibold text-[#0E0E0E]">
+                  Uploading {uploadProgress}%
+                </span>
+              </div>
             )}
-            <span>Upload Image</span>
-          </button>
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+              className="inline-flex items-center gap-1.5 text-xs text-[#0E0E0E] hover:text-[#C5A880] font-semibold uppercase tracking-wider disabled:opacity-50"
+            >
+              {uploading ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Upload className="w-3.5 h-3.5 text-[#C5A880]" />
+              )}
+              <span>Upload Image</span>
+            </button>
+          </div>
           <input
             ref={fileInputRef}
             type="file"
@@ -376,7 +405,11 @@ export function ProductForm({ initialData, onSuccess, onCancel }: ProductFormPro
 
         {/* Images Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 bg-[#FAF9F6] border border-[#E8E5DE] rounded-md min-h-[120px]">
-          {images.length === 0 ? (
+          {uploading && images.length === 0 ? (
+            <div className="col-span-full flex flex-col items-center justify-center py-8">
+              <CircularProgress progress={uploadProgress} size={52} strokeWidth={4} label={`Uploading ${uploadProgress}%`} />
+            </div>
+          ) : images.length === 0 ? (
             <div className="col-span-full flex flex-col items-center justify-center text-[#73706A] py-6">
               <Upload className="w-6 h-6 mb-2 text-[#A8A49C]" />
               <p className="text-xs">No images uploaded yet. Primary image will serve as card visual.</p>

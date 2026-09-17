@@ -77,15 +77,22 @@ export async function POST(req: NextRequest) {
       otp,
     });
 
+    let devHint: string | undefined = undefined;
+    if (!emailResult.delivered) {
+      console.warn(
+        `[DNORA OTP] Email delivery notice for ${normalizedEmail}: ${emailResult.message}. Fallback code: ${otp}`
+      );
+      devHint = `Email not delivered to inbox (${emailResult.message}). Verification Code: ${otp}`;
+    }
+
     return NextResponse.json({
       success: true,
-      message: emailResult.message || "A 6-digit verification code has been sent to your email.",
+      delivered: emailResult.delivered,
+      message: emailResult.delivered
+        ? "A 6-digit verification code has been sent to your email."
+        : `Verification code generated. ${emailResult.message}`,
       email: normalizedEmail,
-      // For seamless local testing only in development if SMTP is not yet configured:
-      devHint:
-        process.env.NODE_ENV !== "production" && !emailResult.delivered
-          ? `Dev Mode OTP: ${otp}`
-          : undefined,
+      devHint,
     });
   } catch (err: unknown) {
     console.error("Error sending OTP:", err);

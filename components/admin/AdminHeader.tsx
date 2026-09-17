@@ -1,8 +1,9 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Menu, LogOut, UserCheck, Sliders } from "lucide-react";
+import { Menu, LogOut, UserCheck, Sliders, Megaphone } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
 
 interface AdminHeaderProps {
@@ -44,6 +45,16 @@ export function AdminHeader({
       </div>
 
       <div className="flex items-center gap-3 sm:gap-4">
+        {/* Direct Announcement Bar Shortcut */}
+        <Link
+          href="/admin/announcements"
+          className="flex items-center gap-1.5 text-xs text-[#0E0E0E] hover:text-[#C5A880] font-semibold border border-[#E8E5DE] hover:border-[#0E0E0E] px-3 py-1.5 rounded transition-all bg-[#FAF9F6] hover:bg-white"
+          title="Manage Announcement Bar"
+        >
+          <Megaphone className="w-3.5 h-3.5 text-[#C5A880]" />
+          <span className="hidden sm:inline">Announcement Bar</span>
+        </Link>
+
         {onOpenCustomizer && (
           <button
             type="button"
@@ -58,7 +69,7 @@ export function AdminHeader({
 
         <div className="flex items-center gap-2 text-xs font-medium text-[#0E0E0E] bg-[#F5F3EF] px-3 py-1.5 rounded-full border border-[#E8E5DE]">
           <UserCheck className="w-3.5 h-3.5 text-emerald-600" />
-          <span className="hidden sm:inline">admin@dnora.luxury</span>
+          <span className="hidden sm:inline">Administrator</span>
         </div>
 
         <button

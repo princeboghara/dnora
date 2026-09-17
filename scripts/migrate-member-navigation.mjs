@@ -47,10 +47,10 @@ const DEFAULT_STOREFRONT = [
   },
   {
     id: "sf-account",
-    label: "Member Privé Portal",
+    label: "Member Account Portal",
     href: "/account",
     icon: "User",
-    badge: "Privé",
+    badge: "Member",
     is_active: true,
     submenus: [
       { id: "sf-sub-orders", label: "Orders & Tracking", href: "/account" },

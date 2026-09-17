@@ -47,6 +47,7 @@ export async function POST(req: NextRequest) {
       slug: validated.slug || slugify(validated.name),
       categories: matchedCategory ? [matchedCategory] : [],
       compare_at_price: validated.compare_at_price || null,
+      color_variants: validated.color_variants || [],
     });
 
     revalidatePath("/");

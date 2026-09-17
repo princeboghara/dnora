@@ -44,6 +44,7 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
     const updated = await store.updateProduct(id, {
       ...validated,
       images: validated.images as ProductImage[] | undefined,
+      color_variants: validated.color_variants,
       categories: categories || undefined,
     });
 

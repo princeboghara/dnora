@@ -39,6 +39,14 @@ export interface ProductFlag {
   sort_order: number;
 }
 
+export interface ProductColorVariant {
+  id: string;
+  name: string; // e.g., "Noir Black", "Caramel Tan", "Ivory Cream"
+  color_hex: string; // e.g., "#1A1A1A", "#8B5A2B"
+  hex?: string; // convenient alias
+  images: ProductImage[];
+}
+
 export interface Product {
   id: string;
   name: string;
@@ -51,6 +59,7 @@ export interface Product {
   stock: number;
   status: ProductStatus;
   images: ProductImage[];
+  color_variants?: ProductColorVariant[];
   categories?: ProductCategory[];
   is_best_seller?: boolean;
   is_new_arrival?: boolean;
@@ -112,6 +121,12 @@ export interface CartItem {
   product: Product;
   quantity: number;
   selectedColor?: string;
+  selectedVariant?: {
+    name: string;
+    color_hex?: string;
+    hex?: string;
+    images?: string[] | ProductImage[];
+  };
 }
 
 export interface AdminDashboardStats {
@@ -230,6 +245,23 @@ export interface SidebarMenuItem {
   badge?: string;
   is_active: boolean;
   submenus?: SidebarSubmenuItem[];
+}
+
+export interface AnnouncementItem {
+  id: string;
+  text: string;
+  link?: string;
+  badge?: string;
+  is_active: boolean;
+  sort_order?: number;
+}
+
+export interface AnnouncementConfig {
+  id: string;
+  interval_seconds: number;
+  is_active: boolean;
+  items: AnnouncementItem[];
+  updated_at?: string;
 }
 
 

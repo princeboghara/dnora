@@ -5,9 +5,9 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 async function sendTestWelcome() {
   console.log('Sending Welcome email via Resend to princebprivate@gmail.com...');
   const res = await resend.emails.send({
-    from: 'DNORA Privé <onboarding@resend.dev>',
+    from: 'DNORA Atelier <onboarding@resend.dev>',
     to: ['princebprivate@gmail.com'],
-    subject: 'Welcome to DNORA Privé — Your Membership is Active',
+    subject: 'Welcome to DNORA — Your Membership is Active',
     html: `
       <!DOCTYPE html>
       <html>
@@ -33,21 +33,21 @@ async function sendTestWelcome() {
       <body>
         <div class="container">
           <div class="brand">DNORA</div>
-          <div class="subbrand">Client Privé Concierge</div>
+          <div class="subbrand">Client Concierge</div>
           
           <div class="hero-banner">
-            <div class="title">Welcome to DNORA Privé</div>
+            <div class="title">Welcome to DNORA</div>
             <div class="subtitle">Membership Confirmed & Activated</div>
           </div>
 
           <p class="text">
             Dear Prince Boghara,<br><br>
-            It is an absolute pleasure to welcome you to the exclusive <strong>DNORA Privé Client Registry</strong>. Your account has been successfully verified and is now fully active.
+            It is an absolute pleasure to welcome you to the exclusive <strong>DNORA Client Registry</strong>. Your account has been successfully verified and is now fully active.
           </p>
 
           <div class="perks">
             <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; color: #73706A; margin-bottom: 12px;">
-              Your Privé Privileges
+              Your Member Privileges
             </div>
             <div class="perk-item">
               <span class="perk-bullet">&#9670;</span>

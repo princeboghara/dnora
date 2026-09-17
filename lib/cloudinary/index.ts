@@ -21,6 +21,7 @@ export interface UploadResult {
 export type MediaFolder =
   | "dnora/heroes"
   | "dnora/products"
+  | "dnora/categories"
   | "dnora/reviews"
   | "dnora/customer-videos";
 
@@ -44,14 +45,25 @@ export async function uploadMedia(
   }
 
   return new Promise((resolve, reject) => {
+    const cleanFileName = fileName ? fileName.replace(/\.[^/.]+$/, "") : `media_${Date.now()}`;
+    const publicId = `${cleanFileName}_${Date.now()}`;
+
     const uploadStream = cloudinary.uploader.upload_stream(
       {
         folder,
-        public_id: fileName ? fileName.replace(/\.[^/.]+$/, "") : undefined,
+        public_id: publicId,
         resource_type: resourceType,
         transformation:
           resourceType === "image"
-            ? [{ quality: "auto", fetch_format: "auto" }]
+            ? [
+                {
+                  width: 1600,
+                  height: 1600,
+                  crop: "limit",
+                  quality: "auto:good",
+                  fetch_format: "auto",
+                },
+              ]
             : undefined,
       },
       (error, result) => {

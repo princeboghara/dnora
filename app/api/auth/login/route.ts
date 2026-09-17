@@ -7,7 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 
 export async function POST(req: NextRequest) {
   try {
-    const { email, password } = await req.json();
+    const { email, password, redirectTo: requestedRedirect } = await req.json();
 
     if (!email || !password) {
       return NextResponse.json(
@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
         await createUserSession({
           id: "admin-master",
           email: normalizedEmail,
-          full_name: "DNORA Administrator",
+          full_name: "Administrator",
           role: "admin",
         });
         return NextResponse.json({
@@ -93,7 +93,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({
         success: true,
         role: dbUser.role || "customer",
-        redirectTo: dbUser.role === "admin" ? "/admin" : "/account",
+        redirectTo: dbUser.role === "admin" ? "/admin" : (requestedRedirect || "/account"),
       });
     }
 
@@ -115,7 +115,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({
           success: true,
           role: "customer",
-          redirectTo: "/account",
+          redirectTo: requestedRedirect || "/account",
         });
       }
     } catch {

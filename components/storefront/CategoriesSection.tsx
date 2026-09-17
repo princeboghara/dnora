@@ -12,28 +12,23 @@ export function CategoriesSection({ categories }: CategoriesSectionProps) {
   return (
     <section id="categories" className="py-20 sm:py-28 bg-white border-t border-[#E8E5DE]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Section Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 sm:mb-16">
-          <div className="max-w-xl">
-            <span className="text-xs uppercase tracking-[0.25em] text-[#C5A880] font-semibold block mb-2">
-              Curated Silhouettes
-            </span>
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-heading font-extrabold text-[#0E0E0E] tracking-tight">
-              Explore by Category
-            </h2>
-          </div>
-          <p className="text-sm text-[#73706A] max-w-sm mt-4 md:mt-0 leading-relaxed">
-            From expansive structured totes to minimal evening vanity silhouettes, every DNORA handbag is shaped by hand in Italy.
-          </p>
+        {/* Section Header - Centered */}
+        <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-14">
+          <span className="text-xs uppercase tracking-[0.25em] text-[#C5A880] font-semibold block mb-2">
+            Curated Silhouettes
+          </span>
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-heading font-extrabold text-[#0E0E0E] tracking-tight">
+            Explore by Category
+          </h2>
         </div>
 
-        {/* Editorial 2-by-2 Category Grid (Side by Side on All Screens including Mobile) */}
-        <div className="grid grid-cols-2 gap-3 sm:gap-6 lg:gap-8">
+        {/* Category Grid: 4 in a line on Laptop/Desktop, 2-by-2 on Mobile */}
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 lg:gap-8">
           {categories.map((category, index) => (
             <Link
               key={category.id}
-              href={`/shop?category=${category.slug}`}
-              className="group relative overflow-hidden rounded-sm bg-[#F5F3EF] border border-[#E8E5DE] aspect-[4/5] sm:aspect-[16/10]"
+              href={`/category/${category.slug}`}
+              className="group relative overflow-hidden rounded-sm bg-[#F5F3EF] border border-[#E8E5DE] aspect-[4/5]"
             >
               {/* Category Background Image */}
               {category.image_url && (

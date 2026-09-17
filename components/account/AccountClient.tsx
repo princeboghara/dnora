@@ -231,7 +231,7 @@ export function AccountClient({
         <div className="relative z-10">
           <div className="flex items-center gap-2 mb-2">
             <span className="text-[10px] uppercase tracking-[0.25em] text-[#C5A880] font-semibold">
-              DNORA Privé Member
+              DNORA Member
             </span>
             <span className="w-1.5 h-1.5 rounded-full bg-[#C5A880]" />
             <span className="text-[10px] uppercase tracking-widest text-[#A8A5A0]">
@@ -247,14 +247,6 @@ export function AccountClient({
         </div>
 
         <div className="flex items-center gap-3 relative z-10">
-          {user.role === "admin" && (
-            <Link
-              href="/admin"
-              className="px-4 py-2.5 bg-[#C5A880] text-[#0E0E0E] rounded-sm text-xs font-semibold uppercase tracking-wider hover:bg-[#B39366] transition-colors"
-            >
-              Admin Dashboard
-            </Link>
-          )}
           <button
             onClick={handleLogout}
             className="flex items-center gap-2 px-4 py-2.5 border border-white/20 rounded-sm text-xs font-semibold uppercase tracking-wider text-white hover:bg-white/10 transition-colors"
@@ -286,7 +278,7 @@ export function AccountClient({
                   ? "Orders & Tracking"
                   : activeTab === "addresses"
                   ? "Saved Addresses"
-                  : "Profile & Privé"}
+                  : "Profile & Settings"}
               </strong>
             </span>
           </div>
@@ -897,7 +889,7 @@ export function AccountClient({
                     </label>
                     <div className="inline-flex items-center gap-1 text-xs font-bold text-[#C5A880]">
                       <Star className="w-3.5 h-3.5 fill-[#C5A880]" />
-                      DNORA Privé Gold Tier
+                      DNORA Gold Tier
                     </div>
                   </div>
 

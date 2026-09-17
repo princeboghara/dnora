@@ -152,7 +152,7 @@ export function MemberDrawer({ isOpen, onClose, user }: MemberDrawerProps) {
                         {user.full_name || user.email.split("@")[0]}
                       </span>
                       <span className="px-1.5 py-0.2 bg-[#C5A880]/20 text-[#8F7449] text-[9px] font-bold uppercase tracking-wider rounded-xs shrink-0">
-                        Privé
+                        Member
                       </span>
                     </div>
                     <Link
@@ -211,19 +211,7 @@ export function MemberDrawer({ isOpen, onClose, user }: MemberDrawerProps) {
                 const hasSubmenus =
                   Array.isArray(item.submenus) && item.submenus.length > 0;
 
-                const isAutoExpanded =
-                  item.id === "sf-shop" ||
-                  (hasSubmenus &&
-                    item.submenus!.some(
-                      (sub) =>
-                        sub.href === pathname ||
-                        (sub.href !== "/" && pathname.startsWith(sub.href))
-                    ));
-
-                const isExpanded =
-                  userExpandedOverrides[item.id] !== undefined
-                    ? userExpandedOverrides[item.id]
-                    : isAutoExpanded;
+                const isExpanded = Boolean(userExpandedOverrides[item.id]);
 
                 const IconComp = ICON_MAP[item.icon] || ShoppingBag;
 
@@ -358,20 +346,19 @@ export function MemberDrawer({ isOpen, onClose, user }: MemberDrawerProps) {
         <div className="p-4 sm:p-5 border-t border-[#E8E5DE] bg-[#FAF9F6] space-y-3 shrink-0">
           <div className="flex items-center justify-between text-xs">
             <Link
-              href="/admin"
+              href="/shop"
               onClick={onClose}
-              className="flex items-center gap-1.5 text-[#73706A] hover:text-[#0E0E0E] font-semibold uppercase tracking-wider transition-colors"
+              className="text-[#0E0E0E] hover:text-[#8F7449] font-semibold uppercase tracking-wider text-[11px] transition-colors"
             >
-              <Shield className="w-3.5 h-3.5 text-[#8F7449]" />
-              <span>Admin Management</span>
+              Explore Collection
             </Link>
 
             <Link
-              href="/shop"
+              href="/account"
               onClick={onClose}
               className="text-[#8F7449] hover:underline font-medium text-[11px]"
             >
-              Explore Shop
+              My Account
             </Link>
           </div>
 

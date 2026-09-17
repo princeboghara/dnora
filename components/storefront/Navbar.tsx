@@ -3,13 +3,12 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Search, ShoppingBag, Menu, User, LogOut, Package, MapPin, Shield } from "lucide-react";
+import { Search, ShoppingBag, User, LogOut, Package, MapPin, ChevronDown } from "lucide-react";
 import { useCart } from "@/lib/store/cart-store";
-import { Product } from "@/types";
+import { Product, ProductCategory } from "@/types";
 import { UserSession } from "@/lib/auth/user-session";
 import { SearchModal } from "./SearchModal";
 import { MemberDrawer } from "./MemberDrawer";
-
 import { BrandLogo } from "@/components/ui/BrandLogo";
 
 interface NavbarProps {
@@ -20,91 +19,293 @@ interface NavbarProps {
 export function Navbar({ products = [], user = null }: NavbarProps) {
   const router = useRouter();
   const [isScrolled, setIsScrolled] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  const [categories, setCategories] = useState<ProductCategory[]>([]);
   const { openCart, itemCount } = useCart();
 
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+    fetch("/api/categories")
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.success && Array.isArray(json.data)) {
+          setCategories(json.data);
+        }
+      })
+      .catch(() => {});
   }, []);
 
-  const navLinks = [
-    { label: "Home", href: "/" },
-    { label: "Shop", href: "/shop" },
-    { label: "Categories", href: "/#categories" },
-    { label: "New Arrivals", href: "/#new-arrivals" },
-    { label: "Best Sellers", href: "/#best-sellers" },
-  ];
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 15);
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   return (
     <>
       <header
         className={`sticky top-0 z-40 w-full transition-all duration-300 bg-white/95 backdrop-blur-md border-b border-[#E8E5DE] ${
-          isScrolled ? "shadow-sm py-3" : "py-4 sm:py-4.5"
+          isScrolled ? "shadow-xs py-3" : "py-3.5 sm:py-4"
         }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between">
-            {/* Desktop Left / Mobile Menu Trigger */}
-            <div className="flex items-center lg:hidden">
+          <div className="flex items-center justify-between min-h-[42px]">
+            {/* LEFT: Mobile 3-Line Hamburger Menu + Logo */}
+            <div className="flex items-center gap-2 sm:gap-4">
+              {/* 3-line hamburger menu for Mobile view ONLY */}
               <button
                 type="button"
-                onClick={() => setMobileMenuOpen(true)}
-                aria-label="Open mobile menu"
-                className="p-2 text-[#0E0E0E] hover:text-[#73706A] transition-colors"
+                onClick={() => setDrawerOpen(true)}
+                aria-label="Open navigation menu"
+                className="p-2 -ml-2 text-[#0E0E0E] hover:text-[#C5A880] transition-colors lg:hidden cursor-pointer"
               >
-                <Menu className="w-6 h-6" />
+                <svg
+                  className="w-6 h-6 transition-transform duration-200 hover:scale-105"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.75"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <line x1="3" y1="6" x2="21" y2="6" />
+                  <line x1="3" y1="12" x2="21" y2="12" />
+                  <line x1="3" y1="18" x2="21" y2="18" />
+                </svg>
               </button>
-            </div>
 
-            {/* Brand Logo */}
-            <div className="flex items-center">
+              {/* Store Brand Logo - Scaled to a clean refined size */}
               <BrandLogo priority size="md" />
             </div>
 
-            {/* Desktop Center Navigation */}
-            <nav className="hidden lg:flex items-center space-x-8">
-              {navLinks.map((link) => (
+            {/* CENTER: Desktop / Laptop Horizontal Navigation Bar with Hover Submenus */}
+            <nav
+              className="hidden lg:flex items-center space-x-7"
+              aria-label="Storefront Desktop Navigation"
+            >
+              {/* Home */}
+              <Link
+                href="/"
+                className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#0E0E0E] hover:text-[#C5A880] transition-colors py-2 relative group"
+              >
+                <span>Home</span>
+                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#0E0E0E] group-hover:w-full transition-all duration-300" />
+              </Link>
+
+              {/* Shop with Dropdown */}
+              <div className="relative group py-2">
                 <Link
-                  key={link.label}
-                  href={link.href}
-                  className="text-xs font-semibold uppercase tracking-[0.18em] text-[#3A3835] hover:text-[#0E0E0E] hover:border-b hover:border-[#0E0E0E] transition-all pb-1"
+                  href="/shop"
+                  className="flex items-center gap-1 text-[11px] font-bold uppercase tracking-[0.22em] text-[#0E0E0E] group-hover:text-[#C5A880] transition-colors"
                 >
-                  {link.label}
+                  <span>Shop</span>
+                  <ChevronDown className="w-3 h-3 text-[#73706A] group-hover:rotate-180 transition-transform duration-200" />
                 </Link>
-              ))}
+                <div className="absolute top-full -left-4 pt-2 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 z-50">
+                  <div className="w-56 bg-white border border-[#E8E5DE] rounded-sm shadow-xl py-2">
+                    <div className="px-3.5 py-1.5 border-b border-[#E8E5DE]/70 text-[9px] uppercase tracking-widest text-[#C5A880] font-bold">
+                      Collections
+                    </div>
+                    <Link
+                      href="/shop"
+                      className="block px-3.5 py-2 text-xs text-[#0E0E0E] hover:bg-[#FAF9F6] hover:text-[#C5A880] transition-colors"
+                    >
+                      All Handbags & Purses
+                    </Link>
+                    <Link
+                      href="/#best-sellers"
+                      className="flex items-center justify-between px-3.5 py-2 text-xs text-[#0E0E0E] hover:bg-[#FAF9F6] hover:text-[#C5A880] transition-colors"
+                    >
+                      <span>Best Sellers</span>
+                      <span className="text-[9px] px-1.5 py-0.5 bg-[#0E0E0E] text-[#FAF9F6] font-bold tracking-wider uppercase rounded-xs">
+                        Hot
+                      </span>
+                    </Link>
+                    <Link
+                      href="/#new-arrivals"
+                      className="flex items-center justify-between px-3.5 py-2 text-xs text-[#0E0E0E] hover:bg-[#FAF9F6] hover:text-[#C5A880] transition-colors"
+                    >
+                      <span>New Arrivals</span>
+                      <span className="text-[9px] px-1.5 py-0.5 bg-[#C5A880] text-[#0E0E0E] font-bold tracking-wider uppercase rounded-xs">
+                        New
+                      </span>
+                    </Link>
+                    <Link
+                      href="/#categories"
+                      className="block px-3.5 py-2 text-xs text-[#0E0E0E] hover:bg-[#FAF9F6] hover:text-[#C5A880] transition-colors"
+                    >
+                      Shop by Silhouette
+                    </Link>
+                  </div>
+                </div>
+              </div>
+
+              {/* Categories with Dropdown */}
+              <div className="relative group py-2">
+                <Link
+                  href="/#categories"
+                  className="flex items-center gap-1 text-[11px] font-bold uppercase tracking-[0.22em] text-[#0E0E0E] group-hover:text-[#C5A880] transition-colors"
+                >
+                  <span>Categories</span>
+                  <ChevronDown className="w-3 h-3 text-[#73706A] group-hover:rotate-180 transition-transform duration-200" />
+                </Link>
+                <div className="absolute top-full -left-6 pt-2 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 z-50">
+                  <div className="w-56 bg-white border border-[#E8E5DE] rounded-sm shadow-xl py-2">
+                    <div className="px-3.5 py-1.5 border-b border-[#E8E5DE]/70 text-[9px] uppercase tracking-widest text-[#C5A880] font-bold">
+                      Curated Silhouettes
+                    </div>
+                    {categories.length > 0 ? (
+                      categories.slice(0, 6).map((cat) => (
+                        <Link
+                          key={cat.id}
+                          href={`/category/${cat.slug}`}
+                          className="block px-3.5 py-2 text-xs text-[#0E0E0E] hover:bg-[#FAF9F6] hover:text-[#C5A880] transition-colors"
+                        >
+                          {cat.name}
+                        </Link>
+                      ))
+                    ) : (
+                      <>
+                        <Link
+                          href="/category/tote-bags"
+                          className="block px-3.5 py-2 text-xs text-[#0E0E0E] hover:bg-[#FAF9F6] hover:text-[#C5A880] transition-colors"
+                        >
+                          Tote Bags
+                        </Link>
+                        <Link
+                          href="/category/shoulder-bags"
+                          className="block px-3.5 py-2 text-xs text-[#0E0E0E] hover:bg-[#FAF9F6] hover:text-[#C5A880] transition-colors"
+                        >
+                          Shoulder Bags
+                        </Link>
+                        <Link
+                          href="/category/crossbody-bags"
+                          className="block px-3.5 py-2 text-xs text-[#0E0E0E] hover:bg-[#FAF9F6] hover:text-[#C5A880] transition-colors"
+                        >
+                          Crossbody Bags
+                        </Link>
+                        <Link
+                          href="/category/handbags"
+                          className="block px-3.5 py-2 text-xs text-[#0E0E0E] hover:bg-[#FAF9F6] hover:text-[#C5A880] transition-colors"
+                        >
+                          Handbags
+                        </Link>
+                      </>
+                    )}
+                    <div className="border-t border-[#E8E5DE]/70 mt-1 pt-1">
+                      <Link
+                        href="/#categories"
+                        className="block px-3.5 py-1.5 text-[11px] font-semibold text-[#8F7449] hover:underline"
+                      >
+                        Explore All Categories →
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* New Arrivals with Dropdown */}
+              <div className="relative group py-2">
+                <Link
+                  href="/#new-arrivals"
+                  className="flex items-center gap-1 text-[11px] font-bold uppercase tracking-[0.22em] text-[#0E0E0E] group-hover:text-[#C5A880] transition-colors"
+                >
+                  <span>New Arrivals</span>
+                  <ChevronDown className="w-3 h-3 text-[#73706A] group-hover:rotate-180 transition-transform duration-200" />
+                </Link>
+                <div className="absolute top-full -left-4 pt-2 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 z-50">
+                  <div className="w-52 bg-white border border-[#E8E5DE] rounded-sm shadow-xl py-2">
+                    <div className="px-3.5 py-1.5 border-b border-[#E8E5DE]/70 text-[9px] uppercase tracking-widest text-[#C5A880] font-bold">
+                      Latest Edits
+                    </div>
+                    <Link
+                      href="/shop?new_arrival=true"
+                      className="block px-3.5 py-2 text-xs text-[#0E0E0E] hover:bg-[#FAF9F6] hover:text-[#C5A880] transition-colors"
+                    >
+                      Spring / Summer 2026
+                    </Link>
+                    <Link
+                      href="/#new-arrivals"
+                      className="block px-3.5 py-2 text-xs text-[#0E0E0E] hover:bg-[#FAF9F6] hover:text-[#C5A880] transition-colors"
+                    >
+                      Featured Releases
+                    </Link>
+                    <Link
+                      href="/shop"
+                      className="block px-3.5 py-2 text-xs text-[#0E0E0E] hover:bg-[#FAF9F6] hover:text-[#C5A880] transition-colors"
+                    >
+                      Runway Atelier Pieces
+                    </Link>
+                  </div>
+                </div>
+              </div>
+
+              {/* Best Sellers with Dropdown */}
+              <div className="relative group py-2">
+                <Link
+                  href="/#best-sellers"
+                  className="flex items-center gap-1 text-[11px] font-bold uppercase tracking-[0.22em] text-[#0E0E0E] group-hover:text-[#C5A880] transition-colors"
+                >
+                  <span>Best Sellers</span>
+                  <ChevronDown className="w-3 h-3 text-[#73706A] group-hover:rotate-180 transition-transform duration-200" />
+                </Link>
+                <div className="absolute top-full -right-4 pt-2 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 z-50">
+                  <div className="w-52 bg-white border border-[#E8E5DE] rounded-sm shadow-xl py-2">
+                    <div className="px-3.5 py-1.5 border-b border-[#E8E5DE]/70 text-[9px] uppercase tracking-widest text-[#C5A880] font-bold">
+                      Signature Icons
+                    </div>
+                    <Link
+                      href="/#best-sellers"
+                      className="block px-3.5 py-2 text-xs text-[#0E0E0E] hover:bg-[#FAF9F6] hover:text-[#C5A880] transition-colors"
+                    >
+                      Top Rated Silhouettes
+                    </Link>
+                    <Link
+                      href="/shop?best_seller=true"
+                      className="block px-3.5 py-2 text-xs text-[#0E0E0E] hover:bg-[#FAF9F6] hover:text-[#C5A880] transition-colors"
+                    >
+                      Iconic Italian Calfskin
+                    </Link>
+                    <Link
+                      href="/shop"
+                      className="block px-3.5 py-2 text-xs text-[#0E0E0E] hover:bg-[#FAF9F6] hover:text-[#C5A880] transition-colors"
+                    >
+                      All Bestselling Bags
+                    </Link>
+                  </div>
+                </div>
+              </div>
             </nav>
 
-            {/* Right Action Icons */}
-            <div className="flex items-center space-x-3 sm:space-x-5">
-              {/* Search Trigger */}
+            {/* RIGHT: Sequential Action Icons (Search, Account, Shopping Bag) */}
+            <div className="flex items-center space-x-1 sm:space-x-3">
+              {/* 1. Search */}
               <button
                 type="button"
                 onClick={() => setSearchOpen(true)}
                 aria-label="Search handbags"
                 className="p-2 text-[#0E0E0E] hover:text-[#C5A880] transition-colors"
+                title="Search"
               >
-                <Search className="w-5 h-5" />
+                <Search className="w-5 h-5" strokeWidth={1.75} />
               </button>
 
-              {/* Client Account / User Portal */}
-              <div className="relative hidden sm:block">
+              {/* 2. Account (No admin links, purely customer session) */}
+              <div className="relative">
                 {user ? (
                   <div className="relative">
                     <button
                       type="button"
                       onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                      className="p-2 text-[#0E0E0E] hover:text-[#C5A880] transition-colors relative flex items-center gap-1"
-                      aria-label="User Account"
+                      className="p-2 text-[#0E0E0E] hover:text-[#C5A880] transition-colors relative flex items-center"
+                      aria-label="Client Account"
                       title={user.full_name || user.email}
                     >
-                      <User className="w-5 h-5" />
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#C5A880] absolute top-1 right-1" />
+                      <User className="w-5 h-5" strokeWidth={1.75} />
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#C5A880] absolute top-1.5 right-1.5" />
                     </button>
 
                     {userDropdownOpen && (
@@ -114,7 +315,7 @@ export function Navbar({ products = [], user = null }: NavbarProps) {
                       >
                         <div className="px-4 py-2 border-b border-[#E8E5DE]">
                           <span className="text-[10px] uppercase tracking-widest text-[#C5A880] font-bold block">
-                            Signed in as
+                            Client Account
                           </span>
                           <span className="text-xs font-bold text-[#0E0E0E] truncate block mt-0.5">
                             {user.full_name || user.email.split("@")[0]}
@@ -142,17 +343,6 @@ export function Navbar({ products = [], user = null }: NavbarProps) {
                           <span>Saved Addresses</span>
                         </Link>
 
-                        {user.role === "admin" && (
-                          <Link
-                            href="/admin"
-                            onClick={() => setUserDropdownOpen(false)}
-                            className="flex items-center gap-2.5 px-4 py-2.5 text-xs text-[#0E0E0E] hover:bg-[#FAF9F6] font-medium transition-colors border-t border-[#E8E5DE]"
-                          >
-                            <Shield className="w-3.5 h-3.5 text-[#0E0E0E]" />
-                            <span>Admin Management</span>
-                          </Link>
-                        )}
-
                         <div className="pt-1 border-t border-[#E8E5DE]">
                           <button
                             type="button"
@@ -179,23 +369,24 @@ export function Navbar({ products = [], user = null }: NavbarProps) {
                 ) : (
                   <Link
                     href="/login"
-                    aria-label="Sign In"
+                    aria-label="Client Sign In"
                     className="p-2 text-[#0E0E0E] hover:text-[#C5A880] transition-colors inline-flex"
                     title="Sign In / Register"
                   >
-                    <User className="w-5 h-5" />
+                    <User className="w-5 h-5" strokeWidth={1.75} />
                   </Link>
                 )}
               </div>
 
-              {/* Cart Drawer Trigger */}
+              {/* 3. Shopping Bag / Cart */}
               <button
                 type="button"
                 onClick={openCart}
                 aria-label="View shopping bag"
                 className="p-2 text-[#0E0E0E] hover:text-[#C5A880] transition-colors relative"
+                title="Shopping Bag"
               >
-                <ShoppingBag className="w-5 h-5" />
+                <ShoppingBag className="w-5 h-5" strokeWidth={1.75} />
                 {itemCount > 0 && (
                   <span className="absolute top-1 right-1 w-4 h-4 bg-[#0E0E0E] text-[#FAF9F6] text-[10px] font-bold rounded-full flex items-center justify-center">
                     {itemCount}
@@ -207,10 +398,10 @@ export function Navbar({ products = [], user = null }: NavbarProps) {
         </div>
       </header>
 
-      {/* Luxury Member & Storefront Navigation Drawer */}
+      {/* Luxury Member & Storefront Navigation Drawer (For Mobile Screen View) */}
       <MemberDrawer
-        isOpen={mobileMenuOpen}
-        onClose={() => setMobileMenuOpen(false)}
+        isOpen={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
         user={user}
       />
 

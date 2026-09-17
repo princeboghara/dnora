@@ -31,6 +31,7 @@ import {
   User,
   Package,
   MapPin,
+  Megaphone,
 } from "lucide-react";
 import { SidebarMenuItem, SidebarSubmenuItem } from "@/types";
 import { Modal } from "@/components/ui/Modal";
@@ -43,6 +44,7 @@ export const ICON_MAP: Record<string, React.ComponentType<{ className?: string }
   Package,
   MapPin,
   User,
+  Megaphone,
   Box,
   Sparkles,
   Tag,
@@ -82,7 +84,7 @@ export function SidebarCustomizerModal({
   const [targetItems, setTargetItems] = useState<Record<NavigationTarget, SidebarMenuItem[]>>({
     storefront: [],
     account: [],
-    admin: initialAdminItems,
+    admin: [],
   });
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -100,17 +102,12 @@ export function SidebarCustomizerModal({
     data: SidebarSubmenuItem;
   } | null>(null);
 
-  // Load items for the current active target
+  // Load items for the current active target whenever modal opens or target changes
   useEffect(() => {
     if (!isOpen) return;
 
     let isMounted = true;
     async function fetchTargetItems() {
-      // If already loaded in memory, don't re-fetch
-      if (targetItems[activeTarget] && targetItems[activeTarget].length > 0) {
-        return;
-      }
-
       setLoading(true);
       try {
         if (activeTarget === "admin") {
@@ -141,7 +138,7 @@ export function SidebarCustomizerModal({
     return () => {
       isMounted = false;
     };
-  }, [isOpen, activeTarget, targetItems]);
+  }, [isOpen, activeTarget]);
 
   const currentItems = targetItems[activeTarget] || [];
 
@@ -733,7 +730,7 @@ export function SidebarCustomizerModal({
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g. New / Hot / Privé"
+                  placeholder="e.g. New / Hot / Exclusive"
                   value={editingItem.data.badge || ""}
                   onChange={(e) =>
                     setEditingItem({

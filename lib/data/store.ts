@@ -293,10 +293,13 @@ class DataStore {
 
   async createProduct(data: Omit<Product, "id" | "created_at" | "updated_at">): Promise<Product> {
     const slug = data.slug || slugify(data.name);
+    // Ensure color_variants column exists
+    await db.query(`ALTER TABLE public.products ADD COLUMN IF NOT EXISTS color_variants JSONB DEFAULT '[]'::jsonb;`).catch(() => {});
+
     const res = await db.query(
       `INSERT INTO public.products 
-        (name, slug, short_description, description, price, compare_at_price, sku, stock, status)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        (name, slug, short_description, description, price, compare_at_price, sku, stock, status, color_variants)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
        RETURNING *`,
       [
         data.name,
@@ -308,6 +311,7 @@ class DataStore {
         data.sku,
         data.stock || 0,
         data.status || "draft",
+        JSON.stringify(data.color_variants || []),
       ]
     );
     const prod = res.rows[0];
@@ -330,10 +334,26 @@ class DataStore {
       }
     }
 
+    // Category relations
+    if (data.categories && data.categories.length > 0) {
+      for (const cat of data.categories) {
+        if (cat.id) {
+          await db.query(
+            `INSERT INTO public.product_category_relations (product_id, category_id)
+             VALUES ($1, $2)
+             ON CONFLICT DO NOTHING`,
+            [prod.id, cat.id]
+          );
+        }
+      }
+    }
+
     return (await this.getProductById(prod.id))!;
   }
 
   async updateProduct(id: string, updates: Partial<Product>): Promise<Product | null> {
+    await db.query(`ALTER TABLE public.products ADD COLUMN IF NOT EXISTS color_variants JSONB DEFAULT '[]'::jsonb;`).catch(() => {});
+
     const fields: string[] = [];
     const values: (string | number | boolean | null)[] = [];
     let i = 1;
@@ -352,10 +372,28 @@ class DataStore {
       }
     }
 
+    if (updates.color_variants !== undefined) {
+      fields.push(`color_variants = $${i}`);
+      values.push(JSON.stringify(updates.color_variants || []));
+      i++;
+    }
+
     if (fields.length > 0) {
       fields.push(`updated_at = now()`);
       values.push(id);
       await db.query(`UPDATE public.products SET ${fields.join(", ")} WHERE id = $${i}`, values);
+    }
+
+    // Images
+    if (updates.images !== undefined && Array.isArray(updates.images)) {
+      await db.query(`DELETE FROM public.product_images WHERE product_id = $1`, [id]).catch(() => {});
+      for (const img of updates.images) {
+        await db.query(
+          `INSERT INTO public.product_images (product_id, cloudinary_public_id, secure_url, alt_text, sort_order)
+           VALUES ($1, $2, $3, $4, $5)`,
+          [id, img.cloudinary_public_id, img.secure_url, img.alt_text || "", img.sort_order || 0]
+        ).catch(() => {});
+      }
     }
 
     // Update flags
@@ -369,6 +407,23 @@ class DataStore {
              sort_order = COALESCE($4, public.product_flags.sort_order)`,
         [id, updates.is_best_seller ?? null, updates.is_new_arrival ?? null, updates.sort_order ?? null]
       );
+    }
+
+    // Update Category relations
+    if (updates.categories !== undefined) {
+      await db.query(`DELETE FROM public.product_category_relations WHERE product_id = $1`, [id]);
+      if (Array.isArray(updates.categories)) {
+        for (const cat of updates.categories) {
+          if (cat.id) {
+            await db.query(
+              `INSERT INTO public.product_category_relations (product_id, category_id)
+               VALUES ($1, $2)
+               ON CONFLICT DO NOTHING`,
+              [id, cat.id]
+            );
+          }
+        }
+      }
     }
 
     return this.getProductById(id);
@@ -406,6 +461,88 @@ class DataStore {
     } catch (err) {
       console.error("Error fetching categories from database:", err);
       return [];
+    }
+  }
+
+  async getCategoryBySlug(slug: string): Promise<ProductCategory | null> {
+    try {
+      const res = await db.query(`SELECT * FROM public.product_categories WHERE slug = $1 LIMIT 1`, [slug]);
+      return res.rows[0] || null;
+    } catch (err) {
+      console.error("Error fetching category by slug:", err);
+      return null;
+    }
+  }
+
+  async getCategoryById(id: string): Promise<ProductCategory | null> {
+    try {
+      const res = await db.query(`SELECT * FROM public.product_categories WHERE id = $1 LIMIT 1`, [id]);
+      return res.rows[0] || null;
+    } catch (err) {
+      console.error("Error fetching category by id:", err);
+      return null;
+    }
+  }
+
+  async createCategory(data: {
+    name: string;
+    slug?: string;
+    description?: string;
+    image_url?: string;
+  }): Promise<ProductCategory> {
+    const slug = data.slug?.trim() ? slugify(data.slug) : slugify(data.name);
+    const res = await db.query(
+      `INSERT INTO public.product_categories (name, slug, description, image_url)
+       VALUES ($1, $2, $3, $4)
+       RETURNING *`,
+      [data.name.trim(), slug, data.description || null, data.image_url || null]
+    );
+    return res.rows[0];
+  }
+
+  async updateCategory(
+    id: string,
+    data: Partial<{ name: string; slug: string; description: string; image_url: string }>
+  ): Promise<ProductCategory | null> {
+    const updates: string[] = [];
+    const params: (string | null)[] = [];
+    let idx = 1;
+
+    if (data.name !== undefined) {
+      updates.push(`name = $${idx++}`);
+      params.push(data.name.trim());
+    }
+    if (data.slug !== undefined) {
+      updates.push(`slug = $${idx++}`);
+      params.push(slugify(data.slug));
+    }
+    if (data.description !== undefined) {
+      updates.push(`description = $${idx++}`);
+      params.push(data.description || null);
+    }
+    if (data.image_url !== undefined) {
+      updates.push(`image_url = $${idx++}`);
+      params.push(data.image_url || null);
+    }
+
+    if (updates.length === 0) return this.getCategoryById(id);
+
+    params.push(id);
+    const res = await db.query(
+      `UPDATE public.product_categories SET ${updates.join(", ")} WHERE id = $${idx} RETURNING *`,
+      params
+    );
+    return res.rows[0] || null;
+  }
+
+  async deleteCategory(id: string): Promise<boolean> {
+    try {
+      await db.query(`DELETE FROM public.product_category_relations WHERE category_id = $1`, [id]).catch(() => {});
+      const res = await db.query(`DELETE FROM public.product_categories WHERE id = $1`, [id]);
+      return (res.rowCount ?? 0) > 0;
+    } catch (err) {
+      console.error("Error deleting category:", err);
+      return false;
     }
   }
 

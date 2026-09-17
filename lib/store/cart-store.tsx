@@ -8,7 +8,11 @@ interface CartContextType {
   isOpen: boolean;
   openCart: () => void;
   closeCart: () => void;
-  addItem: (product: Product, quantity?: number, selectedColor?: string) => void;
+  addItem: (
+    product: Product,
+    quantity?: number,
+    selectedColorOrVariant?: string | { name: string; color_hex?: string; hex?: string; images?: any }
+  ) => void;
   removeItem: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
@@ -74,8 +78,19 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const openCart = () => setIsOpen(true);
   const closeCart = () => setIsOpen(false);
 
-  const addItem = (product: Product, quantity: number = 1, selectedColor?: string) => {
-    const existingIndex = items.findIndex((item) => item.product.id === product.id);
+  const addItem = (
+    product: Product,
+    quantity: number = 1,
+    selectedColorOrVariant?: string | { name: string; color_hex?: string; hex?: string; images?: any }
+  ) => {
+    const variantObj = typeof selectedColorOrVariant === "object" ? selectedColorOrVariant : undefined;
+    const colorStr = typeof selectedColorOrVariant === "string" ? selectedColorOrVariant : variantObj?.name;
+
+    const existingIndex = items.findIndex(
+      (item) =>
+        item.product.id === product.id &&
+        (item.selectedVariant?.name === variantObj?.name || item.selectedColor === colorStr)
+    );
     let updated: CartItem[];
     if (existingIndex > -1) {
       updated = [...items];
@@ -84,7 +99,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
         quantity: updated[existingIndex].quantity + quantity,
       };
     } else {
-      updated = [...items, { product, quantity, selectedColor }];
+      updated = [
+        ...items,
+        {
+          product,
+          quantity,
+          selectedColor: colorStr,
+          selectedVariant: variantObj,
+        },
+      ];
     }
     setCartItems(updated);
     setIsOpen(true);
