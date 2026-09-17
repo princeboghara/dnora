@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { db } from "@/lib/db";
 import { createUserSession } from "@/lib/auth/user-session";
-import { createClient } from "@/lib/supabase/server";
+import { sendWelcomeEmail } from "@/lib/email";
 
 export async function POST(req: NextRequest) {
   try {
@@ -85,21 +85,14 @@ export async function POST(req: NextRequest) {
       normalizedEmail,
     ]);
 
-    // 7. Optional Supabase Auth sync (fire-and-forget)
+    // 7. Send luxury Welcome / Registration Confirmation Email
     try {
-      const supabase = await createClient();
-      await supabase.auth.signUp({
-        email: normalizedEmail,
-        password: crypto.randomUUID(), // placeholder password in Supabase Auth
-        options: {
-          data: {
-            full_name: newUser.full_name,
-            phone: newUser.phone,
-          },
-        },
+      await sendWelcomeEmail({
+        email: newUser.email,
+        name: newUser.full_name,
       });
-    } catch {
-      // Supabase Auth not strictly required when direct DB session is used
+    } catch (welcomeErr) {
+      console.error("Failed to send welcome email:", welcomeErr);
     }
 
     // 8. Create secure HTTP-only user session
