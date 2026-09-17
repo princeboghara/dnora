@@ -9,6 +9,7 @@ import {
   ArrowUpRight,
   Plus,
   AlertTriangle,
+  Users,
 } from "lucide-react";
 import { store } from "@/lib/data/store";
 import { formatPrice } from "@/lib/utils";
@@ -23,6 +24,13 @@ export default async function AdminDashboardPage() {
   ]);
 
   const statCards = [
+    {
+      label: "Total Customers",
+      value: stats.totalCustomers ?? 0,
+      icon: Users,
+      href: "/admin/customers",
+      badge: "CRM Directory",
+    },
     {
       label: "Total Products",
       value: stats.totalProducts,

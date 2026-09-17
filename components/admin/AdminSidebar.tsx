@@ -32,11 +32,11 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
     { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
     { label: "Hero Banners", href: "/admin/heroes", icon: ImageIcon },
     { label: "Products", href: "/admin/products", icon: ShoppingBag },
+    { label: "Customers", href: "/admin/customers", icon: Users },
   ];
 
   const futureNavItems = [
     { label: "Orders", icon: ShoppingCart },
-    { label: "Customers", icon: Users },
     { label: "Reviews", icon: Star },
     { label: "Seen On You", icon: Video },
     { label: "Coupons", icon: Ticket },

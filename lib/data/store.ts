@@ -437,7 +437,7 @@ class DataStore {
   // DASHBOARD STATS
   async getDashboardStats(): Promise<AdminDashboardStats> {
     try {
-      const [totalProd, bestSellers, newArrivals, activeHeroes, draftHeroes, lowStock] =
+      const [totalProd, bestSellers, newArrivals, activeHeroes, draftHeroes, lowStock, totalCust] =
         await Promise.all([
           db.query(`SELECT COUNT(*) FROM public.products`),
           db.query(`SELECT COUNT(*) FROM public.product_flags WHERE is_best_seller = true`),
@@ -445,10 +445,12 @@ class DataStore {
           db.query(`SELECT COUNT(*) FROM public.hero_banners WHERE status = 'published' AND is_active = true`),
           db.query(`SELECT COUNT(*) FROM public.hero_banners WHERE status = 'draft'`),
           db.query(`SELECT COUNT(*) FROM public.products WHERE stock < 10`),
+          db.query(`SELECT COUNT(*) FROM public.users`),
         ]);
 
       return {
         totalProducts: parseInt(totalProd.rows[0].count),
+        totalCustomers: parseInt(totalCust.rows[0].count),
         bestSellersCount: parseInt(bestSellers.rows[0].count),
         newArrivalsCount: parseInt(newArrivals.rows[0].count),
         activeHeroBanners: parseInt(activeHeroes.rows[0].count),
@@ -459,6 +461,7 @@ class DataStore {
       console.error("Error fetching dashboard stats from database:", err);
       return {
         totalProducts: 0,
+        totalCustomers: 0,
         bestSellersCount: 0,
         newArrivalsCount: 0,
         activeHeroBanners: 0,

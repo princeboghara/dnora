@@ -116,6 +116,7 @@ export interface CartItem {
 
 export interface AdminDashboardStats {
   totalProducts: number;
+  totalCustomers?: number;
   bestSellersCount: number;
   newArrivalsCount: number;
   activeHeroBanners: number;
@@ -183,3 +184,33 @@ export interface Order {
   created_at: string;
   updated_at: string;
 }
+
+export interface CustomerAddress {
+  id?: string;
+  user_id?: string;
+  full_name?: string;
+  phone?: string;
+  address_line1: string;
+  address_line2?: string | null;
+  city: string;
+  state: string;
+  postal_code: string;
+  country: string;
+  is_default?: boolean;
+}
+
+export interface AdminCustomer {
+  id: string;
+  email: string;
+  full_name?: string | null;
+  phone?: string | null;
+  avatar_url?: string | null;
+  role: UserRole;
+  created_at: string;
+  updated_at?: string;
+  total_orders: number;
+  total_spent: number;
+  primary_address?: CustomerAddress | null;
+  addresses?: CustomerAddress[];
+}
+
