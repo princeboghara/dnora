@@ -56,7 +56,7 @@ export const metadata: Metadata = {
     siteName: "DNORA",
     images: [
       {
-        url: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=1200&q=80",
+        url: "https://res.cloudinary.com/izdmpa4z/image/upload/v1789649479/dnora/heroes/autumn-winter-couture-1.jpg",
         width: 1200,
         height: 630,
         alt: "DNORA Luxury Handbag Collection",
@@ -71,7 +71,7 @@ export const metadata: Metadata = {
     description:
       "Architectural silhouettes, meticulous artisan craft, and modern women's handbags.",
     images: [
-      "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=1200&q=80",
+      "https://res.cloudinary.com/izdmpa4z/image/upload/v1789649479/dnora/heroes/autumn-winter-couture-1.jpg",
     ],
   },
   robots: {

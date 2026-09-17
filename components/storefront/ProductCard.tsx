@@ -44,7 +44,7 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
     >
       {/* Product Image Frame */}
       <div className="relative w-full aspect-[4/5] bg-[#F5F3EF] overflow-hidden rounded-sm border border-[#E8E5DE]/80">
-        <Link href={`/product/${product.slug}`} className="block w-full h-full">
+        <Link href={`/product/${product.slug}`} className="relative block w-full h-full">
           {/* Primary Image */}
           {primaryImage && (
             <Image

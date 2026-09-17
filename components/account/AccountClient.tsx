@@ -32,6 +32,19 @@ interface AccountClientProps {
   initialAddresses: UserAddress[];
 }
 
+const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+function formatDisplayDate(dateVal?: string | Date | null): string {
+  if (!dateVal) return "";
+  try {
+    const d = typeof dateVal === "string" ? new Date(dateVal) : dateVal;
+    if (isNaN(d.getTime())) return "";
+    return `${MONTH_NAMES[d.getUTCMonth()]} ${d.getUTCDate()}, ${d.getUTCFullYear()}`;
+  } catch {
+    return "";
+  }
+}
+
 export function AccountClient({
   user,
   initialOrders,
@@ -360,15 +373,7 @@ export function AccountClient({
                                 </span>
                               </div>
                               <div className="text-xs text-[#73706A]">
-                                Placed on{" "}
-                                {new Date(order.created_at).toLocaleDateString(
-                                  "en-US",
-                                  {
-                                    month: "short",
-                                    day: "numeric",
-                                    year: "numeric",
-                                  }
-                                )}
+                                Placed on {formatDisplayDate(order.created_at)}
                               </div>
                             </div>
 
@@ -510,9 +515,7 @@ export function AccountClient({
                                       <span className="text-xs text-[#73706A]">
                                         Est. Arrival:{" "}
                                         <strong className="text-[#0E0E0E]">
-                                          {new Date(
-                                            order.estimated_delivery
-                                          ).toLocaleDateString()}
+                                          {formatDisplayDate(order.estimated_delivery)}
                                         </strong>
                                       </span>
                                     )}
