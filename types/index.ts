@@ -214,3 +214,22 @@ export interface AdminCustomer {
   addresses?: CustomerAddress[];
 }
 
+export interface SidebarSubmenuItem {
+  id: string;
+  label: string;
+  href: string;
+  badge?: string;
+  is_active?: boolean;
+}
+
+export interface SidebarMenuItem {
+  id: string;
+  label: string;
+  href?: string;
+  icon: string;
+  badge?: string;
+  is_active: boolean;
+  submenus?: SidebarSubmenuItem[];
+}
+
+

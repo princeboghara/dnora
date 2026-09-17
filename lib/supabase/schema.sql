@@ -297,6 +297,14 @@ CREATE POLICY "Admin full access product_flags" ON public.product_flags FOR ALL 
 CREATE POLICY "Admin full access hero_banners" ON public.hero_banners FOR ALL USING (public.is_admin());
 CREATE POLICY "Admin full access customer_reviews" ON public.customer_reviews FOR ALL USING (public.is_admin());
 CREATE POLICY "Admin full access customer_videos" ON public.customer_videos FOR ALL USING (public.is_admin());
-CREATE POLICY "Admin full access orders" ON public.orders FOR ALL USING (public.is_admin());
-CREATE POLICY "Admin full access order_items" ON public.order_items FOR ALL USING (public.is_admin());
 CREATE POLICY "Admin full access user_addresses" ON public.user_addresses FOR ALL USING (public.is_admin());
+
+-- 13. ADMIN SIDEBAR CONFIGURATION
+CREATE TABLE IF NOT EXISTS public.admin_sidebar_config (
+  id TEXT PRIMARY KEY DEFAULT 'default',
+  items JSONB NOT NULL,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+CREATE POLICY "Admin full access admin_sidebar_config" ON public.admin_sidebar_config FOR ALL USING (public.is_admin());
+

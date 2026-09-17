@@ -2,14 +2,18 @@
 
 import React from "react";
 import { useRouter } from "next/navigation";
-import { Menu, LogOut, UserCheck } from "lucide-react";
+import { Menu, LogOut, UserCheck, Sliders } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
 
 interface AdminHeaderProps {
   onOpenMobileSidebar: () => void;
+  onOpenCustomizer?: () => void;
 }
 
-export function AdminHeader({ onOpenMobileSidebar }: AdminHeaderProps) {
+export function AdminHeader({
+  onOpenMobileSidebar,
+  onOpenCustomizer,
+}: AdminHeaderProps) {
   const router = useRouter();
   const { info } = useToast();
 
@@ -39,10 +43,22 @@ export function AdminHeader({ onOpenMobileSidebar }: AdminHeaderProps) {
         </span>
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3 sm:gap-4">
+        {onOpenCustomizer && (
+          <button
+            type="button"
+            onClick={onOpenCustomizer}
+            className="flex items-center gap-1.5 text-xs text-[#73706A] hover:text-[#0E0E0E] font-medium border border-[#E8E5DE] hover:border-[#0E0E0E] px-3 py-1.5 rounded transition-all bg-[#FAF9F6] hover:bg-white"
+            title="Edit and customize sidebar navigation"
+          >
+            <Sliders className="w-3.5 h-3.5 text-[#8F7449]" />
+            <span className="hidden md:inline">Edit Sidebar</span>
+          </button>
+        )}
+
         <div className="flex items-center gap-2 text-xs font-medium text-[#0E0E0E] bg-[#F5F3EF] px-3 py-1.5 rounded-full border border-[#E8E5DE]">
           <UserCheck className="w-3.5 h-3.5 text-emerald-600" />
-          <span>admin@dnora.luxury</span>
+          <span className="hidden sm:inline">admin@dnora.luxury</span>
         </div>
 
         <button
