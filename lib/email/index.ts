@@ -1,3 +1,4 @@
+import { Resend } from "resend";
 import nodemailer from "nodemailer";
 
 interface SendOtpOptions {
@@ -9,7 +10,7 @@ interface SendOtpOptions {
 /**
  * Sends a luxury-styled verification OTP email to the client.
  * Supports:
- * 1. Resend API (Recommended for production & long scale: RESEND_API_KEY)
+ * 1. Resend API (Official SDK - recommended for production scale: RESEND_API_KEY)
  * 2. SMTP / Brevo (SMTP_HOST, SMTP_USER, SMTP_PASS, SMTP_PORT)
  * 3. Gmail App Password (GMAIL_USER, GMAIL_PASS)
  * 4. Development mode: logs cleanly to console.
@@ -75,38 +76,32 @@ export async function sendVerificationOtpEmail({ email, name, otp }: SendOtpOpti
     </html>
   `;
 
-  // 1. Long Scale Production: Resend REST API (No library required)
+  // 1. Long Scale Production: Official Resend SDK
   if (resendApiKey) {
     try {
+      const resend = new Resend(resendApiKey);
       const fromEmail = process.env.EMAIL_FROM || "DNORA Privé <onboarding@resend.dev>";
-      const resendRes = await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${resendApiKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          from: fromEmail,
-          to: [email],
-          subject: `Your DNORA Verification Code: ${otp}`,
-          html: htmlContent,
-        }),
+      const { data, error } = await resend.emails.send({
+        from: fromEmail,
+        to: [email],
+        subject: `Your DNORA Verification Code: ${otp}`,
+        html: htmlContent,
       });
 
-      const resendData = await resendRes.json();
-      if (!resendRes.ok) {
-        console.error("Resend API error:", resendData);
+      if (error) {
+        console.error("Resend API error:", error);
         return {
           success: true,
           delivered: false,
-          message: "Resend failed: " + (resendData.message || "API error"),
+          message: error.message || "Failed to send via Resend.",
         };
       }
 
+      console.log("Resend successfully dispatched email:", data?.id);
       return {
         success: true,
         delivered: true,
-        message: "Verification code sent to your email inbox.",
+        message: "Verification code sent to your email inbox via Resend.",
       };
     } catch (resendErr: any) {
       console.error("Resend dispatch error:", resendErr);
