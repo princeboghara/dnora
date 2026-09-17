@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowRight, Lock, Mail, ShieldCheck, Sparkles } from "lucide-react";
+import { ArrowRight, Lock, Mail, ShieldCheck } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
 
 export default function LoginPage() {
@@ -40,8 +40,8 @@ export default function LoginPage() {
       const target = data.redirectTo || redirectPath;
       router.push(target);
       router.refresh();
-    } catch (err: any) {
-      setError(err.message || "Failed to sign in. Please try again.");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to sign in. Please try again.");
     } finally {
       setLoading(false);
     }

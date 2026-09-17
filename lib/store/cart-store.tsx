@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import React, { createContext, useContext, useState, useSyncExternalStore, ReactNode } from "react";
 import { CartItem, Product } from "@/types";
 
 interface CartContextType {
@@ -24,53 +24,74 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 const FREE_SHIPPING_THRESHOLD = 250; // $250 luxury threshold
 const CART_STORAGE_KEY = "dnora_cart_items_v1";
 
-export function CartProvider({ children }: { children: ReactNode }) {
-  const [items, setItems] = useState<CartItem[]>([]);
-  const [isOpen, setIsOpen] = useState(false);
-  const [isInitialized, setIsInitialized] = useState(false);
+let memoryCart: CartItem[] = [];
+let initialized = false;
+const listeners = new Set<() => void>();
 
-  // Load from localStorage on mount
-  useEffect(() => {
+function getCartSnapshot(): CartItem[] {
+  if (!initialized && typeof window !== "undefined") {
     try {
       const stored = localStorage.getItem(CART_STORAGE_KEY);
       if (stored) {
-        setItems(JSON.parse(stored));
+        memoryCart = JSON.parse(stored);
       }
     } catch {
       // Ignore localStorage errors
-    } finally {
-      setIsInitialized(true);
     }
-  }, []);
+    initialized = true;
+  }
+  return memoryCart;
+}
 
-  // Persist to localStorage on change
-  useEffect(() => {
-    if (!isInitialized) return;
+const emptySnapshot: CartItem[] = [];
+function getServerSnapshot(): CartItem[] {
+  return emptySnapshot;
+}
+
+function subscribeCart(listener: () => void) {
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+  };
+}
+
+function setCartItems(newItems: CartItem[]) {
+  memoryCart = newItems;
+  if (typeof window !== "undefined") {
     try {
-      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
+      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(newItems));
     } catch {
       // Ignore quota errors
     }
-  }, [items, isInitialized]);
+  }
+  listeners.forEach((listener) => listener());
+}
+
+export function CartProvider({ children }: { children: ReactNode }) {
+  const items = useSyncExternalStore(subscribeCart, getCartSnapshot, getServerSnapshot);
+  const [isOpen, setIsOpen] = useState(false);
 
   const openCart = () => setIsOpen(true);
   const closeCart = () => setIsOpen(false);
 
   const addItem = (product: Product, quantity: number = 1, selectedColor?: string) => {
-    setItems((prev) => {
-      const existingIndex = prev.findIndex((item) => item.product.id === product.id);
-      if (existingIndex > -1) {
-        const updated = [...prev];
-        updated[existingIndex].quantity += quantity;
-        return updated;
-      }
-      return [...prev, { product, quantity, selectedColor }];
-    });
+    const existingIndex = items.findIndex((item) => item.product.id === product.id);
+    let updated: CartItem[];
+    if (existingIndex > -1) {
+      updated = [...items];
+      updated[existingIndex] = {
+        ...updated[existingIndex],
+        quantity: updated[existingIndex].quantity + quantity,
+      };
+    } else {
+      updated = [...items, { product, quantity, selectedColor }];
+    }
+    setCartItems(updated);
     setIsOpen(true);
   };
 
   const removeItem = (productId: string) => {
-    setItems((prev) => prev.filter((item) => item.product.id !== productId));
+    setCartItems(items.filter((item) => item.product.id !== productId));
   };
 
   const updateQuantity = (productId: string, quantity: number) => {
@@ -78,15 +99,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
       removeItem(productId);
       return;
     }
-    setItems((prev) =>
-      prev.map((item) =>
+    setCartItems(
+      items.map((item) =>
         item.product.id === productId ? { ...item, quantity } : item
       )
     );
   };
 
   const clearCart = () => {
-    setItems([]);
+    setCartItems([]);
   };
 
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);

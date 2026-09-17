@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { Search, ShoppingBag, Menu, X, User, LogOut, Package, MapPin, Shield } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Search, ShoppingBag, Menu, User, LogOut, Package, MapPin, Shield } from "lucide-react";
 import { useCart } from "@/lib/store/cart-store";
 import { Product } from "@/types";
 import { UserSession } from "@/lib/auth/user-session";
@@ -17,6 +18,7 @@ interface NavbarProps {
 }
 
 export function Navbar({ products = [], user = null }: NavbarProps) {
+  const router = useRouter();
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -156,8 +158,14 @@ export function Navbar({ products = [], user = null }: NavbarProps) {
                             type="button"
                             onClick={async () => {
                               setUserDropdownOpen(false);
-                              await fetch("/api/auth/logout", { method: "POST" });
-                              window.location.href = "/";
+                              try {
+                                await fetch("/api/auth/logout", { method: "POST" });
+                              } catch (err) {
+                                console.error("Logout error:", err);
+                              } finally {
+                                router.push("/");
+                                router.refresh();
+                              }
                             }}
                             className="w-full flex items-center gap-2.5 px-4 py-2 text-xs text-[#C53030] hover:bg-[#FCF0F0] font-medium transition-colors"
                           >

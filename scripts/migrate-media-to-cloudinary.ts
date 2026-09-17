@@ -10,18 +10,22 @@ import {
 
 const { Client } = pg;
 
+if (!process.env.DATABASE_URL) {
+  console.error("DATABASE_URL environment variable is required.");
+  process.exit(1);
+}
+
 // Configure Cloudinary
 cloudinary.config({
-  cloud_name: "izdmpa4z",
-  api_key: "856758626865353",
-  api_secret: "c-F25h4SWaOe1n2QfxS3CFZEPE8",
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
   secure: true,
 });
 
 // Configure Database
 const client = new Client({
-  connectionString:
-    "postgresql://postgres.zzwgudzlpsfxyxqmywtv:KSXaSRYF3-Zq6hY@aws-0-ap-south-1.pooler.supabase.com:5432/postgres",
+  connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false },
 });
 
@@ -42,8 +46,8 @@ async function main() {
       );
     }
     console.log("Supabase Storage buckets created: dnora-media, dnora-products, dnora-heroes");
-  } catch (e: any) {
-    console.warn("Storage bucket setup warning:", e.message);
+  } catch (e: unknown) {
+    console.warn("Storage bucket setup warning:", e instanceof Error ? e.message : e);
   }
 
   // 2. Upload Categories to Cloudinary
@@ -64,8 +68,8 @@ async function main() {
           `UPDATE public.product_categories SET image_url = $1 WHERE slug = $2`,
           [res.secure_url, cat.slug]
         );
-      } catch (err: any) {
-        console.error(`Error uploading category ${cat.name}:`, err.message);
+      } catch (err: unknown) {
+        console.error(`Error uploading category ${cat.name}:`, err instanceof Error ? err.message : err);
       }
     }
   }
@@ -94,8 +98,8 @@ async function main() {
              AND sort_order = $4`,
             [res.secure_url, res.public_id, prod.slug, img.sort_order]
           );
-        } catch (err: any) {
-          console.error(`Error uploading image for ${prod.name}:`, err.message);
+        } catch (err: unknown) {
+          console.error(`Error uploading image for ${prod.name}:`, err instanceof Error ? err.message : err);
         }
       }
     }
@@ -121,8 +125,8 @@ async function main() {
          WHERE title = $3`,
         [res.secure_url, res.public_id, banner.title]
       );
-    } catch (err: any) {
-      console.error(`Error uploading hero banner ${banner.title}:`, err.message);
+    } catch (err: unknown) {
+      console.error(`Error uploading hero banner ${banner.title}:`, err instanceof Error ? err.message : err);
     }
   }
 
@@ -145,8 +149,8 @@ async function main() {
           `UPDATE public.customer_reviews SET image_url = $1 WHERE customer_name = $2`,
           [res.secure_url, r.customer_name]
         );
-      } catch (err: any) {
-        console.error(`Error uploading review avatar:`, err.message);
+      } catch (err: unknown) {
+        console.error(`Error uploading review avatar:`, err instanceof Error ? err.message : err);
       }
     }
   }
@@ -186,8 +190,8 @@ async function main() {
          WHERE customer_name = $4`,
         [videoRes.secure_url, thumbUrl, videoRes.public_id, v.customer_name]
       );
-    } catch (err: any) {
-      console.error(`Error uploading customer video:`, err.message);
+    } catch (err: unknown) {
+      console.error(`Error uploading customer video:`, err instanceof Error ? err.message : err);
     }
   }
 

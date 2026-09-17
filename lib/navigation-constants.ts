@@ -28,10 +28,11 @@ export const DEFAULT_STOREFRONT_NAVIGATION: SidebarMenuItem[] = [
     icon: "Box",
     is_active: true,
     submenus: [
-      { id: "sf-cat-tote", label: "Tote Bags", href: "/shop?category=Tote" },
-      { id: "sf-cat-shoulder", label: "Shoulder Bags", href: "/shop?category=Shoulder" },
-      { id: "sf-cat-crossbody", label: "Crossbody Bags", href: "/shop?category=Crossbody" },
-      { id: "sf-cat-clutch", label: "Evening Clutches", href: "/shop?category=Clutch" },
+      { id: "sf-cat-tote", label: "Tote Bags", href: "/shop?category=tote-bags" },
+      { id: "sf-cat-shoulder", label: "Shoulder Bags", href: "/shop?category=shoulder-bags" },
+      { id: "sf-cat-crossbody", label: "Crossbody Bags", href: "/shop?category=crossbody-bags" },
+      { id: "sf-cat-handbags", label: "Handbags", href: "/shop?category=handbags" },
+      { id: "sf-cat-mini", label: "Mini Bags", href: "/shop?category=mini-bags" },
     ],
   },
   {

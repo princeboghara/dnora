@@ -3,9 +3,13 @@ import { Pool } from "pg";
 // Global pool cache for Next.js hot-reloading in dev
 const globalForDb = global as unknown as { pgPool?: Pool };
 
-const connectionString =
-  process.env.DATABASE_URL ||
-  "postgresql://postgres.zzwgudzlpsfxyxqmywtv:KSXaSRYF3-Zq6hY@aws-0-ap-south-1.pooler.supabase.com:5432/postgres";
+const connectionString = process.env.DATABASE_URL;
+
+if (!connectionString) {
+  throw new Error(
+    "DATABASE_URL environment variable is missing. Please configure it in .env.local"
+  );
+}
 
 export const db =
   globalForDb.pgPool ||

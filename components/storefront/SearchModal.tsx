@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { Search, X, ArrowRight } from "lucide-react";
+import { Search, X } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { Product } from "@/types";
@@ -17,13 +17,17 @@ export function SearchModal({ isOpen, onClose, products }: SearchModalProps) {
   const [query, setQuery] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const handleClose = () => {
+    setQuery("");
+    onClose();
+  };
+
   useEffect(() => {
     if (isOpen) {
       setTimeout(() => inputRef.current?.focus(), 50);
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "";
-      setQuery("");
     }
     return () => {
       document.body.style.overflow = "";
@@ -58,7 +62,7 @@ export function SearchModal({ isOpen, onClose, products }: SearchModalProps) {
             />
           </div>
           <button
-            onClick={onClose}
+            onClick={handleClose}
             aria-label="Close search"
             className="p-2 rounded-full hover:bg-[#EAE6DF] transition-colors text-[#0E0E0E]"
           >

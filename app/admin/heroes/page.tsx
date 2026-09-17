@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import {
   Plus,
@@ -12,7 +12,6 @@ import {
   Video,
   Image as ImageIcon,
   Loader2,
-  ExternalLink,
 } from "lucide-react";
 import { HeroBanner } from "@/types";
 import { HeroPreviewModal } from "@/components/admin/HeroPreviewModal";
@@ -29,26 +28,35 @@ export default function HeroManagerPage() {
   const [previewBanner, setPreviewBanner] = useState<HeroBanner | null>(null);
   const [editingBanner, setEditingBanner] = useState<HeroBanner | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
-
-  const fetchBanners = useCallback(async () => {
-    try {
-      setLoading(true);
-      const res = await fetch("/api/heroes?includeDrafts=true");
-      const data = await res.json();
-      if (data.banners) {
-        setBanners(data.banners);
-      }
-    } catch {
-      error("Failed to load hero banners");
-    } finally {
-      setLoading(false);
-    }
-  }, [error]);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   useEffect(() => {
-    fetchBanners();
-  }, [fetchBanners]);
+    let ignore = false;
+    async function loadBanners() {
+      try {
+        const res = await fetch("/api/heroes?includeDrafts=true");
+        const data = await res.json();
+        if (!ignore && data.banners) {
+          setBanners(data.banners);
+        }
+      } catch {
+        if (!ignore) {
+          error("Failed to load hero banners");
+        }
+      } finally {
+        if (!ignore) {
+          setLoading(false);
+        }
+      }
+    }
+
+    loadBanners();
+    return () => {
+      ignore = true;
+    };
+  }, [error, refreshTrigger]);
+
+  const refreshBanners = () => setRefreshTrigger((prev) => prev + 1);
 
   const handleTogglePublish = async (banner: HeroBanner) => {
     const newStatus = banner.status === "published" ? "draft" : "published";
@@ -66,7 +74,7 @@ export default function HeroManagerPage() {
           ? `"${banner.title}" is now LIVE on the homepage.`
           : `"${banner.title}" reverted to DRAFT mode.`
       );
-      fetchBanners();
+      refreshBanners();
     } catch {
       error("Error updating banner publishing state.");
     }
@@ -82,7 +90,7 @@ export default function HeroManagerPage() {
       if (!res.ok) throw new Error("Failed to delete");
 
       success("Hero banner deleted successfully.");
-      fetchBanners();
+      refreshBanners();
     } catch {
       error("Error deleting hero banner.");
     }
@@ -295,7 +303,7 @@ export default function HeroManagerPage() {
         <HeroBannerForm
           onSuccess={() => {
             setIsCreateOpen(false);
-            fetchBanners();
+            refreshBanners();
           }}
           onCancel={() => setIsCreateOpen(false)}
         />
@@ -313,7 +321,7 @@ export default function HeroManagerPage() {
             initialData={editingBanner}
             onSuccess={() => {
               setEditingBanner(null);
-              fetchBanners();
+              refreshBanners();
             }}
             onCancel={() => setEditingBanner(null)}
           />

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import {
   Plus,
@@ -11,8 +11,6 @@ import {
   Sparkles,
   Loader2,
   ExternalLink,
-  Check,
-  Filter,
 } from "lucide-react";
 import { Product } from "@/types";
 import { ProductForm } from "@/components/admin/ProductForm";
@@ -33,25 +31,35 @@ export default function ProductManagerPage() {
   // Modals
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-
-  const fetchProducts = useCallback(async () => {
-    try {
-      setLoading(true);
-      const res = await fetch("/api/products");
-      const data = await res.json();
-      if (data.products) {
-        setProducts(data.products);
-      }
-    } catch {
-      error("Failed to load products");
-    } finally {
-      setLoading(false);
-    }
-  }, [error]);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   useEffect(() => {
-    fetchProducts();
-  }, [fetchProducts]);
+    let ignore = false;
+    async function loadProducts() {
+      try {
+        const res = await fetch("/api/products");
+        const data = await res.json();
+        if (!ignore && data.products) {
+          setProducts(data.products);
+        }
+      } catch {
+        if (!ignore) {
+          error("Failed to load products");
+        }
+      } finally {
+        if (!ignore) {
+          setLoading(false);
+        }
+      }
+    }
+
+    loadProducts();
+    return () => {
+      ignore = true;
+    };
+  }, [error, refreshTrigger]);
+
+  const refreshProducts = () => setRefreshTrigger((prev) => prev + 1);
 
   // Instant Flag Toggling (Best Seller / New Arrival)
   const handleToggleFlag = async (product: Product, flag: "is_best_seller" | "is_new_arrival") => {
@@ -71,7 +79,7 @@ export default function ProductManagerPage() {
           : `Removed ${flag === "is_best_seller" ? "Best Seller" : "New Arrival"} flag from "${product.name}".`
       );
 
-      fetchProducts();
+      refreshProducts();
     } catch {
       error("Error toggling product flag.");
     }
@@ -87,7 +95,7 @@ export default function ProductManagerPage() {
       if (!res.ok) throw new Error("Failed to delete product");
 
       success(`"${name}" deleted from catalog.`);
-      fetchProducts();
+      refreshProducts();
     } catch {
       error("Error deleting product.");
     }
@@ -336,7 +344,7 @@ export default function ProductManagerPage() {
         <ProductForm
           onSuccess={() => {
             setIsCreateOpen(false);
-            fetchProducts();
+            refreshProducts();
           }}
           onCancel={() => setIsCreateOpen(false)}
         />
@@ -354,7 +362,7 @@ export default function ProductManagerPage() {
             initialData={editingProduct}
             onSuccess={() => {
               setEditingProduct(null);
-              fetchProducts();
+              refreshProducts();
             }}
             onCancel={() => setEditingProduct(null)}
           />

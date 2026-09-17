@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Users,
   Search,
@@ -16,12 +16,11 @@ import {
   Calendar,
   AlertTriangle,
   Loader2,
-  ExternalLink,
   ShieldCheck,
   UserCheck,
   Check,
 } from "lucide-react";
-import { AdminCustomer, CustomerAddress } from "@/types";
+import { AdminCustomer } from "@/types";
 import { Modal } from "@/components/ui/Modal";
 import { useToast } from "@/components/ui/Toast";
 import { formatPrice } from "@/lib/utils";
@@ -72,27 +71,38 @@ export default function AdminCustomersPage() {
     country: "India",
   });
 
-  // Fetch all customers from API
-  const fetchCustomers = useCallback(async () => {
-    try {
-      setLoading(true);
-      const res = await fetch("/api/admin/customers");
-      const data = await res.json();
-      if (res.ok && data.customers) {
-        setCustomers(data.customers);
-      } else {
-        throw new Error(data.error || "Failed to load customers");
-      }
-    } catch (err: any) {
-      error(err.message || "Failed to load customer list.");
-    } finally {
-      setLoading(false);
-    }
-  }, [error]);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
+  // Fetch all customers from API with ignore cancellation flag
   useEffect(() => {
-    fetchCustomers();
-  }, [fetchCustomers]);
+    let ignore = false;
+    async function loadCustomers() {
+      try {
+        const res = await fetch("/api/admin/customers");
+        const data = await res.json();
+        if (!ignore && res.ok && data.customers) {
+          setCustomers(data.customers);
+        } else if (!ignore && !res.ok) {
+          throw new Error(data.error || "Failed to load customers");
+        }
+      } catch (err: unknown) {
+        if (!ignore) {
+          error(err instanceof Error ? err.message : "Failed to load customer list.");
+        }
+      } finally {
+        if (!ignore) {
+          setLoading(false);
+        }
+      }
+    }
+
+    loadCustomers();
+    return () => {
+      ignore = true;
+    };
+  }, [error, refreshTrigger]);
+
+  const refreshCustomers = () => setRefreshTrigger((prev) => prev + 1);
 
   // Reset form
   const resetForm = () => {
@@ -181,9 +191,9 @@ export default function AdminCustomersPage() {
       setIsAddOpen(false);
       setEditingCustomer(null);
       resetForm();
-      fetchCustomers();
-    } catch (err: any) {
-      error(err.message || "Failed to save customer details.");
+      refreshCustomers();
+    } catch (err: unknown) {
+      error(err instanceof Error ? err.message : "Failed to save customer details.");
     } finally {
       setSubmitting(false);
     }
@@ -205,9 +215,9 @@ export default function AdminCustomersPage() {
 
       success(`Customer "${deletingCustomer.full_name || deletingCustomer.email}" removed.`);
       setDeletingCustomer(null);
-      fetchCustomers();
-    } catch (err: any) {
-      error(err.message || "Error deleting customer profile.");
+      refreshCustomers();
+    } catch (err: unknown) {
+      error(err instanceof Error ? err.message : "Error deleting customer profile.");
     } finally {
       setSubmitting(false);
     }

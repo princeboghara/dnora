@@ -9,9 +9,13 @@ import {
 
 const { Client } = pg;
 
+if (!process.env.DATABASE_URL) {
+  console.error("DATABASE_URL environment variable is required.");
+  process.exit(1);
+}
+
 const client = new Client({
-  connectionString:
-    "postgresql://postgres.zzwgudzlpsfxyxqmywtv:KSXaSRYF3-Zq6hY@aws-0-ap-south-1.pooler.supabase.com:5432/postgres",
+  connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false },
 });
 

@@ -22,7 +22,7 @@ export default function RegisterPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectPath = searchParams.get("redirect") || "/account";
-  const { showToast, success: toastSuccess, error: toastError } = useToast();
+  const { showToast, success: toastSuccess } = useToast();
 
   // Step 1: Form inputs
   const [name, setName] = useState("");
@@ -34,8 +34,9 @@ export default function RegisterPage() {
   const [step, setStep] = useState<"form" | "otp">("form");
   const [otp, setOtp] = useState("");
   const [resendCooldown, setResendCooldown] = useState(60);
-  const [canResend, setCanResend] = useState(false);
   const [devHint, setDevHint] = useState<string | null>(null);
+
+  const canResend = step === "otp" && resendCooldown <= 0;
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -44,11 +45,9 @@ export default function RegisterPage() {
   useEffect(() => {
     let timer: NodeJS.Timeout;
     if (step === "otp" && resendCooldown > 0) {
-      setCanResend(false);
       timer = setInterval(() => {
         setResendCooldown((prev) => {
           if (prev <= 1) {
-            setCanResend(true);
             return 0;
           }
           return prev - 1;
@@ -89,9 +88,9 @@ export default function RegisterPage() {
       }
       setStep("otp");
       setResendCooldown(60);
-      setCanResend(false);
-    } catch (err: any) {
-      setError(err.message || "Failed to process registration.");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to process registration.";
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -127,8 +126,9 @@ export default function RegisterPage() {
       showToast("Account verified successfully! Welcome to DNORA.", "success");
       router.push(data.redirectTo || redirectPath);
       router.refresh();
-    } catch (err: any) {
-      setError(err.message || "Verification failed. Please check the code.");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Verification failed. Please check the code.";
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -162,9 +162,9 @@ export default function RegisterPage() {
         setDevHint(data.devHint);
       }
       setResendCooldown(60);
-      setCanResend(false);
-    } catch (err: any) {
-      setError(err.message || "Could not resend verification code.");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Could not resend verification code.";
+      setError(msg);
     } finally {
       setLoading(false);
     }

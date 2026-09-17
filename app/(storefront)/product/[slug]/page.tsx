@@ -1,10 +1,8 @@
 import React from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ShieldCheck, Truck, RotateCcw, ArrowLeft } from "lucide-react";
 import { store } from "@/lib/data/store";
-import { formatPrice } from "@/lib/utils";
 import { ProductCard } from "@/components/storefront/ProductCard";
 // Client-side interactive handbag detail component (gallery, quantity, wishlist, bag)
 import { ProductDetailClient } from "@/components/storefront/ProductDetailClient";

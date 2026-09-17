@@ -3,6 +3,7 @@ import { store } from "@/lib/data/store";
 import { verifyAdminSession } from "@/lib/auth/session";
 import { heroBannerSchema } from "@/lib/validation/hero";
 import { revalidatePath } from "next/cache";
+import { ZodError } from "zod";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -42,10 +43,10 @@ export async function POST(req: NextRequest) {
     revalidatePath("/");
 
     return NextResponse.json({ success: true, banner: newBanner }, { status: 201 });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Failed to create hero banner:", error);
-    if (error.errors) {
-      return NextResponse.json({ error: "Validation error", details: error.errors }, { status: 400 });
+    if (error instanceof ZodError) {
+      return NextResponse.json({ error: "Validation error", details: error.issues }, { status: 400 });
     }
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }

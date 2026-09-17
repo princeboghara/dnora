@@ -4,12 +4,25 @@ import { UserAddress, Order, OrderItem } from "@/types";
 const isValidUUID = (str?: string | null): boolean =>
   Boolean(str && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str));
 
+interface DbOrderItemRow {
+  id: string;
+  order_id: string;
+  product_id?: string | null;
+  product_name: string;
+  product_slug?: string | null;
+  price: string | number;
+  quantity: number;
+  image_url?: string | null;
+  attributes?: Record<string, unknown>;
+  created_at: string;
+}
+
 // USER ORDERS
 export async function getUserOrders(userId: string, email?: string): Promise<Order[]> {
   try {
     const hasValidUuid = isValidUUID(userId);
     let query = "";
-    let params: any[] = [];
+    let params: string[] = [];
 
     if (hasValidUuid && email) {
       query = `SELECT * FROM public.orders WHERE user_id = $1 OR customer_email = $2 ORDER BY created_at DESC`;
@@ -25,23 +38,32 @@ export async function getUserOrders(userId: string, email?: string): Promise<Ord
     }
 
     const res = await db.query(query, params);
-
-    const orders: Order[] = [];
-    for (const row of res.rows) {
-      const itemsRes = await db.query(
-        `SELECT * FROM public.order_items WHERE order_id = $1 ORDER BY created_at ASC`,
-        [row.id]
-      );
-      orders.push({
-        ...row,
-        total_amount: Number(row.total_amount),
-        items: itemsRes.rows.map((it: any) => ({
-          ...it,
-          price: Number(it.price),
-        })),
-      });
+    if (res.rows.length === 0) {
+      return [];
     }
-    return orders;
+
+    // Batch query order items to eliminate N+1 problem
+    const orderIds = res.rows.map((r: { id: string }) => r.id);
+    const itemsRes = await db.query(
+      `SELECT * FROM public.order_items WHERE order_id = ANY($1) ORDER BY created_at ASC`,
+      [orderIds]
+    );
+
+    const itemsByOrderId = new Map<string, OrderItem[]>();
+    for (const it of itemsRes.rows as DbOrderItemRow[]) {
+      const list = itemsByOrderId.get(it.order_id) || [];
+      list.push({
+        ...it,
+        price: Number(it.price),
+      });
+      itemsByOrderId.set(it.order_id, list);
+    }
+
+    return res.rows.map((row) => ({
+      ...row,
+      total_amount: Number(row.total_amount),
+      items: itemsByOrderId.get(row.id) || [],
+    }));
   } catch (err) {
     console.error("Error fetching user orders from DB:", err);
     return [];
@@ -64,7 +86,7 @@ export async function getOrderById(orderId: string): Promise<Order | null> {
       return {
         ...order,
         total_amount: Number(order.total_amount),
-        items: itemsRes.rows.map((it: any) => ({
+        items: (itemsRes.rows as DbOrderItemRow[]).map((it) => ({
           ...it,
           price: Number(it.price),
         })),
@@ -133,12 +155,11 @@ export async function deleteUserAddress(
   userId: string
 ): Promise<boolean> {
   try {
-    if (!isValidUUID(addressId)) return false;
-    const hasValidUserUuid = isValidUUID(userId);
+    if (!isValidUUID(addressId) || !isValidUUID(userId)) return false;
 
     const res = await db.query(
-      `DELETE FROM public.user_addresses WHERE id = $1 ${hasValidUserUuid ? "AND user_id = $2" : ""}`,
-      hasValidUserUuid ? [addressId, userId] : [addressId]
+      `DELETE FROM public.user_addresses WHERE id = $1 AND user_id = $2`,
+      [addressId, userId]
     );
     return (res.rowCount ?? 0) > 0;
   } catch (err) {
@@ -152,20 +173,17 @@ export async function setDefaultAddress(
   userId: string
 ): Promise<boolean> {
   try {
-    if (!isValidUUID(addressId)) return false;
-    const hasValidUserUuid = isValidUUID(userId);
+    if (!isValidUUID(addressId) || !isValidUUID(userId)) return false;
 
-    if (hasValidUserUuid) {
-      await db.query(
-        `UPDATE public.user_addresses SET is_default = false WHERE user_id = $1`,
-        [userId]
-      );
-    }
     await db.query(
-      `UPDATE public.user_addresses SET is_default = true WHERE id = $1`,
-      [addressId]
+      `UPDATE public.user_addresses SET is_default = false WHERE user_id = $1`,
+      [userId]
     );
-    return true;
+    const res = await db.query(
+      `UPDATE public.user_addresses SET is_default = true WHERE id = $1 AND user_id = $2`,
+      [addressId, userId]
+    );
+    return (res.rowCount ?? 0) > 0;
   } catch (err) {
     console.error("Error setting default address in DB:", err);
     return false;

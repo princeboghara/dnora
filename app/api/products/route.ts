@@ -4,6 +4,7 @@ import { verifyAdminSession } from "@/lib/auth/session";
 import { productSchema } from "@/lib/validation/product";
 import { revalidatePath } from "next/cache";
 import { slugify } from "@/lib/utils";
+import { ZodError } from "zod";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -52,10 +53,10 @@ export async function POST(req: NextRequest) {
     revalidatePath("/shop");
 
     return NextResponse.json({ success: true, product: newProduct }, { status: 201 });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Failed to create product:", error);
-    if (error.errors) {
-      return NextResponse.json({ error: "Validation error", details: error.errors }, { status: 400 });
+    if (error instanceof ZodError) {
+      return NextResponse.json({ error: "Validation error", details: error.issues }, { status: 400 });
     }
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }

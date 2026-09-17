@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from "react";
 import {
-  X,
   Plus,
   Trash2,
   Edit2,
@@ -10,10 +9,7 @@ import {
   ArrowDown,
   RotateCcw,
   Check,
-  ChevronRight,
   Sliders,
-  ExternalLink,
-  Layers,
   LayoutDashboard,
   ShoppingBag,
   ShoppingCart,
@@ -289,8 +285,8 @@ export function SidebarCustomizerModal({
       );
       onSaveSuccess(currentItems, activeTarget);
       onClose();
-    } catch (err: any) {
-      error(err.message || "Failed to update navigation.");
+    } catch (err: unknown) {
+      error(err instanceof Error ? err.message : "Failed to update navigation.");
     } finally {
       setSaving(false);
     }
@@ -329,8 +325,8 @@ export function SidebarCustomizerModal({
       success(`${targetName} reset to factory defaults.`);
       updateCurrentItems(resetItems);
       onSaveSuccess(resetItems, activeTarget);
-    } catch (err: any) {
-      error(err.message || "Failed to reset navigation.");
+    } catch (err: unknown) {
+      error(err instanceof Error ? err.message : "Failed to reset navigation.");
     } finally {
       setSaving(false);
     }

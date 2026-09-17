@@ -58,8 +58,8 @@ export function HeroBannerForm({ initialData, onSuccess, onCancel }: HeroBannerF
 
       setMediaUrl(data.media.secure_url);
       success("Media uploaded successfully.");
-    } catch (err: any) {
-      error(err.message || "Failed to upload media");
+    } catch (err: unknown) {
+      error(err instanceof Error ? err.message : "Failed to upload media");
     } finally {
       setUploading(false);
     }
@@ -109,8 +109,8 @@ export function HeroBannerForm({ initialData, onSuccess, onCancel }: HeroBannerF
           : "Hero banner created successfully."
       );
       onSuccess();
-    } catch (err: any) {
-      error(err.message || "An error occurred");
+    } catch (err: unknown) {
+      error(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setSubmitting(false);
     }
@@ -287,7 +287,7 @@ export function HeroBannerForm({ initialData, onSuccess, onCancel }: HeroBannerF
           </label>
           <select
             value={textAlignment}
-            onChange={(e) => setTextAlignment(e.target.value as any)}
+            onChange={(e) => setTextAlignment(e.target.value as "left" | "center" | "right")}
             className="w-full bg-white border border-[#E8E5DE] px-4 py-2 text-xs text-[#0E0E0E] rounded focus:outline-none focus:border-[#0E0E0E]"
           >
             <option value="left">Left Aligned</option>

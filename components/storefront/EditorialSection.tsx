@@ -12,7 +12,7 @@ export function EditorialSection() {
           <div className="lg:col-span-6 relative">
             <div className="relative aspect-[3/4] w-full rounded-sm overflow-hidden bg-[#F5F3EF] border border-[#E8E5DE] shadow-xl">
               <Image
-                src="https://res.cloudinary.com/izdmpa4z/image/upload/v1789649479/dnora/heroes/autumn-winter-couture-1.jpg"
+                src="https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=1200&q=85"
                 alt="DNORA Editorial Silhouette in Florence"
                 fill
                 sizes="(max-width: 1024px) 100vw, 50vw"

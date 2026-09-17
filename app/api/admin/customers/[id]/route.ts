@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { verifyAdminSession } from "@/lib/auth/session";
 
 export const dynamic = "force-dynamic";
 
@@ -7,6 +8,11 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const session = await verifyAdminSession();
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const { id } = await params;
     const body = await req.json();
@@ -14,7 +20,7 @@ export async function PATCH(
 
     // 1. Update user record
     const updateFields: string[] = [];
-    const updateValues: any[] = [];
+    const updateValues: (string | number | boolean | null)[] = [];
     let paramIndex = 1;
 
     if (full_name !== undefined) {
@@ -96,16 +102,18 @@ export async function PATCH(
     }
 
     return NextResponse.json({ success: true });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Failed to update customer:", err);
-    if (err.code === "23505") {
+    const dbErr = err as { code?: string; message?: string };
+    if (dbErr.code === "23505") {
       return NextResponse.json(
         { error: "Another user already uses this email address." },
         { status: 409 }
       );
     }
+    const message = err instanceof Error ? err.message : "Server error";
     return NextResponse.json(
-      { error: "Failed to update customer: " + (err.message || "Server error") },
+      { error: "Failed to update customer: " + message },
       { status: 500 }
     );
   }
@@ -115,6 +123,11 @@ export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const session = await verifyAdminSession();
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const { id } = await params;
 
@@ -136,10 +149,11 @@ export async function DELETE(
       message: "Customer deleted successfully.",
       deleted: result.rows[0],
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Failed to delete customer:", err);
+    const message = err instanceof Error ? err.message : "Database error";
     return NextResponse.json(
-      { error: "Failed to delete customer: " + (err.message || "Database error") },
+      { error: "Failed to delete customer: " + message },
       { status: 500 }
     );
   }

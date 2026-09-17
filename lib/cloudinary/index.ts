@@ -47,6 +47,7 @@ export async function uploadMedia(
     const uploadStream = cloudinary.uploader.upload_stream(
       {
         folder,
+        public_id: fileName ? fileName.replace(/\.[^/.]+$/, "") : undefined,
         resource_type: resourceType,
         transformation:
           resourceType === "image"

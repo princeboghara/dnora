@@ -103,7 +103,7 @@ export async function sendVerificationOtpEmail({ email, name, otp }: SendOtpOpti
         delivered: true,
         message: "Verification code sent to your email inbox via Resend.",
       };
-    } catch (resendErr: any) {
+    } catch (resendErr: unknown) {
       console.error("Resend dispatch error:", resendErr);
     }
   }
@@ -147,7 +147,7 @@ export async function sendVerificationOtpEmail({ email, name, otp }: SendOtpOpti
         delivered: true,
         message: "Verification code sent to your email address.",
       };
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Failed to send verification email via nodemailer:", err);
       return {
         success: true,
@@ -318,9 +318,13 @@ export async function sendWelcomeEmail({ email, name }: SendWelcomeOptions): Pro
       });
 
       return { success: true, delivered: true, message: "Welcome email delivered via SMTP." };
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("SMTP Welcome email error:", err);
-      return { success: true, delivered: false, message: err.message };
+      return {
+        success: true,
+        delivered: false,
+        message: err instanceof Error ? err.message : "SMTP delivery failed",
+      };
     }
   }
 

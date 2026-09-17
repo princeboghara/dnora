@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { createClient } from "../supabase/server";
+import { signSessionToken, verifySessionToken, ADMIN_COOKIE_NAME } from "./session";
 
 const USER_COOKIE_NAME = "dnora_user_session";
 
@@ -13,74 +14,87 @@ export interface UserSession {
   isAuthenticated: boolean;
 }
 
+interface UserCookiePayload {
+  id: string;
+  email: string;
+  full_name?: string;
+  phone?: string;
+  avatar_url?: string;
+  role?: "customer" | "admin";
+  expiresAt: number;
+}
+
+interface AdminCookiePayload {
+  email: string;
+  role: "admin";
+  expiresAt: number;
+}
+
 /**
  * Validates server-side whether the current request has an authenticated user session.
- * Checks Supabase Auth session first, then falls back to secure HTTP-only session cookie.
+ * Checks Supabase Auth session first, then falls back to secure HTTP-only signed session cookie.
  */
 export async function getUserSession(): Promise<UserSession | null> {
   const cookieStore = await cookies();
 
-  // 1. Try Supabase Auth session
-  try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (user) {
+  // 1. First priority: Check cryptographically signed HTTP-only user cookie (instant, zero network latency)
+  const userCookie = cookieStore.get(USER_COOKIE_NAME);
+  if (userCookie?.value) {
+    const decoded = verifySessionToken<UserCookiePayload>(userCookie.value);
+    if (decoded && decoded.id) {
       return {
-        id: user.id,
-        email: user.email || "",
-        full_name: user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split("@")[0],
-        phone: user.user_metadata?.phone || user.phone,
-        role: user.user_metadata?.role === "admin" ? "admin" : "customer",
+        id: decoded.id,
+        email: decoded.email,
+        full_name: decoded.full_name,
+        phone: decoded.phone,
+        avatar_url: decoded.avatar_url,
+        role: decoded.role || "customer",
         isAuthenticated: true,
       };
     }
-  } catch {
-    // Supabase auth check error (e.g., offline or mock mode)
   }
 
-  // 2. Check secure HTTP-only user cookie
-  const userCookie = cookieStore.get(USER_COOKIE_NAME);
-  if (userCookie?.value) {
-    try {
-      const decoded = JSON.parse(
-        Buffer.from(userCookie.value, "base64").toString("utf-8")
-      );
-      if (decoded.id && decoded.expiresAt > Date.now()) {
-        return {
-          id: decoded.id,
-          email: decoded.email,
-          full_name: decoded.full_name,
-          phone: decoded.phone,
-          role: decoded.role || "customer",
-          isAuthenticated: true,
-        };
-      }
-    } catch {
-      // Invalid cookie format
+  // 2. Second priority: Check cryptographically signed admin cookie if present
+  const adminCookie = cookieStore.get(ADMIN_COOKIE_NAME);
+  if (adminCookie?.value) {
+    const decoded = verifySessionToken<AdminCookiePayload>(adminCookie.value);
+    if (decoded && decoded.role === "admin") {
+      return {
+        id: "admin-master",
+        email: decoded.email,
+        full_name: "DNORA Admin",
+        role: "admin",
+        isAuthenticated: true,
+      };
     }
   }
 
-  // 3. Fallback: Check admin cookie if present
-  const adminCookie = cookieStore.get("dnora_admin_session");
-  if (adminCookie?.value) {
+  // 3. Third priority: Try Supabase Auth ONLY if a Supabase cookie is actually present
+  const hasSupabaseCookie = cookieStore.getAll().some((c) => c.name.startsWith("sb-"));
+  if (hasSupabaseCookie && process.env.NEXT_PUBLIC_SUPABASE_URL) {
     try {
-      const decoded = JSON.parse(
-        Buffer.from(adminCookie.value, "base64").toString("utf-8")
+      const supabase = await createClient();
+      // Guard with a 2.5-second timeout so external network latency never hangs page rendering
+      const authPromise = supabase.auth.getUser();
+      const timeoutPromise = new Promise<{ data: { user: null } }>((resolve) =>
+        setTimeout(() => resolve({ data: { user: null } }), 2500)
       );
-      if (decoded.role === "admin" && decoded.expiresAt > Date.now()) {
+
+      const { data } = await Promise.race([authPromise, timeoutPromise]);
+      const user = data?.user;
+
+      if (user) {
         return {
-          id: "admin-master",
-          email: decoded.email,
-          full_name: "DNORA Admin",
-          role: "admin",
+          id: user.id,
+          email: user.email || "",
+          full_name: user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split("@")[0],
+          phone: user.user_metadata?.phone || user.phone,
+          role: user.user_metadata?.role === "admin" ? "admin" : "customer",
           isAuthenticated: true,
         };
       }
     } catch {
-      // ignore
+      // Supabase auth check error (e.g. timeout or network error)
     }
   }
 
@@ -88,7 +102,7 @@ export async function getUserSession(): Promise<UserSession | null> {
 }
 
 /**
- * Sets a secure, HTTP-only session cookie for the authenticated user.
+ * Sets a cryptographically signed, HTTP-only session cookie for the authenticated user.
  */
 export async function createUserSession(user: {
   id: string;
@@ -99,7 +113,7 @@ export async function createUserSession(user: {
   role?: "customer" | "admin";
 }): Promise<boolean> {
   const cookieStore = await cookies();
-  const sessionData = {
+  const sessionData: UserCookiePayload = {
     id: user.id,
     email: user.email,
     full_name: user.full_name,
@@ -109,9 +123,9 @@ export async function createUserSession(user: {
     expiresAt: Date.now() + 14 * 24 * 60 * 60 * 1000, // 14 days
   };
 
-  const encoded = Buffer.from(JSON.stringify(sessionData)).toString("base64");
+  const signedToken = signSessionToken(sessionData as unknown as Record<string, unknown>);
 
-  cookieStore.set(USER_COOKIE_NAME, encoded, {
+  cookieStore.set(USER_COOKIE_NAME, signedToken, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",

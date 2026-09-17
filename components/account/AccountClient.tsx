@@ -9,7 +9,6 @@ import {
   MapPin,
   User as UserIcon,
   LogOut,
-  ExternalLink,
   CheckCircle2,
   Clock,
   Truck,
@@ -84,7 +83,7 @@ export function AccountClient({
     "acc-orders": true,
   });
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
-  const [orders, setOrders] = useState<Order[]>(initialOrders);
+  const [orders] = useState<Order[]>(initialOrders);
   const [addresses, setAddresses] = useState<UserAddress[]>(initialAddresses);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(
     initialOrders[0] || null
@@ -188,8 +187,8 @@ export function AccountClient({
         country: "India",
         is_default: false,
       });
-    } catch (err: any) {
-      showToast(err.message, "error");
+    } catch (err: unknown) {
+      showToast(err instanceof Error ? err.message : "Failed to save address", "error");
     } finally {
       setAddressLoading(false);
     }
@@ -325,7 +324,6 @@ export function AccountClient({
                 item.id === "acc-profile" ||
                 (item.href && item.href.includes("tab=profile"));
 
-              const isTabItem = isOrdersTab || isAddressesTab || isProfileTab;
               const isActive =
                 (isOrdersTab && activeTab === "orders") ||
                 (isAddressesTab && activeTab === "addresses") ||

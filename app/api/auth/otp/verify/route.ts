@@ -109,10 +109,11 @@ export async function POST(req: NextRequest) {
       message: "Account verified and created successfully.",
       redirectTo: "/account",
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Error verifying OTP:", err);
+    const message = err instanceof Error ? err.message : "Server error";
     return NextResponse.json(
-      { error: "Verification failed: " + (err.message || "Server error") },
+      { error: "Verification failed: " + message },
       { status: 500 }
     );
   }

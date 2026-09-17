@@ -4,6 +4,7 @@ import {
   DEFAULT_STOREFRONT_NAVIGATION,
   DEFAULT_ACCOUNT_NAVIGATION,
 } from "@/lib/navigation-constants";
+import { verifyAdminSession } from "@/lib/auth/session";
 
 export const dynamic = "force-dynamic";
 
@@ -27,7 +28,7 @@ export async function GET(req: NextRequest) {
     }
 
     return NextResponse.json({ target, items: defaultItems });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Error fetching site navigation config:", err);
     return NextResponse.json({
       target: "storefront",
@@ -37,6 +38,11 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const session = await verifyAdminSession();
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const body = await req.json();
     const { target = "storefront", items } = body;
@@ -58,16 +64,22 @@ export async function POST(req: NextRequest) {
     );
 
     return NextResponse.json({ success: true, target, items });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Error saving site navigation config:", err);
+    const message = err instanceof Error ? err.message : "Database error";
     return NextResponse.json(
-      { error: "Failed to save navigation config: " + (err.message || "Database error") },
+      { error: "Failed to save navigation config: " + message },
       { status: 500 }
     );
   }
 }
 
 export async function DELETE(req: NextRequest) {
+  const session = await verifyAdminSession();
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const { searchParams } = new URL(req.url);
     const target = searchParams.get("target") || "storefront";
@@ -92,10 +104,11 @@ export async function DELETE(req: NextRequest) {
       target,
       items: defaultItems,
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Error resetting site navigation config:", err);
+    const message = err instanceof Error ? err.message : "Database error";
     return NextResponse.json(
-      { error: "Failed to reset navigation config: " + (err.message || "Database error") },
+      { error: "Failed to reset navigation config: " + message },
       { status: 500 }
     );
   }

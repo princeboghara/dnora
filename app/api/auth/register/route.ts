@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
-export async function POST(_req: NextRequest) {
+export async function POST() {
   // All customer registrations in DNORA now require custom email OTP verification.
   // This prevents unverified account creations and disables default duplicate confirmation emails.
   return NextResponse.json(

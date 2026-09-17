@@ -1,10 +1,31 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { AdminCustomer } from "@/types";
+import { AdminCustomer, CustomerAddress } from "@/types";
+import { verifyAdminSession } from "@/lib/auth/session";
 
 export const dynamic = "force-dynamic";
 
+interface CustomerDbRow {
+  id: string;
+  email: string;
+  full_name: string | null;
+  phone: string | null;
+  avatar_url: string | null;
+  role: "admin" | "customer";
+  created_at: string;
+  updated_at: string | null;
+  total_orders: number;
+  total_spent: number;
+  primary_address: CustomerAddress | null;
+  addresses: CustomerAddress[];
+}
+
 export async function GET() {
+  const session = await verifyAdminSession();
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const query = `
       SELECT 
@@ -63,7 +84,7 @@ export async function GET() {
 
     const { rows } = await db.query(query);
 
-    const customers: AdminCustomer[] = rows.map((r: any) => ({
+    const customers: AdminCustomer[] = rows.map((r: CustomerDbRow) => ({
       id: r.id,
       email: r.email,
       full_name: r.full_name,
@@ -79,16 +100,22 @@ export async function GET() {
     }));
 
     return NextResponse.json({ customers });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Failed to fetch customers:", err);
+    const message = err instanceof Error ? err.message : "Database error";
     return NextResponse.json(
-      { error: "Failed to fetch customers: " + (err.message || "Database error") },
+      { error: "Failed to fetch customers: " + message },
       { status: 500 }
     );
   }
 }
 
 export async function POST(req: NextRequest) {
+  const session = await verifyAdminSession();
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const body = await req.json();
     const { full_name, email, phone, role, address } = body;
@@ -120,22 +147,21 @@ export async function POST(req: NextRequest) {
 
     const createdUser = userResult.rows[0];
 
-    // 2. Insert address if provided
+    // 2. Insert primary address if provided
     let createdAddress = null;
     if (address && (address.address_line1 || address.city)) {
       const addressId = crypto.randomUUID();
       const insertAddressQuery = `
-        INSERT INTO public.user_addresses (
-          id, user_id, full_name, phone, address_line1, address_line2, 
-          city, state, postal_code, country, is_default, created_at
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, true, timezone('utc'::text, now()))
+        INSERT INTO public.user_addresses 
+          (id, user_id, full_name, phone, address_line1, address_line2, city, state, postal_code, country, is_default)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, true)
         RETURNING *;
       `;
       const addressResult = await db.query(insertAddressQuery, [
         addressId,
         userId,
-        full_name || "Customer",
-        phone || "",
+        address.full_name || full_name || "Valued Client",
+        address.phone || phone || "",
         address.address_line1 || "",
         address.address_line2 || null,
         address.city || "",
@@ -162,16 +188,18 @@ export async function POST(req: NextRequest) {
         addresses: createdAddress ? [createdAddress] : [],
       },
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Failed to create customer:", err);
-    if (err.code === "23505") {
+    const dbErr = err as { code?: string; message?: string };
+    if (dbErr.code === "23505") {
       return NextResponse.json(
         { error: "A user with this email address already exists." },
         { status: 409 }
       );
     }
+    const message = err instanceof Error ? err.message : "Server error";
     return NextResponse.json(
-      { error: "Failed to create customer: " + (err.message || "Server error") },
+      { error: "Failed to create customer: " + message },
       { status: 500 }
     );
   }

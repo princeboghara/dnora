@@ -75,7 +75,7 @@ class DataStore {
 
   async updateHeroBanner(id: string, updates: Partial<HeroBanner>): Promise<HeroBanner | null> {
     const fields: string[] = [];
-    const values: any[] = [];
+    const values: (string | number | boolean | null)[] = [];
     let i = 1;
 
     for (const [key, val] of Object.entries(updates)) {
@@ -124,7 +124,7 @@ class DataStore {
   }): Promise<Product[]> {
     try {
       const conditions: string[] = ["1=1"];
-      const params: any[] = [];
+      const params: (string | number | boolean)[] = [];
       let idx = 1;
 
       if (filter?.status) {
@@ -335,18 +335,19 @@ class DataStore {
 
   async updateProduct(id: string, updates: Partial<Product>): Promise<Product | null> {
     const fields: string[] = [];
-    const values: any[] = [];
+    const values: (string | number | boolean | null)[] = [];
     let i = 1;
 
     if (updates.name && !updates.slug) {
       updates.slug = slugify(updates.name);
     }
 
-    const prodCols = ["name", "slug", "short_description", "description", "price", "compare_at_price", "sku", "stock", "status"];
+    const prodCols: (keyof Product)[] = ["name", "slug", "short_description", "description", "price", "compare_at_price", "sku", "stock", "status"];
     for (const col of prodCols) {
-      if ((updates as any)[col] !== undefined) {
+      const val = updates[col];
+      if (val !== undefined) {
         fields.push(`${col} = $${i}`);
-        values.push((updates as any)[col]);
+        values.push(val as string | number | null);
         i++;
       }
     }

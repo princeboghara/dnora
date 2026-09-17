@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Lock, ArrowRight, ShieldCheck } from "lucide-react";
+import { Lock, ArrowRight } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
 import { BrandLogo } from "@/components/ui/BrandLogo";
 
@@ -33,8 +33,8 @@ export default function AdminLoginPage() {
       success("Authenticated successfully. Welcome to DNORA Executive Suite.");
       router.push("/admin");
       router.refresh();
-    } catch (err: any) {
-      error(err.message || "Incorrect admin password.");
+    } catch (err: unknown) {
+      error(err instanceof Error ? err.message : "Incorrect admin password.");
     } finally {
       setLoading(false);
     }

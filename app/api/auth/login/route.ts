@@ -18,11 +18,11 @@ export async function POST(req: NextRequest) {
 
     const normalizedEmail = email.toLowerCase().trim();
     const adminEmail = (process.env.ADMIN_EMAIL || "admin@dnora.luxury").toLowerCase().trim();
-    const adminPassword = process.env.ADMIN_PASSWORD || "admin";
+    const adminPassword = process.env.ADMIN_PASSWORD;
 
     // 1. Dedicated Admin Master Login Check
-    if (normalizedEmail === adminEmail) {
-      if (password === adminPassword || password === "dnora2026!") {
+    if (adminPassword && normalizedEmail === adminEmail) {
+      if (password === adminPassword) {
         await createAdminSession(normalizedEmail);
         await createUserSession({
           id: "admin-master",
@@ -39,7 +39,14 @@ export async function POST(req: NextRequest) {
     }
 
     // 2. Query user in PostgreSQL database
-    let dbUser: any = null;
+    let dbUser: {
+      id: string;
+      email: string;
+      full_name?: string;
+      phone?: string;
+      role?: "customer" | "admin";
+      password_hash?: string;
+    } | null = null;
     try {
       const userRes = await db.query(
         `SELECT * FROM public.users WHERE LOWER(email) = LOWER($1) LIMIT 1`,

@@ -11,12 +11,19 @@ import {
   AlertTriangle,
   Users,
 } from "lucide-react";
+import { redirect } from "next/navigation";
 import { store } from "@/lib/data/store";
 import { formatPrice } from "@/lib/utils";
+import { verifyAdminSession } from "@/lib/auth/session";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminDashboardPage() {
+  const session = await verifyAdminSession();
+  if (!session) {
+    redirect("/admin/login");
+  }
+
   const [stats, recentProducts, heroBanners] = await Promise.all([
     store.getDashboardStats(),
     store.getAllAdminProducts(),

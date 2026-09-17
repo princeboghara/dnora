@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   X,
   ChevronDown,
@@ -21,7 +21,6 @@ import {
   Flame,
   Folder,
   Sliders,
-  ExternalLink,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BrandLogo } from "@/components/ui/BrandLogo";
@@ -53,11 +52,10 @@ interface MemberDrawerProps {
 
 export function MemberDrawer({ isOpen, onClose, user }: MemberDrawerProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const [items, setItems] = useState<SidebarMenuItem[]>(DEFAULT_STOREFRONT_NAVIGATION);
   const [loading, setLoading] = useState(true);
-  const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({
-    "sf-shop": true, // Expand collections by default for great browsing
-  });
+  const [userExpandedOverrides, setUserExpandedOverrides] = useState<Record<string, boolean>>({});
 
   // Fetch dynamic navigation configuration
   useEffect(() => {
@@ -84,30 +82,10 @@ export function MemberDrawer({ isOpen, onClose, user }: MemberDrawerProps) {
     };
   }, []);
 
-  // Auto-expand menu if current route matches any child submenu
-  useEffect(() => {
-    if (!items || items.length === 0) return;
-
-    setExpandedMenus((prev) => {
-      const next = { ...prev };
-      items.forEach((item) => {
-        if (item.submenus && item.submenus.length > 0) {
-          const hasActiveSub = item.submenus.some(
-            (sub) => sub.href === pathname || pathname.startsWith(sub.href + "?")
-          );
-          if (hasActiveSub) {
-            next[item.id] = true;
-          }
-        }
-      });
-      return next;
-    });
-  }, [pathname, items]);
-
-  const toggleSubmenu = (id: string) => {
-    setExpandedMenus((prev) => ({
+  const toggleSubmenu = (id: string, currentState: boolean) => {
+    setUserExpandedOverrides((prev) => ({
       ...prev,
-      [id]: !prev[id],
+      [id]: !currentState,
     }));
   };
 
@@ -115,9 +93,11 @@ export function MemberDrawer({ isOpen, onClose, user }: MemberDrawerProps) {
     onClose();
     try {
       await fetch("/api/auth/logout", { method: "POST" });
-      window.location.href = "/";
-    } catch {
-      window.location.href = "/";
+    } catch (err) {
+      console.error("Failed to sign out:", err);
+    } finally {
+      router.push("/");
+      router.refresh();
     }
   };
 
@@ -230,7 +210,21 @@ export function MemberDrawer({ isOpen, onClose, user }: MemberDrawerProps) {
               {items.map((item) => {
                 const hasSubmenus =
                   Array.isArray(item.submenus) && item.submenus.length > 0;
-                const isExpanded = !!expandedMenus[item.id];
+
+                const isAutoExpanded =
+                  item.id === "sf-shop" ||
+                  (hasSubmenus &&
+                    item.submenus!.some(
+                      (sub) =>
+                        sub.href === pathname ||
+                        (sub.href !== "/" && pathname.startsWith(sub.href))
+                    ));
+
+                const isExpanded =
+                  userExpandedOverrides[item.id] !== undefined
+                    ? userExpandedOverrides[item.id]
+                    : isAutoExpanded;
+
                 const IconComp = ICON_MAP[item.icon] || ShoppingBag;
 
                 const isDirectActive =
@@ -276,7 +270,7 @@ export function MemberDrawer({ isOpen, onClose, user }: MemberDrawerProps) {
                       ) : (
                         <button
                           type="button"
-                          onClick={() => toggleSubmenu(item.id)}
+                          onClick={() => toggleSubmenu(item.id, isExpanded)}
                           className="flex items-center gap-3 flex-1 min-w-0 text-left text-xs uppercase tracking-wider font-semibold"
                         >
                           <IconComp className="w-4 h-4 text-[#8F7449] shrink-0" />
@@ -296,7 +290,7 @@ export function MemberDrawer({ isOpen, onClose, user }: MemberDrawerProps) {
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
-                            toggleSubmenu(item.id);
+                            toggleSubmenu(item.id, isExpanded);
                           }}
                           className="p-1 rounded-sm text-[#73706A] hover:text-[#0E0E0E] transition-colors ml-1"
                           aria-label={

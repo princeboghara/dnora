@@ -16,7 +16,6 @@ export function CartDrawer() {
     removeItem,
     subtotal,
     itemCount,
-    freeShippingThreshold,
     freeShippingProgress,
     amountToFreeShipping,
   } = useCart();

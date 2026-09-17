@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { DEFAULT_SIDEBAR_ITEMS } from "@/lib/sidebar-constants";
+import { verifyAdminSession } from "@/lib/auth/session";
 
 export const dynamic = "force-dynamic";
 
@@ -15,13 +16,18 @@ export async function GET() {
     }
 
     return NextResponse.json({ items: DEFAULT_SIDEBAR_ITEMS });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Error fetching admin sidebar config:", err);
     return NextResponse.json({ items: DEFAULT_SIDEBAR_ITEMS });
   }
 }
 
 export async function POST(req: NextRequest) {
+  const session = await verifyAdminSession();
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const body = await req.json();
     const { items } = body;
@@ -43,16 +49,22 @@ export async function POST(req: NextRequest) {
     );
 
     return NextResponse.json({ success: true, items });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Error saving admin sidebar config:", err);
+    const message = err instanceof Error ? err.message : "Database error";
     return NextResponse.json(
-      { error: "Failed to save sidebar config: " + (err.message || "Database error") },
+      { error: "Failed to save sidebar config: " + message },
       { status: 500 }
     );
   }
 }
 
 export async function DELETE() {
+  const session = await verifyAdminSession();
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     await db.query(
       `INSERT INTO public.admin_sidebar_config (id, items, updated_at)
@@ -68,10 +80,11 @@ export async function DELETE() {
       message: "Sidebar configuration reset to factory default.",
       items: DEFAULT_SIDEBAR_ITEMS,
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Error resetting sidebar config:", err);
+    const message = err instanceof Error ? err.message : "Database error";
     return NextResponse.json(
-      { error: "Failed to reset sidebar config: " + (err.message || "Database error") },
+      { error: "Failed to reset sidebar config: " + message },
       { status: 500 }
     );
   }

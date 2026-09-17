@@ -32,12 +32,13 @@ export async function GET(req: NextRequest) {
     if (data?.url) {
       return NextResponse.redirect(data.url);
     }
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.error("Google OAuth error:", e);
+    const message = e instanceof Error ? e.message : "Unknown error";
     return NextResponse.redirect(
       new URL(
         `/login?error=${encodeURIComponent(
-          "Failed to connect with Google OAuth: " + (e.message || "Unknown error")
+          "Failed to connect with Google OAuth: " + message
         )}`,
         req.url
       )

@@ -3,6 +3,7 @@ import { store } from "@/lib/data/store";
 import { verifyAdminSession } from "@/lib/auth/session";
 import { heroBannerSchema } from "@/lib/validation/hero";
 import { revalidatePath } from "next/cache";
+import { ZodError } from "zod";
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -36,9 +37,9 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
 
     revalidatePath("/");
     return NextResponse.json({ success: true, banner: updated });
-  } catch (error: any) {
-    if (error.errors) {
-      return NextResponse.json({ error: "Validation error", details: error.errors }, { status: 400 });
+  } catch (error: unknown) {
+    if (error instanceof ZodError) {
+      return NextResponse.json({ error: "Validation error", details: error.issues }, { status: 400 });
     }
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }

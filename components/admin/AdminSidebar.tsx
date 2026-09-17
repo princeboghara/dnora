@@ -35,7 +35,7 @@ export function AdminSidebar({
   const [items, setItems] = useState<SidebarMenuItem[]>(DEFAULT_SIDEBAR_ITEMS);
   const [loading, setLoading] = useState(true);
   const [internalCustomizerOpen, setInternalCustomizerOpen] = useState(false);
-  const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({});
+  const [userExpandedOverrides, setUserExpandedOverrides] = useState<Record<string, boolean>>({});
 
   const isCustomizerOpen =
     controlledCustomizerOpen !== undefined
@@ -83,34 +83,10 @@ export function AdminSidebar({
     };
   }, []);
 
-  // Auto-expand submenus if the current route matches any submenu
-  useEffect(() => {
-    if (!items || items.length === 0) return;
-
-    setExpandedMenus((prev) => {
-      const next = { ...prev };
-      items.forEach((item) => {
-        if (item.submenus && item.submenus.length > 0) {
-          const hasActiveSub = item.submenus.some(
-            (sub) => sub.href === pathname || pathname.startsWith(sub.href + "?")
-          );
-          const isParentActive =
-            item.href && item.href !== "/admin" && pathname.startsWith(item.href);
-
-          if (hasActiveSub || isParentActive) {
-            next[item.id] = true;
-          }
-        }
-      });
-      return next;
-    });
-  }, [pathname, items]);
-
-  // Toggle submenu expansion
-  const toggleSubmenu = (itemId: string) => {
-    setExpandedMenus((prev) => ({
+  const toggleSubmenu = (itemId: string, currentState: boolean) => {
+    setUserExpandedOverrides((prev) => ({
       ...prev,
-      [itemId]: !prev[itemId],
+      [itemId]: !currentState,
     }));
   };
 
@@ -170,7 +146,24 @@ export function AdminSidebar({
                 {items.map((item) => {
                   const hasSubmenus =
                     Array.isArray(item.submenus) && item.submenus.length > 0;
-                  const isExpanded = !!expandedMenus[item.id];
+
+                  const isAutoExpanded =
+                    hasSubmenus &&
+                    (item.submenus!.some(
+                      (sub) =>
+                        sub.href === pathname ||
+                        pathname.startsWith(sub.href + "?")
+                    ) ||
+                      Boolean(
+                        item.href &&
+                          item.href !== "/admin" &&
+                          pathname.startsWith(item.href)
+                      ));
+
+                  const isExpanded =
+                    userExpandedOverrides[item.id] !== undefined
+                      ? userExpandedOverrides[item.id]
+                      : isAutoExpanded;
 
                   // Active state calculation
                   const isDirectActive =
@@ -208,7 +201,7 @@ export function AdminSidebar({
                             href={item.href}
                             onClick={() => {
                               if (hasSubmenus && !isExpanded) {
-                                toggleSubmenu(item.id);
+                                toggleSubmenu(item.id, isExpanded);
                               }
                               if (onCloseMobile) onCloseMobile();
                             }}
@@ -239,7 +232,7 @@ export function AdminSidebar({
                         ) : (
                           <button
                             type="button"
-                            onClick={() => toggleSubmenu(item.id)}
+                            onClick={() => toggleSubmenu(item.id, isExpanded)}
                             className="flex items-center gap-3 flex-1 min-w-0 text-left"
                           >
                             <IconComp
@@ -273,7 +266,7 @@ export function AdminSidebar({
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
-                              toggleSubmenu(item.id);
+                              toggleSubmenu(item.id, isExpanded);
                             }}
                             className={cn(
                               "p-1 rounded transition-colors ml-1",

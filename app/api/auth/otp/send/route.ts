@@ -81,13 +81,17 @@ export async function POST(req: NextRequest) {
       success: true,
       message: emailResult.message || "A 6-digit verification code has been sent to your email.",
       email: normalizedEmail,
-      // For seamless local testing if SMTP is not yet configured:
-      devHint: !emailResult.delivered ? `Dev Mode OTP: ${otp}` : undefined,
+      // For seamless local testing only in development if SMTP is not yet configured:
+      devHint:
+        process.env.NODE_ENV !== "production" && !emailResult.delivered
+          ? `Dev Mode OTP: ${otp}`
+          : undefined,
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Error sending OTP:", err);
+    const message = err instanceof Error ? err.message : "Server error";
     return NextResponse.json(
-      { error: "Failed to initiate verification: " + (err.message || "Server error") },
+      { error: "Failed to initiate verification: " + message },
       { status: 500 }
     );
   }

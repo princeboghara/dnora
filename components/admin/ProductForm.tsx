@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import Image from "next/image";
-import { Upload, X, Loader2, Check, Sparkles, Flame, Plus } from "lucide-react";
+import { Upload, X, Loader2, Check, Sparkles, Flame } from "lucide-react";
 import { Product, ProductCategory, ProductImage } from "@/types";
 import { useToast } from "@/components/ui/Toast";
 import { slugify } from "@/lib/utils";
@@ -33,7 +33,6 @@ export function ProductForm({ initialData, onSuccess, onCancel }: ProductFormPro
     initialData?.status || "active"
   );
   const [images, setImages] = useState<ProductImage[]>(initialData?.images || []);
-
   const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
@@ -95,8 +94,8 @@ export function ProductForm({ initialData, onSuccess, onCancel }: ProductFormPro
         setImages((prev) => [...prev, newImg]);
       }
       success("Product images uploaded successfully.");
-    } catch (err: any) {
-      error(err.message || "Failed to upload product image");
+    } catch (err: unknown) {
+      error(err instanceof Error ? err.message : "Failed to upload product image");
     } finally {
       setUploading(false);
     }
@@ -152,8 +151,8 @@ export function ProductForm({ initialData, onSuccess, onCancel }: ProductFormPro
           : `"${name}" added to catalog.`
       );
       onSuccess();
-    } catch (err: any) {
-      error(err.message || "An error occurred");
+    } catch (err: unknown) {
+      error(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setSubmitting(false);
     }
@@ -277,7 +276,7 @@ export function ProductForm({ initialData, onSuccess, onCancel }: ProductFormPro
           </label>
           <select
             value={status}
-            onChange={(e) => setStatus(e.target.value as any)}
+            onChange={(e) => setStatus(e.target.value as "active" | "draft" | "archived")}
             className="w-full bg-white border border-[#E8E5DE] px-3 py-2 text-xs text-[#0E0E0E] rounded focus:outline-none focus:border-[#0E0E0E]"
           >
             <option value="active">Active (Visible in Store)</option>
