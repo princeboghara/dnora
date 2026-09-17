@@ -7,6 +7,7 @@ import { useCart } from "@/lib/store/cart-store";
 import { Product } from "@/types";
 import { UserSession } from "@/lib/auth/user-session";
 import { SearchModal } from "./SearchModal";
+import { MemberDrawer } from "./MemberDrawer";
 
 import { BrandLogo } from "@/components/ui/BrandLogo";
 
@@ -198,93 +199,12 @@ export function Navbar({ products = [], user = null }: NavbarProps) {
         </div>
       </header>
 
-      {/* Mobile Slide-out Navigation Sheet */}
-      {mobileMenuOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden animate-in fade-in duration-200">
-          <div
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm"
-            onClick={() => setMobileMenuOpen(false)}
-            aria-hidden="true"
-          />
-          <div className="fixed inset-y-0 left-0 max-w-xs w-full bg-white shadow-2xl p-6 flex flex-col justify-between">
-            <div>
-              <div className="flex items-center justify-between pb-6 border-b border-[#E8E5DE]">
-                <div onClick={() => setMobileMenuOpen(false)}>
-                  <BrandLogo size="sm" />
-                </div>
-                <button
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="p-2 text-[#0E0E0E]"
-                  aria-label="Close menu"
-                >
-                  <X className="w-6 h-6" />
-                </button>
-              </div>
-
-              <div className="py-6 flex flex-col space-y-4">
-                {navLinks.map((link) => (
-                  <Link
-                    key={link.label}
-                    href={link.href}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="text-sm font-semibold uppercase tracking-[0.2em] text-[#0E0E0E] hover:text-[#C5A880] transition-colors py-1"
-                  >
-                    {link.label}
-                  </Link>
-                ))}
-              </div>
-            </div>
-
-            <div className="pt-6 border-t border-[#E8E5DE] space-y-3">
-              {user ? (
-                <>
-                  <Link
-                    href="/account"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="flex items-center gap-2 text-xs uppercase tracking-wider font-semibold text-[#0E0E0E]"
-                  >
-                    <Package className="w-4 h-4 text-[#C5A880]" />
-                    <span>My Account & Orders ({user.full_name || user.email.split("@")[0]})</span>
-                  </Link>
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      setMobileMenuOpen(false);
-                      await fetch("/api/auth/logout", { method: "POST" });
-                      window.location.href = "/";
-                    }}
-                    className="flex items-center gap-2 text-xs uppercase tracking-wider font-semibold text-[#C53030]"
-                  >
-                    <LogOut className="w-4 h-4" />
-                    <span>Sign Out</span>
-                  </button>
-                </>
-              ) : (
-                <Link
-                  href="/login"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-2 text-xs uppercase tracking-wider font-semibold text-[#0E0E0E]"
-                >
-                  <User className="w-4 h-4 text-[#C5A880]" />
-                  <span>Sign In / Register</span>
-                </Link>
-              )}
-
-              <Link
-                href="/admin"
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center gap-2 text-xs uppercase tracking-wider font-semibold text-[#73706A] hover:text-[#0E0E0E]"
-              >
-                <Shield className="w-4 h-4" />
-                <span>Admin Management</span>
-              </Link>
-              <p className="text-[11px] text-[#A8A49C] tracking-wide uppercase">
-                Florence • Milan • New York
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Luxury Member & Storefront Navigation Drawer */}
+      <MemberDrawer
+        isOpen={mobileMenuOpen}
+        onClose={() => setMobileMenuOpen(false)}
+        user={user}
+      />
 
       {/* Search Modal */}
       <SearchModal

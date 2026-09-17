@@ -19,12 +19,37 @@ import {
   Copy,
   Check,
   ChevronRight,
+  ChevronDown,
   Shield,
   ShoppingBag,
+  Sparkles,
+  Globe,
+  Box,
+  Tag,
+  Flame,
+  Folder,
+  Sliders,
+  Menu,
 } from "lucide-react";
 import { UserSession } from "@/lib/auth/user-session";
-import { Order, UserAddress } from "@/types";
+import { Order, UserAddress, SidebarMenuItem } from "@/types";
+import { DEFAULT_ACCOUNT_NAVIGATION } from "@/lib/navigation-constants";
 import { useToast } from "@/components/ui/Toast";
+
+const ACCOUNT_ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
+  Package,
+  MapPin,
+  User: UserIcon,
+  Sparkles,
+  Shield,
+  ShoppingBag,
+  Globe,
+  Box,
+  Tag,
+  Flame,
+  Folder,
+  Sliders,
+};
 
 interface AccountClientProps {
   user: UserSession;
@@ -54,11 +79,42 @@ export function AccountClient({
   const { showToast } = useToast();
 
   const [activeTab, setActiveTab] = useState<"orders" | "addresses" | "profile">("orders");
+  const [navItems, setNavItems] = useState<SidebarMenuItem[]>(DEFAULT_ACCOUNT_NAVIGATION);
+  const [expandedSubmenus, setExpandedSubmenus] = useState<Record<string, boolean>>({
+    "acc-orders": true,
+  });
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [orders, setOrders] = useState<Order[]>(initialOrders);
   const [addresses, setAddresses] = useState<UserAddress[]>(initialAddresses);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(
     initialOrders[0] || null
   );
+
+  // Load dynamic account navigation config
+  React.useEffect(() => {
+    let isMounted = true;
+    async function loadAccountNav() {
+      try {
+        const res = await fetch("/api/navigation?target=account");
+        if (res.ok) {
+          const data = await res.json();
+          if (isMounted && Array.isArray(data.items) && data.items.length > 0) {
+            setNavItems(data.items);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load account navigation:", err);
+      }
+    }
+    loadAccountNav();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const toggleAccountSubmenu = (id: string) => {
+    setExpandedSubmenus((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
 
   // Address form modal state
   const [showAddressModal, setShowAddressModal] = useState(false);
@@ -215,70 +271,193 @@ export function AccountClient({
         </div>
       </div>
 
+      {/* Mobile Portal Navigation Dropdown Bar */}
+      <div className="lg:hidden mb-6">
+        <button
+          type="button"
+          onClick={() => setMobileNavOpen(!mobileNavOpen)}
+          className="w-full flex items-center justify-between p-3.5 bg-white border border-[#E8E5DE] rounded-sm text-xs font-semibold uppercase tracking-wider text-[#0E0E0E] shadow-sm"
+        >
+          <div className="flex items-center gap-2.5">
+            <Menu className="w-4 h-4 text-[#8F7449]" />
+            <span>
+              Portal Section:{" "}
+              <strong className="text-[#0E0E0E]">
+                {activeTab === "orders"
+                  ? "Orders & Tracking"
+                  : activeTab === "addresses"
+                  ? "Saved Addresses"
+                  : "Profile & Privé"}
+              </strong>
+            </span>
+          </div>
+          <ChevronDown
+            className={`w-4 h-4 transition-transform duration-300 ${
+              mobileNavOpen ? "rotate-180" : ""
+            }`}
+          />
+        </button>
+      </div>
+
       {/* Main Account Portal Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        {/* Navigation Sidebar */}
-        <div className="lg:col-span-1 space-y-2">
-          <nav className="bg-white border border-[#E8E5DE] rounded-sm p-2 space-y-1">
-            <button
-              onClick={() => setActiveTab("orders")}
-              className={`w-full flex items-center justify-between px-4 py-3 text-xs font-semibold uppercase tracking-wider rounded-sm transition-all ${
-                activeTab === "orders"
-                  ? "bg-[#0E0E0E] text-[#FAF9F6]"
-                  : "text-[#73706A] hover:bg-[#F5F3EF] hover:text-[#0E0E0E]"
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <Package className="w-4 h-4" />
-                <span>Orders & Tracking</span>
-              </div>
-              <span
-                className={`text-[10px] px-2 py-0.5 rounded-full ${
-                  activeTab === "orders"
-                    ? "bg-white/20 text-white"
-                    : "bg-[#F5F3EF] text-[#0E0E0E]"
-                }`}
-              >
-                {orders.length}
-              </span>
-            </button>
+        {/* Dynamic Member Navigation Sidebar */}
+        <div
+          className={`lg:col-span-1 space-y-3 ${
+            mobileNavOpen ? "block mb-6" : "hidden lg:block"
+          }`}
+        >
+          <nav className="bg-white border border-[#E8E5DE] rounded-sm p-2 space-y-1 shadow-xs">
+            {navItems.map((item) => {
+              const hasSubmenus =
+                Array.isArray(item.submenus) && item.submenus.length > 0;
+              const isExpanded = !!expandedSubmenus[item.id];
+              const IconComp = ACCOUNT_ICON_MAP[item.icon] || Package;
 
-            <button
-              onClick={() => setActiveTab("addresses")}
-              className={`w-full flex items-center justify-between px-4 py-3 text-xs font-semibold uppercase tracking-wider rounded-sm transition-all ${
-                activeTab === "addresses"
-                  ? "bg-[#0E0E0E] text-[#FAF9F6]"
-                  : "text-[#73706A] hover:bg-[#F5F3EF] hover:text-[#0E0E0E]"
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <MapPin className="w-4 h-4" />
-                <span>Saved Addresses</span>
-              </div>
-              <span
-                className={`text-[10px] px-2 py-0.5 rounded-full ${
-                  activeTab === "addresses"
-                    ? "bg-white/20 text-white"
-                    : "bg-[#F5F3EF] text-[#0E0E0E]"
-                }`}
-              >
-                {addresses.length}
-              </span>
-            </button>
+              // Determine tab association
+              const isOrdersTab =
+                item.id === "acc-orders" ||
+                (item.href && item.href.includes("tab=orders"));
+              const isAddressesTab =
+                item.id === "acc-addresses" ||
+                (item.href && item.href.includes("tab=addresses"));
+              const isProfileTab =
+                item.id === "acc-profile" ||
+                (item.href && item.href.includes("tab=profile"));
 
-            <button
-              onClick={() => setActiveTab("profile")}
-              className={`w-full flex items-center justify-between px-4 py-3 text-xs font-semibold uppercase tracking-wider rounded-sm transition-all ${
-                activeTab === "profile"
-                  ? "bg-[#0E0E0E] text-[#FAF9F6]"
-                  : "text-[#73706A] hover:bg-[#F5F3EF] hover:text-[#0E0E0E]"
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <UserIcon className="w-4 h-4" />
-                <span>Profile & Privé</span>
-              </div>
-            </button>
+              const isTabItem = isOrdersTab || isAddressesTab || isProfileTab;
+              const isActive =
+                (isOrdersTab && activeTab === "orders") ||
+                (isAddressesTab && activeTab === "addresses") ||
+                (isProfileTab && activeTab === "profile");
+
+              const countBadge = isOrdersTab
+                ? orders.length
+                : isAddressesTab
+                ? addresses.length
+                : item.badge;
+
+              const handleItemClick = () => {
+                if (isOrdersTab) setActiveTab("orders");
+                else if (isAddressesTab) setActiveTab("addresses");
+                else if (isProfileTab) setActiveTab("profile");
+                else if (item.href && !item.href.startsWith("/account")) {
+                  if (item.href.startsWith("mailto:")) {
+                    window.location.href = item.href;
+                  } else {
+                    router.push(item.href);
+                  }
+                }
+                setMobileNavOpen(false);
+              };
+
+              return (
+                <div key={item.id} className="select-none">
+                  {/* Main Tab Button Row */}
+                  <div
+                    className={`w-full flex items-center justify-between px-3.5 py-3 text-xs font-semibold uppercase tracking-wider rounded-sm transition-all duration-200 ${
+                      isActive
+                        ? "bg-[#0E0E0E] text-[#FAF9F6] shadow-xs"
+                        : "text-[#73706A] hover:bg-[#F5F3EF] hover:text-[#0E0E0E]"
+                    }`}
+                  >
+                    <button
+                      type="button"
+                      onClick={handleItemClick}
+                      className="flex items-center gap-3 flex-1 min-w-0 text-left"
+                    >
+                      <IconComp
+                        className={`w-4 h-4 shrink-0 transition-colors ${
+                          isActive ? "text-[#C5A880]" : "text-[#73706A]"
+                        }`}
+                      />
+                      <span className="truncate">{item.label}</span>
+                    </button>
+
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {countBadge !== undefined && countBadge !== null && (
+                        <span
+                          className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                            isActive
+                              ? "bg-white/20 text-white"
+                              : "bg-[#F5F3EF] text-[#0E0E0E]"
+                          }`}
+                        >
+                          {countBadge}
+                        </span>
+                      )}
+
+                      {hasSubmenus && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            toggleAccountSubmenu(item.id);
+                          }}
+                          className={`p-1 rounded-sm transition-colors ${
+                            isActive
+                              ? "text-[#FAF9F6] hover:bg-white/10"
+                              : "text-[#73706A] hover:text-[#0E0E0E] hover:bg-[#E8E5DE]"
+                          }`}
+                          aria-label={
+                            isExpanded ? "Collapse submenu" : "Expand submenu"
+                          }
+                        >
+                          <ChevronDown
+                            className={`w-3.5 h-3.5 transition-transform duration-300 ease-in-out ${
+                              isExpanded ? "rotate-180" : "rotate-0"
+                            }`}
+                          />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Smooth Collapsible Submenu Accordion */}
+                  {hasSubmenus && (
+                    <div
+                      className={`grid transition-[grid-template-rows,opacity] duration-300 ease-in-out overflow-hidden ${
+                        isExpanded
+                          ? "grid-rows-[1fr] opacity-100 mt-1"
+                          : "grid-rows-[0fr] opacity-0 pointer-events-none"
+                      }`}
+                    >
+                      <div className="overflow-hidden space-y-0.5 pl-8 pr-1 py-0.5">
+                        {item.submenus!.map((sub) => (
+                          <button
+                            key={sub.id}
+                            type="button"
+                            onClick={() => {
+                              if (sub.href.includes("tab=orders")) {
+                                setActiveTab("orders");
+                              } else if (sub.href.includes("tab=addresses")) {
+                                setActiveTab("addresses");
+                              } else if (sub.href.includes("tab=profile")) {
+                                setActiveTab("profile");
+                              } else if (sub.href.startsWith("mailto:")) {
+                                window.location.href = sub.href;
+                              } else {
+                                router.push(sub.href);
+                              }
+                              setMobileNavOpen(false);
+                            }}
+                            className="w-full flex items-center justify-between px-3 py-1.5 rounded-sm text-[11px] font-medium text-[#73706A] hover:text-[#0E0E0E] hover:bg-[#FAF9F6] transition-colors text-left"
+                          >
+                            <span className="truncate">{sub.label}</span>
+                            {sub.badge && (
+                              <span className="text-[9px] uppercase tracking-wider px-1.5 py-0.2 rounded font-bold bg-[#E8E5DE] text-[#0E0E0E]">
+                                {sub.badge}
+                              </span>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </nav>
 
           {/* Luxury Client Support Box */}

@@ -308,3 +308,15 @@ CREATE TABLE IF NOT EXISTS public.admin_sidebar_config (
 
 CREATE POLICY "Admin full access admin_sidebar_config" ON public.admin_sidebar_config FOR ALL USING (public.is_admin());
 
+-- 14. STOREFRONT & MEMBER NAVIGATION CONFIGURATION
+CREATE TABLE IF NOT EXISTS public.site_navigation_config (
+  id TEXT PRIMARY KEY,
+  items JSONB NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+CREATE POLICY "Public users can view site_navigation_config" ON public.site_navigation_config FOR SELECT USING (true);
+CREATE POLICY "Admin full access site_navigation_config" ON public.site_navigation_config FOR ALL USING (public.is_admin());
+
+

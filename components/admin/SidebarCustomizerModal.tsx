@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   X,
   Plus,
@@ -32,47 +32,63 @@ import {
   Box,
   Folder,
   Loader2,
+  User,
+  Package,
+  MapPin,
 } from "lucide-react";
 import { SidebarMenuItem, SidebarSubmenuItem } from "@/types";
 import { Modal } from "@/components/ui/Modal";
 import { useToast } from "@/components/ui/Toast";
 
 export const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
-  LayoutDashboard,
+  Globe,
   ShoppingBag,
   ShoppingCart,
+  Package,
+  MapPin,
+  User,
+  Box,
+  Sparkles,
+  Tag,
+  Flame,
+  Folder,
+  Star,
+  LayoutDashboard,
   Users,
   Image: ImageIcon,
-  Star,
   Video,
   Ticket,
   BarChart3,
   Settings,
   Shield,
-  Tag,
-  Globe,
-  Sparkles,
-  Flame,
-  Box,
-  Folder,
   Sliders,
 };
+
+export type NavigationTarget = "storefront" | "account" | "admin";
 
 interface SidebarCustomizerModalProps {
   isOpen: boolean;
   onClose: () => void;
   items: SidebarMenuItem[];
-  onSaveSuccess: (updatedItems: SidebarMenuItem[]) => void;
+  initialTarget?: NavigationTarget;
+  onSaveSuccess: (updatedItems: SidebarMenuItem[], target: NavigationTarget) => void;
 }
 
 export function SidebarCustomizerModal({
   isOpen,
   onClose,
-  items: initialItems,
+  items: initialAdminItems,
+  initialTarget = "storefront",
   onSaveSuccess,
 }: SidebarCustomizerModalProps) {
   const { success, error } = useToast();
-  const [items, setItems] = useState<SidebarMenuItem[]>(initialItems);
+  const [activeTarget, setActiveTarget] = useState<NavigationTarget>(initialTarget);
+  const [targetItems, setTargetItems] = useState<Record<NavigationTarget, SidebarMenuItem[]>>({
+    storefront: [],
+    account: [],
+    admin: initialAdminItems,
+  });
+  const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
   // Editing state for top-level item
@@ -88,54 +104,97 @@ export function SidebarCustomizerModal({
     data: SidebarSubmenuItem;
   } | null>(null);
 
-  // Sync initialItems when modal opens
-  React.useEffect(() => {
-    if (isOpen) {
-      setItems(initialItems);
+  // Load items for the current active target
+  useEffect(() => {
+    if (!isOpen) return;
+
+    let isMounted = true;
+    async function fetchTargetItems() {
+      // If already loaded in memory, don't re-fetch
+      if (targetItems[activeTarget] && targetItems[activeTarget].length > 0) {
+        return;
+      }
+
+      setLoading(true);
+      try {
+        if (activeTarget === "admin") {
+          const res = await fetch("/api/admin/sidebar");
+          if (res.ok) {
+            const data = await res.json();
+            if (isMounted && Array.isArray(data.items)) {
+              setTargetItems((prev) => ({ ...prev, admin: data.items }));
+            }
+          }
+        } else {
+          const res = await fetch(`/api/navigation?target=${activeTarget}`);
+          if (res.ok) {
+            const data = await res.json();
+            if (isMounted && Array.isArray(data.items)) {
+              setTargetItems((prev) => ({ ...prev, [activeTarget]: data.items }));
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load navigation for target:", activeTarget, err);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
     }
-  }, [isOpen, initialItems]);
+
+    fetchTargetItems();
+    return () => {
+      isMounted = false;
+    };
+  }, [isOpen, activeTarget, targetItems]);
+
+  const currentItems = targetItems[activeTarget] || [];
+
+  const updateCurrentItems = (newItems: SidebarMenuItem[]) => {
+    setTargetItems((prev) => ({
+      ...prev,
+      [activeTarget]: newItems,
+    }));
+  };
 
   // Reorder parent items
   const moveItem = (index: number, direction: "up" | "down") => {
-    const newItems = [...items];
+    const newItems = [...currentItems];
     const targetIndex = direction === "up" ? index - 1 : index + 1;
     if (targetIndex < 0 || targetIndex >= newItems.length) return;
     const [moved] = newItems.splice(index, 1);
     newItems.splice(targetIndex, 0, moved);
-    setItems(newItems);
+    updateCurrentItems(newItems);
   };
 
   // Delete parent item
   const deleteItem = (id: string) => {
-    setItems(items.filter((item) => item.id !== id));
+    updateCurrentItems(currentItems.filter((item) => item.id !== id));
   };
 
   // Reorder submenu
   const moveSubmenu = (parentId: string, subIndex: number, direction: "up" | "down") => {
-    setItems(
-      items.map((item) => {
-        if (item.id !== parentId || !item.submenus) return item;
-        const newSubs = [...item.submenus];
-        const targetIndex = direction === "up" ? subIndex - 1 : subIndex + 1;
-        if (targetIndex < 0 || targetIndex >= newSubs.length) return item;
-        const [moved] = newSubs.splice(subIndex, 1);
-        newSubs.splice(targetIndex, 0, moved);
-        return { ...item, submenus: newSubs };
-      })
-    );
+    const updated = currentItems.map((item) => {
+      if (item.id !== parentId || !item.submenus) return item;
+      const newSubs = [...item.submenus];
+      const targetIndex = direction === "up" ? subIndex - 1 : subIndex + 1;
+      if (targetIndex < 0 || targetIndex >= newSubs.length) return item;
+      const [moved] = newSubs.splice(subIndex, 1);
+      newSubs.splice(targetIndex, 0, moved);
+      return { ...item, submenus: newSubs };
+    });
+    updateCurrentItems(updated);
   };
 
   // Delete submenu
   const deleteSubmenu = (parentId: string, subId: string) => {
-    setItems(
-      items.map((item) => {
-        if (item.id !== parentId || !item.submenus) return item;
-        return {
-          ...item,
-          submenus: item.submenus.filter((sub) => sub.id !== subId),
-        };
-      })
-    );
+    const updated = currentItems.map((item) => {
+      if (item.id !== parentId || !item.submenus) return item;
+      return {
+        ...item,
+        submenus: item.submenus.filter((sub) => sub.id !== subId),
+      };
+    });
+    updateCurrentItems(updated);
   };
 
   // Save parent item edit/create
@@ -156,9 +215,9 @@ export function SidebarCustomizerModal({
         is_active: true,
         submenus: data.submenus || [],
       };
-      setItems([...items, newItem]);
+      updateCurrentItems([...currentItems, newItem]);
     } else {
-      setItems(items.map((it) => (it.id === data.id ? data : it)));
+      updateCurrentItems(currentItems.map((it) => (it.id === data.id ? data : it)));
     }
 
     setEditingItem(null);
@@ -175,26 +234,25 @@ export function SidebarCustomizerModal({
       return;
     }
 
-    setItems(
-      items.map((parent) => {
-        if (parent.id !== parentId) return parent;
-        const currentSubs = parent.submenus || [];
-        if (isNew) {
-          const newSub: SidebarSubmenuItem = {
-            ...data,
-            id: `sub-${Date.now()}`,
-            is_active: true,
-          };
-          return { ...parent, submenus: [...currentSubs, newSub] };
-        } else {
-          return {
-            ...parent,
-            submenus: currentSubs.map((s) => (s.id === data.id ? data : s)),
-          };
-        }
-      })
-    );
+    const updated = currentItems.map((parent) => {
+      if (parent.id !== parentId) return parent;
+      const currentSubs = parent.submenus || [];
+      if (isNew) {
+        const newSub: SidebarSubmenuItem = {
+          ...data,
+          id: `sub-${Date.now()}`,
+          is_active: true,
+        };
+        return { ...parent, submenus: [...currentSubs, newSub] };
+      } else {
+        return {
+          ...parent,
+          submenus: currentSubs.map((s) => (s.id === data.id ? data : s)),
+        };
+      }
+    });
 
+    updateCurrentItems(updated);
     setEditingSubmenu(null);
   };
 
@@ -202,20 +260,37 @@ export function SidebarCustomizerModal({
   const handleSaveToDatabase = async () => {
     try {
       setSaving(true);
-      const res = await fetch("/api/admin/sidebar", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items }),
-      });
+      if (activeTarget === "admin") {
+        const res = await fetch("/api/admin/sidebar", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ items: currentItems }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Failed to save admin sidebar.");
+      } else {
+        const res = await fetch("/api/navigation", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ target: activeTarget, items: currentItems }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Failed to save navigation.");
+      }
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to save configuration.");
-
-      success("Sidebar navigation updated successfully.");
-      onSaveSuccess(items);
+      success(
+        `${
+          activeTarget === "storefront"
+            ? "Member & Storefront Drawer"
+            : activeTarget === "account"
+            ? "Member Account Portal"
+            : "Admin Sidebar"
+        } navigation updated successfully.`
+      );
+      onSaveSuccess(currentItems, activeTarget);
       onClose();
     } catch (err: any) {
-      error(err.message || "Failed to update sidebar.");
+      error(err.message || "Failed to update navigation.");
     } finally {
       setSaving(false);
     }
@@ -223,22 +298,39 @@ export function SidebarCustomizerModal({
 
   // Reset to factory defaults
   const handleResetToDefault = async () => {
-    if (!window.confirm("Reset all sidebar navigation items to factory default?")) {
+    const targetName =
+      activeTarget === "storefront"
+        ? "Member & Storefront Drawer"
+        : activeTarget === "account"
+        ? "Member Account Portal"
+        : "Admin Sidebar";
+
+    if (!window.confirm(`Reset ${targetName} navigation to factory defaults?`)) {
       return;
     }
 
     try {
       setSaving(true);
-      const res = await fetch("/api/admin/sidebar", { method: "DELETE" });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to reset.");
+      let resetItems: SidebarMenuItem[] = [];
+      if (activeTarget === "admin") {
+        const res = await fetch("/api/admin/sidebar", { method: "DELETE" });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Failed to reset.");
+        resetItems = data.items;
+      } else {
+        const res = await fetch(`/api/navigation?target=${activeTarget}`, {
+          method: "DELETE",
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Failed to reset.");
+        resetItems = data.items;
+      }
 
-      success("Navigation reset to factory default.");
-      setItems(data.items);
-      onSaveSuccess(data.items);
-      onClose();
+      success(`${targetName} reset to factory defaults.`);
+      updateCurrentItems(resetItems);
+      onSaveSuccess(resetItems, activeTarget);
     } catch (err: any) {
-      error(err.message || "Failed to reset sidebar.");
+      error(err.message || "Failed to reset navigation.");
     } finally {
       setSaving(false);
     }
@@ -249,22 +341,69 @@ export function SidebarCustomizerModal({
       <Modal
         isOpen={isOpen}
         onClose={onClose}
-        title="Customize Admin Sidebar Navigation"
+        title="Custom Navigation & Sidebar Manager"
         maxWidth="2xl"
       >
         <div className="space-y-6">
+          {/* Target Tabs: Member Drawer vs Account Portal vs Admin Sidebar */}
+          <div className="flex border-b border-[#E8E5DE] gap-1 overflow-x-auto">
+            <button
+              type="button"
+              onClick={() => setActiveTarget("storefront")}
+              className={`flex items-center gap-2 px-4 py-2.5 text-xs font-semibold uppercase tracking-wider border-b-2 transition-all shrink-0 ${
+                activeTarget === "storefront"
+                  ? "border-[#0E0E0E] text-[#0E0E0E] bg-[#FAF9F6]"
+                  : "border-transparent text-[#73706A] hover:text-[#0E0E0E]"
+              }`}
+            >
+              <Globe className="w-3.5 h-3.5 text-[#8F7449]" />
+              <span>Member / Storefront Drawer</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTarget("account")}
+              className={`flex items-center gap-2 px-4 py-2.5 text-xs font-semibold uppercase tracking-wider border-b-2 transition-all shrink-0 ${
+                activeTarget === "account"
+                  ? "border-[#0E0E0E] text-[#0E0E0E] bg-[#FAF9F6]"
+                  : "border-transparent text-[#73706A] hover:text-[#0E0E0E]"
+              }`}
+            >
+              <User className="w-3.5 h-3.5 text-[#8F7449]" />
+              <span>Member Account Portal</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTarget("admin")}
+              className={`flex items-center gap-2 px-4 py-2.5 text-xs font-semibold uppercase tracking-wider border-b-2 transition-all shrink-0 ${
+                activeTarget === "admin"
+                  ? "border-[#0E0E0E] text-[#0E0E0E] bg-[#FAF9F6]"
+                  : "border-transparent text-[#73706A] hover:text-[#0E0E0E]"
+              }`}
+            >
+              <Shield className="w-3.5 h-3.5 text-[#8F7449]" />
+              <span>Admin Sidebar</span>
+            </button>
+          </div>
+
+          {/* Subheader and Action Buttons */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-[#E8E5DE]">
             <p className="text-xs text-[#73706A]">
-              Organize main navigation modules, connect route URLs, and add collapsible submenus.
+              {activeTarget === "storefront"
+                ? "Manage items, nested submenus, and routes shown in the website slide-out drawer for members & visitors."
+                : activeTarget === "account"
+                ? "Manage tabs and submenus in the Member Account Portal (/account)."
+                : "Manage navigation modules in the Executive Admin Suite sidebar."}
             </p>
 
             <div className="flex items-center gap-2 shrink-0">
               <button
                 type="button"
                 onClick={handleResetToDefault}
-                disabled={saving}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-[#E8E5DE] hover:bg-[#FAF9F6] text-[#73706A] hover:text-[#0E0E0E] text-xs font-semibold rounded-sm transition-colors"
-                title="Reset to original navigation"
+                disabled={saving || loading}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-[#E8E5DE] hover:bg-[#FAF9F6] text-[#73706A] hover:text-[#0E0E0E] text-xs font-semibold rounded-sm transition-colors disabled:opacity-50"
+                title="Reset to factory navigation"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
                 Reset Default
@@ -278,8 +417,18 @@ export function SidebarCustomizerModal({
                     data: {
                       id: "",
                       label: "",
-                      href: "/admin",
-                      icon: "LayoutDashboard",
+                      href:
+                        activeTarget === "storefront"
+                          ? "/shop"
+                          : activeTarget === "account"
+                          ? "/account?tab=orders"
+                          : "/admin",
+                      icon:
+                        activeTarget === "storefront"
+                          ? "ShoppingBag"
+                          : activeTarget === "account"
+                          ? "Package"
+                          : "LayoutDashboard",
                       is_active: true,
                       submenus: [],
                     },
@@ -288,20 +437,25 @@ export function SidebarCustomizerModal({
                 className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-[#0E0E0E] hover:bg-[#242321] text-white text-xs font-semibold uppercase tracking-wider rounded-sm transition-colors"
               >
                 <Plus className="w-3.5 h-3.5 text-[#C5A880]" />
-                Add Menu Item
+                Add Item
               </button>
             </div>
           </div>
 
           {/* Navigation Items List */}
-          <div className="space-y-3 max-h-[55vh] overflow-y-auto pr-1">
-            {items.length === 0 ? (
+          <div className="space-y-3 max-h-[50vh] overflow-y-auto pr-1">
+            {loading ? (
+              <div className="text-center py-12 text-[#73706A] text-xs flex items-center justify-center gap-2">
+                <Loader2 className="w-4 h-4 animate-spin text-[#8F7449]" />
+                <span>Loading navigation hierarchy...</span>
+              </div>
+            ) : currentItems.length === 0 ? (
               <div className="text-center py-12 text-[#73706A] text-xs">
-                No menu items configured. Click &quot;Add Menu Item&quot; or &quot;Reset Default&quot;.
+                No menu items configured for this section. Click &quot;Add Item&quot; or &quot;Reset Default&quot;.
               </div>
             ) : (
-              items.map((item, index) => {
-                const IconComp = ICON_MAP[item.icon] || LayoutDashboard;
+              currentItems.map((item, index) => {
+                const IconComp = ICON_MAP[item.icon] || ShoppingBag;
 
                 return (
                   <div
@@ -324,7 +478,7 @@ export function SidebarCustomizerModal({
                           <button
                             type="button"
                             onClick={() => moveItem(index, "down")}
-                            disabled={index === items.length - 1}
+                            disabled={index === currentItems.length - 1}
                             className="p-0.5 text-[#73706A] hover:text-[#0E0E0E] disabled:opacity-20 disabled:hover:text-[#73706A]"
                             title="Move Down"
                           >
@@ -348,7 +502,7 @@ export function SidebarCustomizerModal({
                             )}
                           </div>
                           <span className="text-[11px] text-[#73706A] font-mono">
-                            {item.href || "No route (Dropdown only)"}
+                            {item.href || "No direct route (Accordion Header)"}
                           </span>
                         </div>
                       </div>
@@ -363,7 +517,7 @@ export function SidebarCustomizerModal({
                               data: {
                                 id: "",
                                 label: "",
-                                href: item.href || "/admin",
+                                href: item.href || "/",
                               },
                             })
                           }
@@ -403,7 +557,7 @@ export function SidebarCustomizerModal({
                     {item.submenus && item.submenus.length > 0 && (
                       <div className="pl-8 pt-1 space-y-1.5 border-t border-[#E8E5DE]/60">
                         <span className="text-[9px] uppercase tracking-wider text-[#A8A49C] font-semibold block">
-                          Submenus ({item.submenus.length})
+                          Nested Submenus ({item.submenus.length})
                         </span>
                         <div className="space-y-1">
                           {item.submenus.map((sub, sIdx) => (
@@ -433,6 +587,11 @@ export function SidebarCustomizerModal({
                                 <span className="font-medium text-[#0E0E0E]">
                                   {sub.label}
                                 </span>
+                                {sub.badge && (
+                                  <span className="px-1 py-0.2 bg-[#E8E5DE] text-[9px] uppercase font-bold rounded-xs">
+                                    {sub.badge}
+                                  </span>
+                                )}
                                 <span className="text-[10px] text-[#73706A] font-mono">
                                   {sub.href}
                                 </span>
@@ -483,19 +642,19 @@ export function SidebarCustomizerModal({
             </button>
             <button
               type="button"
-              disabled={saving}
+              disabled={saving || loading}
               onClick={handleSaveToDatabase}
               className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#0E0E0E] hover:bg-[#242321] text-white text-xs font-semibold uppercase tracking-widest rounded-sm transition-colors disabled:opacity-50"
             >
               {saving ? (
                 <>
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  Saving Configuration...
+                  Saving...
                 </>
               ) : (
                 <>
                   <Check className="w-3.5 h-3.5 text-[#C5A880]" />
-                  Save & Apply Sidebar
+                  Save & Apply Changes
                 </>
               )}
             </button>
@@ -507,19 +666,19 @@ export function SidebarCustomizerModal({
       <Modal
         isOpen={Boolean(editingItem)}
         onClose={() => setEditingItem(null)}
-        title={editingItem?.isNew ? "Add Main Menu Item" : "Edit Menu Item"}
+        title={editingItem?.isNew ? "Add Navigation Item" : "Edit Navigation Item"}
         maxWidth="md"
       >
         {editingItem && (
           <form onSubmit={handleSaveItem} className="space-y-4">
             <div>
               <label className="block text-xs font-semibold text-[#0E0E0E] mb-1.5">
-                Menu Label *
+                Item Label *
               </label>
               <input
                 type="text"
                 required
-                placeholder="e.g. Collections"
+                placeholder="e.g. Handbag Collections / My Orders"
                 value={editingItem.data.label}
                 onChange={(e) =>
                   setEditingItem({
@@ -537,7 +696,7 @@ export function SidebarCustomizerModal({
               </label>
               <input
                 type="text"
-                placeholder="e.g. /admin/products or /admin/customers"
+                placeholder="e.g. /shop or /#categories or /account?tab=orders"
                 value={editingItem.data.href || ""}
                 onChange={(e) =>
                   setEditingItem({
@@ -578,7 +737,7 @@ export function SidebarCustomizerModal({
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g. New / Soon / Live"
+                  placeholder="e.g. New / Hot / Privé"
                   value={editingItem.data.badge || ""}
                   onChange={(e) =>
                     setEditingItem({
@@ -626,7 +785,7 @@ export function SidebarCustomizerModal({
               <input
                 type="text"
                 required
-                placeholder="e.g. Best Sellers / Add Product"
+                placeholder="e.g. Tote Bags / Best Sellers"
                 value={editingSubmenu.data.label}
                 onChange={(e) =>
                   setEditingSubmenu({
@@ -645,7 +804,7 @@ export function SidebarCustomizerModal({
               <input
                 type="text"
                 required
-                placeholder="e.g. /admin/products?filter=best_seller"
+                placeholder="e.g. /shop?category=Tote"
                 value={editingSubmenu.data.href}
                 onChange={(e) =>
                   setEditingSubmenu({
@@ -663,7 +822,7 @@ export function SidebarCustomizerModal({
               </label>
               <input
                 type="text"
-                placeholder="e.g. Hot / 24h"
+                placeholder="e.g. Hot / 24h / New"
                 value={editingSubmenu.data.badge || ""}
                 onChange={(e) =>
                   setEditingSubmenu({

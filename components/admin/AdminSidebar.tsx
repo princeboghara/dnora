@@ -375,13 +375,16 @@ export function AdminSidebar({
         </div>
       </aside>
 
-      {/* Sidebar Customizer Modal */}
+      {/* Navigation Customizer Modal */}
       <SidebarCustomizerModal
         isOpen={isCustomizerOpen}
         onClose={handleCloseCustomizer}
         items={items}
-        onSaveSuccess={(updatedItems) => {
-          setItems(updatedItems);
+        initialTarget="storefront"
+        onSaveSuccess={(updatedItems, target) => {
+          if (target === "admin") {
+            setItems(updatedItems);
+          }
         }}
       />
     </>
