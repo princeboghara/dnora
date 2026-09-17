@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminSession } from "@/lib/auth/session";
 import { createUserSession } from "@/lib/auth/user-session";
+import { verifyPassword } from "@/lib/auth/password";
 import { db } from "@/lib/db";
 import { createClient } from "@/lib/supabase/server";
 
@@ -17,10 +18,11 @@ export async function POST(req: NextRequest) {
 
     const normalizedEmail = email.toLowerCase().trim();
     const adminEmail = (process.env.ADMIN_EMAIL || "admin@dnora.luxury").toLowerCase().trim();
+    const adminPassword = process.env.ADMIN_PASSWORD || "admin";
 
-    // 1. Admin login check
+    // 1. Dedicated Admin Master Login Check
     if (normalizedEmail === adminEmail) {
-      if (password === "dnora2026!" || password.length >= 6) {
+      if (password === adminPassword || password === "dnora2026!") {
         await createAdminSession(normalizedEmail);
         await createUserSession({
           id: "admin-master",
@@ -36,7 +38,59 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 2. Try Supabase Auth if client has anon key
+    // 2. Query user in PostgreSQL database
+    let dbUser: any = null;
+    try {
+      const userRes = await db.query(
+        `SELECT * FROM public.users WHERE LOWER(email) = LOWER($1) LIMIT 1`,
+        [normalizedEmail]
+      );
+      if (userRes.rows.length > 0) {
+        dbUser = userRes.rows[0];
+      }
+    } catch (dbErr) {
+      console.error("Database user query error:", dbErr);
+    }
+
+    // 3. If user exists in DB, check authentication type
+    if (dbUser) {
+      // If user registered with Google OAuth and has no password hash
+      if (!dbUser.password_hash) {
+        return NextResponse.json(
+          {
+            error:
+              "This account was created with Google Sign-In. Please use 'Sign in with Google' to access your account.",
+          },
+          { status: 400 }
+        );
+      }
+
+      // Verify the password hash securely
+      const isValid = await verifyPassword(password, dbUser.password_hash);
+      if (!isValid) {
+        return NextResponse.json(
+          { error: "Invalid email or password." },
+          { status: 401 }
+        );
+      }
+
+      // Password matches! Create authenticated customer session
+      await createUserSession({
+        id: dbUser.id,
+        email: dbUser.email,
+        full_name: dbUser.full_name || dbUser.email.split("@")[0],
+        phone: dbUser.phone,
+        role: dbUser.role || "customer",
+      });
+
+      return NextResponse.json({
+        success: true,
+        role: dbUser.role || "customer",
+        redirectTo: dbUser.role === "admin" ? "/admin" : "/account",
+      });
+    }
+
+    // 4. Try Supabase Auth as secondary check
     try {
       const supabase = await createClient();
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -61,34 +115,9 @@ export async function POST(req: NextRequest) {
       // Supabase Auth not active or failed
     }
 
-    // 3. Check direct PostgreSQL database users
-    try {
-      const res = await db.query(
-        `SELECT * FROM public.users WHERE email = $1 LIMIT 1`,
-        [normalizedEmail]
-      );
-      if (res.rows.length > 0) {
-        const u = res.rows[0];
-        await createUserSession({
-          id: u.id,
-          email: u.email,
-          full_name: u.full_name || u.email.split("@")[0],
-          phone: u.phone,
-          role: u.role || "customer",
-        });
-        return NextResponse.json({
-          success: true,
-          role: u.role || "customer",
-          redirectTo: u.role === "admin" ? "/admin" : "/account",
-        });
-      }
-    } catch (dbErr) {
-      console.error("Database auth check error:", dbErr);
-    }
-
-    // If no matching user found in database or Supabase Auth, reject authentication
+    // 5. Account not found or wrong credentials
     return NextResponse.json(
-      { error: "Invalid email or password. Please register an account or check your credentials." },
+      { error: "Invalid email or password." },
       { status: 401 }
     );
   } catch (error) {

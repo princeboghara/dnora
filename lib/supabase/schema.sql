@@ -11,12 +11,24 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE TABLE IF NOT EXISTS public.users (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   email TEXT NOT NULL UNIQUE,
+  password_hash TEXT,
   full_name TEXT,
   phone TEXT,
   avatar_url TEXT,
   role TEXT NOT NULL DEFAULT 'customer' CHECK (role IN ('admin', 'customer')),
   created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+-- 1B. EMAIL OTP VERIFICATIONS
+CREATE TABLE IF NOT EXISTS public.email_verifications (
+  email TEXT PRIMARY KEY,
+  otp_hash TEXT NOT NULL,
+  full_name TEXT,
+  phone TEXT,
+  password_hash TEXT NOT NULL,
+  expires_at TIMESTAMPTZ NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
 
 -- 2. PRODUCT CATEGORIES

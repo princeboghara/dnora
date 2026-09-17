@@ -1,0 +1,94 @@
+import { NextRequest, NextResponse } from "next/server";
+import crypto from "crypto";
+import { db } from "@/lib/db";
+import { hashPassword } from "@/lib/auth/password";
+import { sendVerificationOtpEmail } from "@/lib/email";
+
+export async function POST(req: NextRequest) {
+  try {
+    const { name, email, phone, password } = await req.json();
+
+    if (!email || !password || !name) {
+      return NextResponse.json(
+        { error: "Please provide your full name, email address, and password." },
+        { status: 400 }
+      );
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(normalizedEmail)) {
+      return NextResponse.json(
+        { error: "Please enter a valid email address." },
+        { status: 400 }
+      );
+    }
+
+    if (password.length < 6) {
+      return NextResponse.json(
+        { error: "Password must be at least 6 characters long." },
+        { status: 400 }
+      );
+    }
+
+    // 1. Strict Duplicate Email Check
+    const existingUser = await db.query(
+      `SELECT id, email FROM public.users WHERE LOWER(email) = LOWER($1) LIMIT 1`,
+      [normalizedEmail]
+    );
+
+    if (existingUser.rows.length > 0) {
+      return NextResponse.json(
+        { error: "Email already registered." },
+        { status: 409 }
+      );
+    }
+
+    // 2. Generate 6-digit numeric OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpHash = crypto.createHash("sha256").update(otp).digest("hex");
+
+    // 3. Hash user password
+    const pwdHash = await hashPassword(password);
+
+    // 4. Expiration: 10 minutes
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+
+    // 5. Store pending verification in database
+    await db.query(
+      `INSERT INTO public.email_verifications (email, otp_hash, full_name, phone, password_hash, expires_at, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, timezone('utc'::text, now()))
+       ON CONFLICT (email) DO UPDATE SET
+         otp_hash = EXCLUDED.otp_hash,
+         full_name = EXCLUDED.full_name,
+         phone = EXCLUDED.phone,
+         password_hash = EXCLUDED.password_hash,
+         expires_at = EXCLUDED.expires_at,
+         created_at = timezone('utc'::text, now())`,
+      [normalizedEmail, otpHash, name.trim(), phone?.trim() || null, pwdHash, expiresAt]
+    );
+
+    // 6. Send OTP to user's email
+    const emailResult = await sendVerificationOtpEmail({
+      email: normalizedEmail,
+      name: name.trim(),
+      otp,
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: emailResult.message || "A 6-digit verification code has been sent to your email.",
+      email: normalizedEmail,
+      // For seamless local testing if SMTP is not yet configured:
+      devHint: !emailResult.delivered ? `Dev Mode OTP: ${otp}` : undefined,
+    });
+  } catch (err: any) {
+    console.error("Error sending OTP:", err);
+    return NextResponse.json(
+      { error: "Failed to initiate verification: " + (err.message || "Server error") },
+      { status: 500 }
+    );
+  }
+}
