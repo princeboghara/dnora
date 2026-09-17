@@ -8,8 +8,11 @@ interface SendOtpOptions {
 
 /**
  * Sends a luxury-styled verification OTP email to the client.
- * Uses nodemailer if SMTP/Gmail credentials are configured in .env.local;
- * otherwise logs the OTP cleanly for development testing.
+ * Supports:
+ * 1. Resend API (Recommended for production & long scale: RESEND_API_KEY)
+ * 2. SMTP / Brevo (SMTP_HOST, SMTP_USER, SMTP_PASS, SMTP_PORT)
+ * 3. Gmail App Password (GMAIL_USER, GMAIL_PASS)
+ * 4. Development mode: logs cleanly to console.
  */
 export async function sendVerificationOtpEmail({ email, name, otp }: SendOtpOptions): Promise<{
   success: boolean;
@@ -18,7 +21,11 @@ export async function sendVerificationOtpEmail({ email, name, otp }: SendOtpOpti
 }> {
   const recipientName = name?.trim() || "Valued Client";
 
-  // Check for email credentials
+  console.log("=================================================");
+  console.log(`🔑 [DNORA OTP] 6-Digit Code for ${email}: [ ${otp} ]`);
+  console.log("=================================================");
+
+  const resendApiKey = process.env.RESEND_API_KEY;
   const gmailUser = process.env.GMAIL_USER;
   const gmailPass = process.env.GMAIL_PASS || process.env.GMAIL_APP_PASSWORD;
   const smtpHost = process.env.SMTP_HOST;
@@ -26,103 +33,139 @@ export async function sendVerificationOtpEmail({ email, name, otp }: SendOtpOpti
   const smtpUser = process.env.SMTP_USER;
   const smtpPass = process.env.SMTP_PASS;
 
-  console.log("=================================================");
-  console.log(`🔑 [DNORA OTP] 6-Digit Code for ${email}: [ ${otp} ]`);
-  console.log("=================================================");
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <style>
+        body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #FAF9F6; margin: 0; padding: 40px 20px; color: #0E0E0E; }
+        .container { max-width: 520px; margin: 0 auto; background: #FFFFFF; border: 1px solid #E8E5DE; padding: 40px 32px; border-radius: 2px; }
+        .brand { text-align: center; letter-spacing: 0.3em; font-size: 16px; font-weight: 700; color: #0E0E0E; margin-bottom: 24px; text-transform: uppercase; }
+        .subbrand { text-align: center; letter-spacing: 0.2em; font-size: 10px; color: #C5A880; font-weight: 700; text-transform: uppercase; margin-bottom: 30px; }
+        .title { font-size: 20px; font-weight: 600; text-align: center; margin-bottom: 12px; color: #0E0E0E; }
+        .text { font-size: 13px; line-height: 1.6; color: #73706A; text-align: center; margin-bottom: 28px; }
+        .otp-box { background: #F5F3EF; border: 1px solid #E8E5DE; padding: 20px; text-align: center; border-radius: 2px; margin-bottom: 28px; }
+        .otp-code { font-size: 34px; letter-spacing: 0.25em; font-weight: 800; color: #0E0E0E; font-family: monospace; }
+        .expiry { font-size: 11px; color: #73706A; text-align: center; margin-top: 10px; }
+        .footer { text-align: center; font-size: 11px; color: #A8A59E; margin-top: 36px; border-top: 1px solid #E8E5DE; padding-top: 20px; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="brand">DNORA</div>
+        <div class="subbrand">Client Privé Concierge</div>
+        <div class="title">Email Verification Code</div>
+        <p class="text">
+          Dear ${recipientName},<br>
+          Please enter the following one-time verification code to confirm your email and complete your DNORA account registration:
+        </p>
+        <div class="otp-box">
+          <div class="otp-code">${otp}</div>
+          <div class="expiry">Valid for 10 minutes</div>
+        </div>
+        <p class="text" style="font-size: 11px; margin-bottom: 0;">
+          If you did not initiate this registration request, please disregard this email. Never share this code with anyone.
+        </p>
+        <div class="footer">
+          &copy; ${new Date().getFullYear()} DNORA Luxury Handbags & Leather Goods Atelier.<br>All rights reserved.
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
 
+  // 1. Long Scale Production: Resend REST API (No library required)
+  if (resendApiKey) {
+    try {
+      const fromEmail = process.env.EMAIL_FROM || "DNORA Privé <onboarding@resend.dev>";
+      const resendRes = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${resendApiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          from: fromEmail,
+          to: [email],
+          subject: `Your DNORA Verification Code: ${otp}`,
+          html: htmlContent,
+        }),
+      });
+
+      const resendData = await resendRes.json();
+      if (!resendRes.ok) {
+        console.error("Resend API error:", resendData);
+        return {
+          success: true,
+          delivered: false,
+          message: "Resend failed: " + (resendData.message || "API error"),
+        };
+      }
+
+      return {
+        success: true,
+        delivered: true,
+        message: "Verification code sent to your email inbox.",
+      };
+    } catch (resendErr: any) {
+      console.error("Resend dispatch error:", resendErr);
+    }
+  }
+
+  // 2. SMTP (Brevo / SendGrid / Custom SMTP) or Gmail
   const hasGmail = Boolean(gmailUser && gmailPass);
   const hasSmtp = Boolean(smtpHost && smtpUser && smtpPass);
 
-  if (!hasGmail && !hasSmtp) {
-    return {
-      success: true,
-      delivered: false,
-      message: "Development mode: OTP generated and logged to console.",
-    };
+  if (hasGmail || hasSmtp) {
+    try {
+      const transporter = hasGmail
+        ? nodemailer.createTransport({
+            service: "gmail",
+            auth: {
+              user: gmailUser,
+              pass: gmailPass,
+            },
+          })
+        : nodemailer.createTransport({
+            host: smtpHost,
+            port: smtpPort,
+            secure: smtpPort === 465,
+            auth: {
+              user: smtpUser,
+              pass: smtpPass,
+            },
+          });
+
+      await transporter.sendMail({
+        from: hasGmail
+          ? `"DNORA Privé" <${gmailUser}>`
+          : process.env.EMAIL_FROM || `"DNORA Privé" <${smtpUser}>`,
+        to: email,
+        subject: `Your DNORA Verification Code: ${otp}`,
+        text: `Your DNORA one-time verification code is: ${otp}. It will expire in 10 minutes.`,
+        html: htmlContent,
+      });
+
+      return {
+        success: true,
+        delivered: true,
+        message: "Verification code sent to your email address.",
+      };
+    } catch (err: any) {
+      console.error("Failed to send verification email via nodemailer:", err);
+      return {
+        success: true,
+        delivered: false,
+        message: "Email dispatch failed, but verification code was generated.",
+      };
+    }
   }
 
-  try {
-    const transporter = hasGmail
-      ? nodemailer.createTransport({
-          service: "gmail",
-          auth: {
-            user: gmailUser,
-            pass: gmailPass,
-          },
-        })
-      : nodemailer.createTransport({
-          host: smtpHost,
-          port: smtpPort,
-          secure: smtpPort === 465,
-          auth: {
-            user: smtpUser,
-            pass: smtpPass,
-          },
-        });
-
-    const htmlContent = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="utf-8">
-        <style>
-          body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #FAF9F6; margin: 0; padding: 40px 20px; color: #0E0E0E; }
-          .container { max-width: 520px; margin: 0 auto; background: #FFFFFF; border: 1px solid #E8E5DE; padding: 40px 32px; border-radius: 2px; }
-          .brand { text-align: center; letter-spacing: 0.3em; font-size: 16px; font-weight: 700; color: #0E0E0E; margin-bottom: 24px; text-transform: uppercase; }
-          .subbrand { text-align: center; letter-spacing: 0.2em; font-size: 10px; color: #C5A880; font-weight: 700; text-transform: uppercase; margin-bottom: 30px; }
-          .title { font-size: 20px; font-weight: 600; text-align: center; margin-bottom: 12px; color: #0E0E0E; }
-          .text { font-size: 13px; line-height: 1.6; color: #73706A; text-align: center; margin-bottom: 28px; }
-          .otp-box { background: #F5F3EF; border: 1px solid #E8E5DE; padding: 20px; text-align: center; border-radius: 2px; margin-bottom: 28px; }
-          .otp-code { font-size: 34px; letter-spacing: 0.25em; font-weight: 800; color: #0E0E0E; font-family: monospace; }
-          .expiry { font-size: 11px; color: #73706A; text-align: center; margin-top: 10px; }
-          .footer { text-align: center; font-size: 11px; color: #A8A59E; margin-top: 36px; border-top: 1px solid #E8E5DE; padding-top: 20px; }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <div class="brand">DNORA</div>
-          <div class="subbrand">Client Privé Concierge</div>
-          <div class="title">Email Verification Code</div>
-          <p class="text">
-            Dear ${recipientName},<br>
-            Please enter the following one-time verification code to confirm your email and complete your DNORA account registration:
-          </p>
-          <div class="otp-box">
-            <div class="otp-code">${otp}</div>
-            <div class="expiry">Valid for 10 minutes</div>
-          </div>
-          <p class="text" style="font-size: 11px; margin-bottom: 0;">
-            If you did not initiate this registration request, please disregard this email. Never share this code with anyone.
-          </p>
-          <div class="footer">
-            &copy; ${new Date().getFullYear()} DNORA Luxury Handbags & Leather Goods Atelier.<br>All rights reserved.
-          </div>
-        </div>
-      </body>
-      </html>
-    `;
-
-    await transporter.sendMail({
-      from: hasGmail
-        ? `"DNORA Privé" <${gmailUser}>`
-        : `"DNORA Privé" <${smtpUser}>`,
-      to: email,
-      subject: `Your DNORA Verification Code: ${otp}`,
-      text: `Your DNORA one-time verification code is: ${otp}. It will expire in 10 minutes.`,
-      html: htmlContent,
-    });
-
-    return {
-      success: true,
-      delivered: true,
-      message: "Verification code sent to your email address.",
-    };
-  } catch (err: any) {
-    console.error("Failed to send verification email via nodemailer:", err);
-    return {
-      success: true,
-      delivered: false,
-      message: "Email dispatch failed, but verification code was generated.",
-    };
-  }
+  // 3. Fallback Development Mode (No email provider configured yet)
+  return {
+    success: true,
+    delivered: false,
+    message: "Development mode: OTP generated and logged to console.",
+  };
 }
