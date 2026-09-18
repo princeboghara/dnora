@@ -48,14 +48,23 @@ interface MemberDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   user?: UserSession | null;
+  items?: SidebarMenuItem[];
 }
 
-export function MemberDrawer({ isOpen, onClose, user }: MemberDrawerProps) {
-  const pathname = usePathname();
+export function MemberDrawer({ isOpen, onClose, user, items: propItems }: MemberDrawerProps) {
+  const rawPathname = usePathname();
+  const pathname = rawPathname || "/";
   const router = useRouter();
-  const [items, setItems] = useState<SidebarMenuItem[]>(DEFAULT_STOREFRONT_NAVIGATION);
-  const [loading, setLoading] = useState(true);
+  const [items, setItems] = useState<SidebarMenuItem[]>(propItems || DEFAULT_STOREFRONT_NAVIGATION);
+  const [loading, setLoading] = useState(!propItems || propItems.length === 0);
   const [userExpandedOverrides, setUserExpandedOverrides] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    if (propItems && propItems.length > 0) {
+      setItems(propItems);
+      setLoading(false);
+    }
+  }, [propItems]);
 
   // Fetch dynamic navigation configuration
   useEffect(() => {

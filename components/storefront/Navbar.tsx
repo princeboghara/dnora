@@ -2,11 +2,13 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { Search, ShoppingBag, User, LogOut, Package, MapPin, ChevronDown } from "lucide-react";
 import { useCart } from "@/lib/store/cart-store";
-import { Product, ProductCategory } from "@/types";
+import { Product, ProductCategory, SidebarMenuItem } from "@/types";
 import { UserSession } from "@/lib/auth/user-session";
+import { DEFAULT_STOREFRONT_NAVIGATION } from "@/lib/navigation-constants";
+import { cn } from "@/lib/utils";
 import { SearchModal } from "./SearchModal";
 import { MemberDrawer } from "./MemberDrawer";
 import { BrandLogo } from "@/components/ui/BrandLogo";
@@ -14,28 +16,52 @@ import { BrandLogo } from "@/components/ui/BrandLogo";
 interface NavbarProps {
   products?: Product[];
   user?: UserSession | null;
+  initialNavItems?: SidebarMenuItem[];
 }
 
-export function Navbar({ products = [], user = null }: NavbarProps) {
+export function Navbar({ products = [], user = null, initialNavItems }: NavbarProps) {
   const router = useRouter();
+  const rawPathname = usePathname();
+  const pathname = rawPathname || "/";
   const [isScrolled, setIsScrolled] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
-  const [categories, setCategories] = useState<ProductCategory[]>([]);
+  const [navItems, setNavItems] = useState<SidebarMenuItem[]>(() => {
+    if (Array.isArray(initialNavItems) && initialNavItems.length > 0) {
+      return initialNavItems;
+    }
+    return DEFAULT_STOREFRONT_NAVIGATION;
+  });
   const { openCart, itemCount } = useCart();
 
+  // Sync with initialNavItems when received from layout
   useEffect(() => {
-    fetch("/api/categories")
+    if (Array.isArray(initialNavItems) && initialNavItems.length > 0) {
+      setNavItems(initialNavItems);
+    }
+  }, [initialNavItems]);
+
+  // Real-time synchronization with dynamic storefront navigation API
+  useEffect(() => {
+    let isMounted = true;
+    fetch("/api/navigation?target=storefront")
       .then((res) => res.json())
-      .then((json) => {
-        if (json.success && Array.isArray(json.data)) {
-          setCategories(json.data);
+      .then((data) => {
+        if (isMounted && Array.isArray(data?.items) && data.items.length > 0) {
+          setNavItems(data.items);
         }
       })
-      .catch(() => {});
+      .catch((err) => {
+        console.error("Error synchronizing storefront navigation in Navbar:", err);
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
+  // Sticky header shadow on scroll
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 15);
@@ -44,23 +70,30 @@ export function Navbar({ products = [], user = null }: NavbarProps) {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Defensive fallback: Always ensure we have active navigation items to render
+  const safeNavItems = (
+    Array.isArray(navItems) && navItems.length > 0
+      ? navItems
+      : DEFAULT_STOREFRONT_NAVIGATION
+  ).filter((item) => item && item.is_active !== false);
+
   return (
     <>
       <header
         className={`sticky top-0 z-40 w-full transition-all duration-300 bg-white/95 backdrop-blur-md border-b border-[#E8E5DE] ${
-          isScrolled ? "shadow-xs py-3" : "py-3.5 sm:py-4"
+          isScrolled ? "shadow-xs py-2.5 sm:py-3" : "py-3 sm:py-4"
         }`}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between min-h-[42px]">
-            {/* LEFT: Mobile 3-Line Hamburger Menu + Logo */}
-            <div className="flex items-center gap-2 sm:gap-4">
-              {/* 3-line hamburger menu for Mobile view ONLY */}
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between min-h-[42px] gap-2 lg:gap-4">
+            {/* LEFT: Mobile 3-Line Hamburger Menu + Brand Logo */}
+            <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+              {/* 3-line hamburger menu for Mobile view (< 768px) */}
               <button
                 type="button"
                 onClick={() => setDrawerOpen(true)}
                 aria-label="Open navigation menu"
-                className="p-2 -ml-2 text-[#0E0E0E] hover:text-[#C5A880] transition-colors lg:hidden cursor-pointer"
+                className="p-2 -ml-2 text-[#0E0E0E] hover:text-[#C5A880] transition-colors md:hidden cursor-pointer"
               >
                 <svg
                   className="w-6 h-6 transition-transform duration-200 hover:scale-105"
@@ -77,207 +110,121 @@ export function Navbar({ products = [], user = null }: NavbarProps) {
                 </svg>
               </button>
 
-              {/* Store Brand Logo - Scaled to a clean refined size */}
+              {/* Store Brand Logo */}
               <BrandLogo priority size="md" />
             </div>
 
-            {/* CENTER: Desktop / Laptop Horizontal Navigation Bar with Hover Submenus */}
+            {/* CENTER: Desktop / Laptop Horizontal Navigation Bar */}
             <nav
-              className="hidden lg:flex items-center space-x-7"
+              className="hidden md:flex items-center justify-center gap-2.5 md:gap-4 lg:gap-6 xl:gap-8 flex-1 min-w-0 px-1"
               aria-label="Storefront Desktop Navigation"
             >
-              {/* Home */}
-              <Link
-                href="/"
-                className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#0E0E0E] hover:text-[#C5A880] transition-colors py-2 relative group"
-              >
-                <span>Home</span>
-                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#0E0E0E] group-hover:w-full transition-all duration-300" />
-              </Link>
+              {safeNavItems.map((item) => {
+                const hasSubmenus =
+                  Array.isArray(item.submenus) && item.submenus.length > 0;
+                const isDirectActive =
+                  item.href === "/"
+                    ? pathname === "/"
+                    : Boolean(item.href && item.href !== "#" && pathname.startsWith(item.href));
+                const isAnySubActive =
+                  hasSubmenus &&
+                  item.submenus!.some(
+                    (sub) =>
+                      Boolean(
+                        sub &&
+                          sub.href &&
+                          (sub.href === pathname ||
+                            (sub.href !== "/" &&
+                              sub.href !== "#" &&
+                              pathname.startsWith(sub.href)))
+                      )
+                  );
+                const isActive = Boolean(isDirectActive || isAnySubActive);
 
-              {/* Shop with Dropdown */}
-              <div className="relative group py-2">
-                <Link
-                  href="/shop"
-                  className="flex items-center gap-1 text-[11px] font-bold uppercase tracking-[0.22em] text-[#0E0E0E] group-hover:text-[#C5A880] transition-colors"
-                >
-                  <span>Shop</span>
-                  <ChevronDown className="w-3 h-3 text-[#73706A] group-hover:rotate-180 transition-transform duration-200" />
-                </Link>
-                <div className="absolute top-full -left-4 pt-2 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 z-50">
-                  <div className="w-56 bg-white border border-[#E8E5DE] rounded-sm shadow-xl py-2">
-                    <div className="px-3.5 py-1.5 border-b border-[#E8E5DE]/70 text-[9px] uppercase tracking-widest text-[#C5A880] font-bold">
-                      Collections
-                    </div>
+                // Simple item without submenus
+                if (!hasSubmenus) {
+                  return (
                     <Link
-                      href="/shop"
-                      className="block px-3.5 py-2 text-xs text-[#0E0E0E] hover:bg-[#FAF9F6] hover:text-[#C5A880] transition-colors"
+                      key={item.id}
+                      href={item.href || "/"}
+                      className={cn(
+                        "text-[10px] md:text-[11px] font-bold uppercase tracking-[0.14em] md:tracking-[0.18em] lg:tracking-[0.2em] transition-colors py-2 relative group flex items-center gap-1 shrink-0 whitespace-nowrap",
+                        isActive
+                          ? "text-[#0E0E0E]"
+                          : "text-[#4A4744] hover:text-[#0E0E0E]"
+                      )}
                     >
-                      All Handbags & Purses
+                      <span>{item.label}</span>
+                      {item.badge && (
+                        <span className="text-[8px] md:text-[9px] uppercase tracking-wider px-1.5 py-0.2 rounded font-bold bg-[#C5A880]/20 text-[#8F7449]">
+                          {item.badge}
+                        </span>
+                      )}
+                      <span
+                        className={cn(
+                          "absolute bottom-0 left-0 h-0.5 bg-[#0E0E0E] transition-all duration-300",
+                          isActive ? "w-full" : "w-0 group-hover:w-full"
+                        )}
+                      />
                     </Link>
-                    <Link
-                      href="/#best-sellers"
-                      className="flex items-center justify-between px-3.5 py-2 text-xs text-[#0E0E0E] hover:bg-[#FAF9F6] hover:text-[#C5A880] transition-colors"
-                    >
-                      <span>Best Sellers</span>
-                      <span className="text-[9px] px-1.5 py-0.5 bg-[#0E0E0E] text-[#FAF9F6] font-bold tracking-wider uppercase rounded-xs">
-                        Hot
-                      </span>
-                    </Link>
-                    <Link
-                      href="/#new-arrivals"
-                      className="flex items-center justify-between px-3.5 py-2 text-xs text-[#0E0E0E] hover:bg-[#FAF9F6] hover:text-[#C5A880] transition-colors"
-                    >
-                      <span>New Arrivals</span>
-                      <span className="text-[9px] px-1.5 py-0.5 bg-[#C5A880] text-[#0E0E0E] font-bold tracking-wider uppercase rounded-xs">
-                        New
-                      </span>
-                    </Link>
-                    <Link
-                      href="/#categories"
-                      className="block px-3.5 py-2 text-xs text-[#0E0E0E] hover:bg-[#FAF9F6] hover:text-[#C5A880] transition-colors"
-                    >
-                      Shop by Silhouette
-                    </Link>
-                  </div>
-                </div>
-              </div>
+                  );
+                }
 
-              {/* Categories with Dropdown */}
-              <div className="relative group py-2">
-                <Link
-                  href="/#categories"
-                  className="flex items-center gap-1 text-[11px] font-bold uppercase tracking-[0.22em] text-[#0E0E0E] group-hover:text-[#C5A880] transition-colors"
-                >
-                  <span>Categories</span>
-                  <ChevronDown className="w-3 h-3 text-[#73706A] group-hover:rotate-180 transition-transform duration-200" />
-                </Link>
-                <div className="absolute top-full -left-6 pt-2 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 z-50">
-                  <div className="w-56 bg-white border border-[#E8E5DE] rounded-sm shadow-xl py-2">
-                    <div className="px-3.5 py-1.5 border-b border-[#E8E5DE]/70 text-[9px] uppercase tracking-widest text-[#C5A880] font-bold">
-                      Curated Silhouettes
-                    </div>
-                    {categories.length > 0 ? (
-                      categories.slice(0, 6).map((cat) => (
-                        <Link
-                          key={cat.id}
-                          href={`/category/${cat.slug}`}
-                          className="block px-3.5 py-2 text-xs text-[#0E0E0E] hover:bg-[#FAF9F6] hover:text-[#C5A880] transition-colors"
-                        >
-                          {cat.name}
-                        </Link>
-                      ))
-                    ) : (
-                      <>
-                        <Link
-                          href="/category/tote-bags"
-                          className="block px-3.5 py-2 text-xs text-[#0E0E0E] hover:bg-[#FAF9F6] hover:text-[#C5A880] transition-colors"
-                        >
-                          Tote Bags
-                        </Link>
-                        <Link
-                          href="/category/shoulder-bags"
-                          className="block px-3.5 py-2 text-xs text-[#0E0E0E] hover:bg-[#FAF9F6] hover:text-[#C5A880] transition-colors"
-                        >
-                          Shoulder Bags
-                        </Link>
-                        <Link
-                          href="/category/crossbody-bags"
-                          className="block px-3.5 py-2 text-xs text-[#0E0E0E] hover:bg-[#FAF9F6] hover:text-[#C5A880] transition-colors"
-                        >
-                          Crossbody Bags
-                        </Link>
-                        <Link
-                          href="/category/handbags"
-                          className="block px-3.5 py-2 text-xs text-[#0E0E0E] hover:bg-[#FAF9F6] hover:text-[#C5A880] transition-colors"
-                        >
-                          Handbags
-                        </Link>
-                      </>
-                    )}
-                    <div className="border-t border-[#E8E5DE]/70 mt-1 pt-1">
-                      <Link
-                        href="/#categories"
-                        className="block px-3.5 py-1.5 text-[11px] font-semibold text-[#8F7449] hover:underline"
-                      >
-                        Explore All Categories →
-                      </Link>
+                // Item with submenus -> Dropdown
+                return (
+                  <div key={item.id} className="relative group py-2 shrink-0">
+                    <Link
+                      href={item.href || "#"}
+                      className={cn(
+                        "flex items-center gap-1 text-[10px] md:text-[11px] font-bold uppercase tracking-[0.14em] md:tracking-[0.18em] lg:tracking-[0.2em] transition-colors whitespace-nowrap",
+                        isActive
+                          ? "text-[#0E0E0E]"
+                          : "text-[#4A4744] group-hover:text-[#0E0E0E]"
+                      )}
+                    >
+                      <span>{item.label}</span>
+                      {item.badge && (
+                        <span className="text-[8px] md:text-[9px] uppercase tracking-wider px-1.5 py-0.2 rounded font-bold bg-[#C5A880]/20 text-[#8F7449]">
+                          {item.badge}
+                        </span>
+                      )}
+                      <ChevronDown className="w-3 h-3 text-[#73706A] group-hover:rotate-180 transition-transform duration-200 shrink-0" />
+                    </Link>
+
+                    {/* Dropdown Menu */}
+                    <div className="absolute top-full -left-4 pt-2 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 z-50">
+                      <div className="min-w-[14rem] max-w-xs bg-white border border-[#E8E5DE] rounded-sm shadow-xl py-2">
+                        <div className="px-3.5 py-1.5 border-b border-[#E8E5DE]/70 text-[9px] uppercase tracking-widest text-[#C5A880] font-bold">
+                          {item.label}
+                        </div>
+                        {item.submenus!
+                          .filter((sub) => sub && sub.is_active !== false)
+                          .map((sub) => (
+                            <Link
+                              key={sub.id || sub.href}
+                              href={sub.href || "#"}
+                              className="flex items-center justify-between px-3.5 py-2 text-xs text-[#0E0E0E] hover:bg-[#FAF9F6] hover:text-[#C5A880] transition-colors"
+                            >
+                              <span>{sub.label}</span>
+                              {sub.badge && (
+                                <span
+                                  className={cn(
+                                    "text-[9px] px-1.5 py-0.5 font-bold tracking-wider uppercase rounded-xs",
+                                    sub.badge.toLowerCase() === "hot"
+                                      ? "bg-[#0E0E0E] text-[#FAF9F6]"
+                                      : "bg-[#C5A880] text-[#0E0E0E]"
+                                  )}
+                                >
+                                  {sub.badge}
+                                </span>
+                              )}
+                            </Link>
+                          ))}
+                      </div>
                     </div>
                   </div>
-                </div>
-              </div>
-
-              {/* New Arrivals with Dropdown */}
-              <div className="relative group py-2">
-                <Link
-                  href="/#new-arrivals"
-                  className="flex items-center gap-1 text-[11px] font-bold uppercase tracking-[0.22em] text-[#0E0E0E] group-hover:text-[#C5A880] transition-colors"
-                >
-                  <span>New Arrivals</span>
-                  <ChevronDown className="w-3 h-3 text-[#73706A] group-hover:rotate-180 transition-transform duration-200" />
-                </Link>
-                <div className="absolute top-full -left-4 pt-2 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 z-50">
-                  <div className="w-52 bg-white border border-[#E8E5DE] rounded-sm shadow-xl py-2">
-                    <div className="px-3.5 py-1.5 border-b border-[#E8E5DE]/70 text-[9px] uppercase tracking-widest text-[#C5A880] font-bold">
-                      Latest Edits
-                    </div>
-                    <Link
-                      href="/shop?new_arrival=true"
-                      className="block px-3.5 py-2 text-xs text-[#0E0E0E] hover:bg-[#FAF9F6] hover:text-[#C5A880] transition-colors"
-                    >
-                      Spring / Summer 2026
-                    </Link>
-                    <Link
-                      href="/#new-arrivals"
-                      className="block px-3.5 py-2 text-xs text-[#0E0E0E] hover:bg-[#FAF9F6] hover:text-[#C5A880] transition-colors"
-                    >
-                      Featured Releases
-                    </Link>
-                    <Link
-                      href="/shop"
-                      className="block px-3.5 py-2 text-xs text-[#0E0E0E] hover:bg-[#FAF9F6] hover:text-[#C5A880] transition-colors"
-                    >
-                      Runway Atelier Pieces
-                    </Link>
-                  </div>
-                </div>
-              </div>
-
-              {/* Best Sellers with Dropdown */}
-              <div className="relative group py-2">
-                <Link
-                  href="/#best-sellers"
-                  className="flex items-center gap-1 text-[11px] font-bold uppercase tracking-[0.22em] text-[#0E0E0E] group-hover:text-[#C5A880] transition-colors"
-                >
-                  <span>Best Sellers</span>
-                  <ChevronDown className="w-3 h-3 text-[#73706A] group-hover:rotate-180 transition-transform duration-200" />
-                </Link>
-                <div className="absolute top-full -right-4 pt-2 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 z-50">
-                  <div className="w-52 bg-white border border-[#E8E5DE] rounded-sm shadow-xl py-2">
-                    <div className="px-3.5 py-1.5 border-b border-[#E8E5DE]/70 text-[9px] uppercase tracking-widest text-[#C5A880] font-bold">
-                      Signature Icons
-                    </div>
-                    <Link
-                      href="/#best-sellers"
-                      className="block px-3.5 py-2 text-xs text-[#0E0E0E] hover:bg-[#FAF9F6] hover:text-[#C5A880] transition-colors"
-                    >
-                      Top Rated Silhouettes
-                    </Link>
-                    <Link
-                      href="/shop?best_seller=true"
-                      className="block px-3.5 py-2 text-xs text-[#0E0E0E] hover:bg-[#FAF9F6] hover:text-[#C5A880] transition-colors"
-                    >
-                      Iconic Italian Calfskin
-                    </Link>
-                    <Link
-                      href="/shop"
-                      className="block px-3.5 py-2 text-xs text-[#0E0E0E] hover:bg-[#FAF9F6] hover:text-[#C5A880] transition-colors"
-                    >
-                      All Bestselling Bags
-                    </Link>
-                  </div>
-                </div>
-              </div>
+                );
+              })}
             </nav>
 
             {/* RIGHT: Sequential Action Icons (Search, Account, Shopping Bag) */}
@@ -293,7 +240,7 @@ export function Navbar({ products = [], user = null }: NavbarProps) {
                 <Search className="w-5 h-5" strokeWidth={1.75} />
               </button>
 
-              {/* 2. Account (No admin links, purely customer session) */}
+              {/* 2. Account */}
               <div className="relative">
                 {user ? (
                   <div className="relative">
@@ -398,11 +345,12 @@ export function Navbar({ products = [], user = null }: NavbarProps) {
         </div>
       </header>
 
-      {/* Luxury Member & Storefront Navigation Drawer (For Mobile Screen View) */}
+      {/* Luxury Member & Storefront Navigation Drawer (Mobile screen view) */}
       <MemberDrawer
         isOpen={drawerOpen}
         onClose={() => setDrawerOpen(false)}
         user={user}
+        items={navItems}
       />
 
       {/* Search Modal */}
