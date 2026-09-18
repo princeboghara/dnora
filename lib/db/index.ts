@@ -16,10 +16,9 @@ export const db =
   new Pool({
     connectionString,
     ssl: { rejectUnauthorized: false },
-    max: 10,
+    max: 5,
     idleTimeoutMillis: 30000,
   });
 
-if (process.env.NODE_ENV !== "production") {
-  globalForDb.pgPool = db;
-}
+globalForDb.pgPool = db;
+
