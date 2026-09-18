@@ -1,4 +1,5 @@
 import React from "react";
+import { redirect } from "next/navigation";
 import { HeroSlider } from "@/components/hero/HeroSlider";
 import { CategoriesSection } from "@/components/storefront/CategoriesSection";
 import { BestSellersSection } from "@/components/storefront/BestSellersSection";
@@ -10,7 +11,17 @@ import { store } from "@/lib/data/store";
 
 export const dynamic = "force-dynamic";
 
-export default async function HomePage() {
+interface HomePageProps {
+  searchParams?: Promise<{ code?: string; next?: string }>;
+}
+
+export default async function HomePage(props: HomePageProps) {
+  const searchParams = await props.searchParams;
+  if (searchParams?.code) {
+    const nextParam = searchParams.next ? `&next=${encodeURIComponent(searchParams.next)}` : "";
+    redirect(`/api/auth/callback?code=${encodeURIComponent(searchParams.code)}${nextParam}`);
+  }
+
   // Fetch data in parallel for optimal performance
   const [heroBanners, categories, products, reviews, seenOnYou] = await Promise.all([
     store.getHeroBanners(false),
