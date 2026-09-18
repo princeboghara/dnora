@@ -114,7 +114,7 @@ export default function ProductManagerPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-[#E8E5DE]">
         <div>
-          <span className="text-xs uppercase tracking-[0.2em] text-[#C5A880] font-semibold block mb-1">
+          <span className="text-xs uppercase tracking-[0.2em] text-[#0E0E0E] font-semibold block mb-1">
             Inventory &amp; Merchandising
           </span>
           <h1 className="text-2xl sm:text-3xl font-heading font-extrabold text-[#0E0E0E] tracking-tight">
@@ -129,7 +129,7 @@ export default function ProductManagerPage() {
           href="/admin/products/new"
           className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#0E0E0E] hover:bg-[#2C2B29] text-xs font-bold uppercase tracking-wider text-[#FAF9F6] rounded transition-all shadow-md shrink-0"
         >
-          <Plus className="w-4 h-4 text-[#C5A880]" />
+          <Plus className="w-4 h-4 text-[#0E0E0E]" />
           <span>Add New Handbag</span>
         </Link>
       </div>
@@ -280,7 +280,7 @@ export default function ProductManagerPage() {
                         onClick={() => handleToggleFlag(product, "is_new_arrival")}
                         className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wider transition-colors ${
                           product.is_new_arrival
-                            ? "bg-[#C5A880] text-[#0E0E0E]"
+                            ? "bg-[#0E0E0E] text-[#0E0E0E]"
                             : "bg-[#F5F3EF] text-[#73706A] hover:bg-[#EAE6DF]"
                         }`}
                         title="Toggle New Arrival section placement"

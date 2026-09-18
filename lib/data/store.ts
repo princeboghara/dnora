@@ -5,6 +5,10 @@ import {
   CustomerReview,
   SeenOnYouVideo,
   AdminDashboardStats,
+  Order,
+  OrderItem,
+  OrderStatus,
+  PaymentStatus,
 } from "@/types";
 import { db } from "@/lib/db";
 import { slugify } from "../utils";
@@ -575,20 +579,36 @@ class DataStore {
   // DASHBOARD STATS
   async getDashboardStats(): Promise<AdminDashboardStats> {
     try {
-      const [totalProd, bestSellers, newArrivals, activeHeroes, draftHeroes, lowStock, totalCust] =
-        await Promise.all([
-          db.query(`SELECT COUNT(*) FROM public.products`),
-          db.query(`SELECT COUNT(*) FROM public.product_flags WHERE is_best_seller = true`),
-          db.query(`SELECT COUNT(*) FROM public.product_flags WHERE is_new_arrival = true`),
-          db.query(`SELECT COUNT(*) FROM public.hero_banners WHERE status = 'published' AND is_active = true`),
-          db.query(`SELECT COUNT(*) FROM public.hero_banners WHERE status = 'draft'`),
-          db.query(`SELECT COUNT(*) FROM public.products WHERE stock < 10`),
-          db.query(`SELECT COUNT(*) FROM public.users`),
-        ]);
+      const [
+        totalProd,
+        bestSellers,
+        newArrivals,
+        activeHeroes,
+        draftHeroes,
+        lowStock,
+        totalCust,
+        totalOrd,
+        totalRev,
+        pendingOrd,
+      ] = await Promise.all([
+        db.query(`SELECT COUNT(*) FROM public.products`),
+        db.query(`SELECT COUNT(*) FROM public.product_flags WHERE is_best_seller = true`),
+        db.query(`SELECT COUNT(*) FROM public.product_flags WHERE is_new_arrival = true`),
+        db.query(`SELECT COUNT(*) FROM public.hero_banners WHERE status = 'published' AND is_active = true`),
+        db.query(`SELECT COUNT(*) FROM public.hero_banners WHERE status = 'draft'`),
+        db.query(`SELECT COUNT(*) FROM public.products WHERE stock < 10`),
+        db.query(`SELECT COUNT(*) FROM public.users`),
+        db.query(`SELECT COUNT(*) FROM public.orders`),
+        db.query(`SELECT COALESCE(SUM(total_amount), 0) FROM public.orders WHERE status != 'cancelled'`),
+        db.query(`SELECT COUNT(*) FROM public.orders WHERE status = 'processing'`),
+      ]);
 
       return {
         totalProducts: parseInt(totalProd.rows[0].count),
         totalCustomers: parseInt(totalCust.rows[0].count),
+        totalOrders: parseInt(totalOrd.rows[0].count),
+        totalRevenue: Number(totalRev.rows[0].coalesce || 0),
+        pendingOrders: parseInt(pendingOrd.rows[0].count),
         bestSellersCount: parseInt(bestSellers.rows[0].count),
         newArrivalsCount: parseInt(newArrivals.rows[0].count),
         activeHeroBanners: parseInt(activeHeroes.rows[0].count),
@@ -600,12 +620,262 @@ class DataStore {
       return {
         totalProducts: 0,
         totalCustomers: 0,
+        totalOrders: 0,
+        totalRevenue: 0,
+        pendingOrders: 0,
         bestSellersCount: 0,
         newArrivalsCount: 0,
         activeHeroBanners: 0,
         draftHeroBanners: 0,
         lowStockCount: 0,
       };
+    }
+  }
+
+  // ==========================================
+  // ORDERS MANAGEMENT
+  // ==========================================
+  async getOrders(params?: {
+    status?: string;
+    search?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<{ orders: Order[]; total: number }> {
+    try {
+      const conditions: string[] = [];
+      const values: (string | number)[] = [];
+      let idx = 1;
+
+      if (params?.status && params.status !== "all") {
+        conditions.push(`o.status = $${idx++}`);
+        values.push(params.status);
+      }
+
+      if (params?.search && params.search.trim()) {
+        const term = `%${params.search.trim()}%`;
+        conditions.push(
+          `(o.order_number ILIKE $${idx} OR o.customer_name ILIKE $${idx} OR o.customer_email ILIKE $${idx} OR o.customer_phone ILIKE $${idx})`
+        );
+        values.push(term);
+        idx++;
+      }
+
+      const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+
+      const countRes = await db.query(
+        `SELECT COUNT(*) FROM public.orders o ${whereClause}`,
+        values
+      );
+      const total = parseInt(countRes.rows[0]?.count || "0", 10);
+
+      const limit = params?.limit || 20;
+      const offset = params?.offset || 0;
+
+      const orderQuery = `
+        SELECT 
+          o.*,
+          COALESCE(
+            json_agg(
+              json_build_object(
+                'id', oi.id,
+                'order_id', oi.order_id,
+                'product_id', oi.product_id,
+                'product_name', oi.product_name,
+                'product_slug', oi.product_slug,
+                'price', oi.price,
+                'quantity', oi.quantity,
+                'image_url', oi.image_url,
+                'attributes', oi.attributes,
+                'created_at', oi.created_at
+              )
+            ) FILTER (WHERE oi.id IS NOT NULL),
+            '[]'
+          ) as items
+        FROM public.orders o
+        LEFT JOIN public.order_items oi ON o.id = oi.order_id
+        ${whereClause}
+        GROUP BY o.id
+        ORDER BY o.created_at DESC
+        LIMIT $${idx++} OFFSET $${idx++}
+      `;
+
+      values.push(limit, offset);
+      const res = await db.query(orderQuery, values);
+
+      const orders: Order[] = res.rows.map((row) => ({
+        ...row,
+        total_amount: Number(row.total_amount),
+        shipping_address:
+          typeof row.shipping_address === "string"
+            ? JSON.parse(row.shipping_address)
+            : row.shipping_address,
+        items: (row.items || []).map((it: OrderItem) => ({
+          ...it,
+          price: Number(it.price),
+          quantity: Number(it.quantity),
+          attributes:
+            typeof it.attributes === "string"
+              ? JSON.parse(it.attributes)
+              : it.attributes,
+        })),
+      }));
+
+      return { orders, total };
+    } catch (err) {
+      console.error("Error fetching orders:", err);
+      return { orders: [], total: 0 };
+    }
+  }
+
+  async getOrderById(id: string): Promise<Order | null> {
+    try {
+      const orderRes = await db.query(
+        `SELECT * FROM public.orders WHERE id = $1 OR order_number = $1 LIMIT 1`,
+        [id]
+      );
+      if (orderRes.rows.length === 0) return null;
+      const row = orderRes.rows[0];
+
+      const itemsRes = await db.query(
+        `SELECT * FROM public.order_items WHERE order_id = $1 ORDER BY created_at ASC`,
+        [row.id]
+      );
+
+      return {
+        ...row,
+        total_amount: Number(row.total_amount),
+        shipping_address:
+          typeof row.shipping_address === "string"
+            ? JSON.parse(row.shipping_address)
+            : row.shipping_address,
+        items: itemsRes.rows.map((it) => ({
+          ...it,
+          price: Number(it.price),
+          quantity: Number(it.quantity),
+          attributes:
+            typeof it.attributes === "string"
+              ? JSON.parse(it.attributes)
+              : it.attributes,
+        })),
+      };
+    } catch (err) {
+      console.error("Error fetching order by ID:", err);
+      return null;
+    }
+  }
+
+  async createOrder(
+    data: Omit<Order, "id" | "created_at" | "updated_at">,
+    items?: Omit<OrderItem, "id" | "order_id" | "created_at">[]
+  ): Promise<Order> {
+    const orderNumber =
+      data.order_number ||
+      `DN-${Date.now().toString().slice(-6)}-${Math.floor(100 + Math.random() * 900)}`;
+
+    const res = await db.query(
+      `INSERT INTO public.orders 
+        (order_number, user_id, customer_email, customer_name, customer_phone, total_amount, status, payment_status, payment_method, shipping_address, tracking_number, carrier, estimated_delivery, notes)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+       RETURNING *`,
+      [
+        orderNumber,
+        data.user_id || null,
+        data.customer_email,
+        data.customer_name,
+        data.customer_phone || null,
+        data.total_amount,
+        data.status || "processing",
+        data.payment_status || "paid",
+        data.payment_method || "card",
+        JSON.stringify(data.shipping_address || {}),
+        data.tracking_number || null,
+        data.carrier || null,
+        data.estimated_delivery || null,
+        data.notes || null,
+      ]
+    );
+
+    const createdOrder = res.rows[0];
+    const createdItems: OrderItem[] = [];
+
+    if (items && items.length > 0) {
+      for (const item of items) {
+        const itemRes = await db.query(
+          `INSERT INTO public.order_items
+            (order_id, product_id, product_name, product_slug, price, quantity, image_url, attributes)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+           RETURNING *`,
+          [
+            createdOrder.id,
+            item.product_id || null,
+            item.product_name,
+            item.product_slug || null,
+            item.price,
+            item.quantity,
+            item.image_url || null,
+            JSON.stringify(item.attributes || {}),
+          ]
+        );
+        createdItems.push({
+          ...itemRes.rows[0],
+          price: Number(itemRes.rows[0].price),
+          quantity: Number(itemRes.rows[0].quantity),
+        });
+      }
+    }
+
+    return {
+      ...createdOrder,
+      total_amount: Number(createdOrder.total_amount),
+      shipping_address:
+        typeof createdOrder.shipping_address === "string"
+          ? JSON.parse(createdOrder.shipping_address)
+          : createdOrder.shipping_address,
+      items: createdItems,
+    };
+  }
+
+  async updateOrder(id: string, updates: Partial<Order>): Promise<Order | null> {
+    const fields: string[] = [];
+    const values: (string | number | boolean | null)[] = [];
+    let i = 1;
+
+    for (const [key, val] of Object.entries(updates)) {
+      if (key !== "id" && key !== "created_at" && key !== "items" && val !== undefined) {
+        if (key === "shipping_address") {
+          fields.push(`${key} = $${i}`);
+          values.push(JSON.stringify(val));
+        } else {
+          fields.push(`${key} = $${i}`);
+          values.push(val as string | number | boolean | null);
+        }
+        i++;
+      }
+    }
+
+    if (fields.length === 0) return this.getOrderById(id);
+
+    fields.push(`updated_at = timezone('utc'::text, now())`);
+    values.push(id);
+
+    await db.query(
+      `UPDATE public.orders SET ${fields.join(", ")} WHERE id = $${i} OR order_number = $${i}`,
+      values
+    );
+
+    return this.getOrderById(id);
+  }
+
+  async deleteOrder(id: string): Promise<boolean> {
+    try {
+      const res = await db.query(
+        `DELETE FROM public.orders WHERE id = $1 OR order_number = $1 RETURNING id`,
+        [id]
+      );
+      return (res.rowCount ?? 0) > 0;
+    } catch (err) {
+      console.error("Error deleting order:", err);
+      return false;
     }
   }
 }

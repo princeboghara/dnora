@@ -132,6 +132,9 @@ export interface CartItem {
 export interface AdminDashboardStats {
   totalProducts: number;
   totalCustomers?: number;
+  totalOrders?: number;
+  totalRevenue?: number;
+  pendingOrders?: number;
   bestSellersCount: number;
   newArrivalsCount: number;
   activeHeroBanners: number;

@@ -48,10 +48,10 @@ export function AdminHeader({
         {/* Direct Announcement Bar Shortcut */}
         <Link
           href="/admin/announcements"
-          className="flex items-center gap-1.5 text-xs text-[#0E0E0E] hover:text-[#C5A880] font-semibold border border-[#E8E5DE] hover:border-[#0E0E0E] px-3 py-1.5 rounded transition-all bg-[#FAF9F6] hover:bg-white"
+          className="flex items-center gap-1.5 text-xs text-[#0E0E0E] hover:text-[#73706A] font-semibold border border-[#E8E5DE] hover:border-[#0E0E0E] px-3 py-1.5 rounded transition-all bg-[#FAF9F6] hover:bg-white"
           title="Manage Announcement Bar"
         >
-          <Megaphone className="w-3.5 h-3.5 text-[#C5A880]" />
+          <Megaphone className="w-3.5 h-3.5 text-[#0E0E0E]" />
           <span className="hidden sm:inline">Announcement Bar</span>
         </Link>
 

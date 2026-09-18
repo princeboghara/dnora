@@ -389,7 +389,7 @@ export function ProductEditor({ initialProduct = null, mode = "create" }: Produc
             {submitting ? (
               <Loader2 className="w-3.5 h-3.5 animate-spin" />
             ) : (
-              <Check className="w-3.5 h-3.5 text-[#C5A880]" />
+              <Check className="w-3.5 h-3.5 text-[#0E0E0E]" />
             )}
             <span>{mode === "create" ? "Publish Product" : "Save Changes"}</span>
           </button>
@@ -479,7 +479,7 @@ export function ProductEditor({ initialProduct = null, mode = "create" }: Produc
                 <button
                   type="button"
                   onClick={() => setIsCustomSlug(!isCustomSlug)}
-                  className="text-[10px] text-[#C5A880] hover:underline uppercase font-bold"
+                  className="text-[10px] text-[#0E0E0E] hover:underline uppercase font-bold"
                 >
                   {isCustomSlug ? "Auto-Generate" : "Edit Custom Slug"}
                 </button>
@@ -505,7 +505,7 @@ export function ProductEditor({ initialProduct = null, mode = "create" }: Produc
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#E8E5DE] pb-4">
               <div>
                 <div className="flex items-center gap-2">
-                  <Palette className="w-4 h-4 text-[#C5A880]" />
+                  <Palette className="w-4 h-4 text-[#0E0E0E]" />
                   <h2 className="text-xs uppercase tracking-[0.2em] font-bold text-[#0E0E0E]">
                     Professional Color Variants System
                   </h2>
@@ -553,7 +553,7 @@ export function ProductEditor({ initialProduct = null, mode = "create" }: Produc
             {/* Color Variants Tabs */}
             {colorVariants.length === 0 ? (
               <div className="p-8 border-2 border-dashed border-[#E8E5DE] rounded-lg text-center bg-[#FAF9F6]">
-                <Palette className="w-8 h-8 text-[#C5A880] mx-auto mb-2 opacity-60" />
+                <Palette className="w-8 h-8 text-[#0E0E0E] mx-auto mb-2 opacity-60" />
                 <p className="text-xs font-semibold text-[#0E0E0E] uppercase tracking-wider">
                   No Color Variants Added Yet
                 </p>
@@ -676,7 +676,7 @@ export function ProductEditor({ initialProduct = null, mode = "create" }: Produc
                             disabled={uploadingVariantImage}
                             className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#0E0E0E] text-white text-xs font-semibold uppercase tracking-wider rounded hover:bg-[#2C2B29] transition-all disabled:opacity-50"
                           >
-                            <Upload className="w-3.5 h-3.5 text-[#C5A880]" />
+                            <Upload className="w-3.5 h-3.5 text-[#0E0E0E]" />
                             <span>Upload Photos</span>
                           </button>
                           <input
@@ -694,9 +694,9 @@ export function ProductEditor({ initialProduct = null, mode = "create" }: Produc
                       {activeVariant.images.length === 0 ? (
                         <div
                           onClick={() => variantFileInputRef.current?.click()}
-                          className="border-2 border-dashed border-[#E8E5DE] rounded-lg p-6 text-center cursor-pointer hover:border-[#C5A880] transition-colors bg-white"
+                          className="border-2 border-dashed border-[#E8E5DE] rounded-lg p-6 text-center cursor-pointer hover:border-[#0E0E0E] transition-colors bg-white"
                         >
-                          <ImageIcon className="w-6 h-6 text-[#C5A880] mx-auto mb-1.5" />
+                          <ImageIcon className="w-6 h-6 text-[#0E0E0E] mx-auto mb-1.5" />
                           <p className="text-xs font-semibold text-[#0E0E0E]">
                             Upload photos specifically for {activeVariant.name}
                           </p>
@@ -764,7 +764,7 @@ export function ProductEditor({ initialProduct = null, mode = "create" }: Produc
                   disabled={uploadingGeneral}
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#FAF9F6] hover:bg-[#0E0E0E] text-[#0E0E0E] hover:text-white border border-[#E8E5DE] rounded text-xs font-semibold uppercase tracking-wider transition-all disabled:opacity-50"
                 >
-                  <Upload className="w-3.5 h-3.5 text-[#C5A880]" />
+                  <Upload className="w-3.5 h-3.5 text-[#0E0E0E]" />
                   <span>Upload Images</span>
                 </button>
                 <input
@@ -781,9 +781,9 @@ export function ProductEditor({ initialProduct = null, mode = "create" }: Produc
             {images.length === 0 ? (
               <div
                 onClick={() => fileInputRef.current?.click()}
-                className="border-2 border-dashed border-[#E8E5DE] rounded-lg p-8 text-center cursor-pointer hover:border-[#C5A880] transition-colors bg-[#FAF9F6]"
+                className="border-2 border-dashed border-[#E8E5DE] rounded-lg p-8 text-center cursor-pointer hover:border-[#0E0E0E] transition-colors bg-[#FAF9F6]"
               >
-                <Upload className="w-8 h-8 text-[#C5A880] mx-auto mb-2" />
+                <Upload className="w-8 h-8 text-[#0E0E0E] mx-auto mb-2" />
                 <p className="text-xs font-semibold text-[#0E0E0E] uppercase tracking-wider">
                   Select Handbag Photos
                 </p>
@@ -944,7 +944,7 @@ export function ProductEditor({ initialProduct = null, mode = "create" }: Produc
             <label className="flex items-center justify-between p-3 rounded-lg border border-[#E8E5DE] bg-[#FAF9F6] cursor-pointer hover:border-[#0E0E0E] transition-all">
               <div className="flex items-center gap-2.5">
                 <span className="p-1.5 rounded bg-black text-white">
-                  <Flame className="w-3.5 h-3.5 text-[#C5A880]" />
+                  <Flame className="w-3.5 h-3.5 text-[#0E0E0E]" />
                 </span>
                 <div>
                   <span className="text-xs font-bold text-[#0E0E0E] block uppercase tracking-wider">
@@ -966,7 +966,7 @@ export function ProductEditor({ initialProduct = null, mode = "create" }: Produc
             {/* New Arrival Toggle */}
             <label className="flex items-center justify-between p-3 rounded-lg border border-[#E8E5DE] bg-[#FAF9F6] cursor-pointer hover:border-[#0E0E0E] transition-all">
               <div className="flex items-center gap-2.5">
-                <span className="p-1.5 rounded bg-[#C5A880] text-[#0E0E0E]">
+                <span className="p-1.5 rounded bg-[#0E0E0E] text-[#0E0E0E]">
                   <Sparkles className="w-3.5 h-3.5 text-[#0E0E0E]" />
                 </span>
                 <div>

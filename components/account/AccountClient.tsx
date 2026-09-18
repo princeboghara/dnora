@@ -230,10 +230,10 @@ export function AccountClient({
       <div className="bg-[#0E0E0E] text-[#FAF9F6] p-6 sm:p-10 rounded-sm mb-10 flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden">
         <div className="relative z-10">
           <div className="flex items-center gap-2 mb-2">
-            <span className="text-[10px] uppercase tracking-[0.25em] text-[#C5A880] font-semibold">
+            <span className="text-[10px] uppercase tracking-[0.25em] text-[#0E0E0E] font-semibold">
               DNORA Member
             </span>
-            <span className="w-1.5 h-1.5 rounded-full bg-[#C5A880]" />
+            <span className="w-1.5 h-1.5 rounded-full bg-[#0E0E0E]" />
             <span className="text-[10px] uppercase tracking-widest text-[#A8A5A0]">
               Active Session
             </span>
@@ -358,7 +358,7 @@ export function AccountClient({
                     >
                       <IconComp
                         className={`w-4 h-4 shrink-0 transition-colors ${
-                          isActive ? "text-[#C5A880]" : "text-[#73706A]"
+                          isActive ? "text-[#0E0E0E]" : "text-[#73706A]"
                         }`}
                       />
                       <span className="truncate">{item.label}</span>
@@ -452,7 +452,7 @@ export function AccountClient({
 
           {/* Luxury Client Support Box */}
           <div className="bg-[#FAF9F6] border border-[#E8E5DE] p-5 rounded-sm">
-            <span className="text-[10px] uppercase tracking-widest text-[#C5A880] font-bold block mb-1">
+            <span className="text-[10px] uppercase tracking-widest text-[#0E0E0E] font-bold block mb-1">
               Concierge Service
             </span>
             <h4 className="text-sm font-bold text-[#0E0E0E]">
@@ -483,7 +483,7 @@ export function AccountClient({
                 </div>
                 <Link
                   href="/shop"
-                  className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wider text-[#C5A880] hover:text-[#0E0E0E] transition-colors"
+                  className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wider text-[#0E0E0E] hover:text-[#0E0E0E] transition-colors"
                 >
                   <ShoppingBag className="w-3.5 h-3.5" />
                   Explore Silhouettes
@@ -492,7 +492,7 @@ export function AccountClient({
 
               {orders.length === 0 ? (
                 <div className="bg-white border border-[#E8E5DE] p-12 text-center rounded-sm">
-                  <Package className="w-12 h-12 text-[#C5A880] mx-auto mb-3 stroke-[1.5]" />
+                  <Package className="w-12 h-12 text-[#0E0E0E] mx-auto mb-3 stroke-[1.5]" />
                   <h3 className="text-base font-bold text-[#0E0E0E]">No Orders Yet</h3>
                   <p className="text-xs text-[#73706A] mt-1 max-w-sm mx-auto">
                     When you order a handcrafted DNORA piece, its tracking journey and delivery timeline will appear here.
@@ -516,7 +516,7 @@ export function AccountClient({
                           className={`bg-white border rounded-sm transition-all overflow-hidden ${
                             isSelected
                               ? "border-[#0E0E0E] shadow-sm ring-1 ring-[#0E0E0E]"
-                              : "border-[#E8E5DE] hover:border-[#C5A880]"
+                              : "border-[#E8E5DE] hover:border-[#0E0E0E]"
                           }`}
                         >
                           {/* Order Header Summary */}
@@ -557,7 +557,7 @@ export function AccountClient({
                               </div>
                               <button
                                 type="button"
-                                className="text-xs text-[#0E0E0E] font-semibold flex items-center gap-1 hover:text-[#C5A880]"
+                                className="text-xs text-[#0E0E0E] font-semibold flex items-center gap-1 hover:text-[#73706A]"
                               >
                                 {isSelected ? "Viewing Details" : "Track Order"}
                                 <ChevronRight className="w-4 h-4" />
@@ -570,7 +570,7 @@ export function AccountClient({
                             <div className="border-t border-[#E8E5DE] p-5 sm:p-7 bg-[#FAF9F6] space-y-6">
                               {/* Visual Tracking Stepper */}
                               <div>
-                                <span className="text-[10px] uppercase tracking-widest text-[#C5A880] font-bold block mb-4">
+                                <span className="text-[10px] uppercase tracking-widest text-[#0E0E0E] font-bold block mb-4">
                                   Delivery Progress
                                 </span>
 
@@ -578,7 +578,7 @@ export function AccountClient({
                                   {/* Step 1 */}
                                   <div className="flex flex-col items-center text-center">
                                     <div className="w-8 h-8 rounded-full bg-[#0E0E0E] text-white flex items-center justify-center text-xs font-bold mb-2">
-                                      <CheckCircle2 className="w-4 h-4 text-[#C5A880]" />
+                                      <CheckCircle2 className="w-4 h-4 text-[#0E0E0E]" />
                                     </div>
                                     <span className="text-[11px] font-bold text-[#0E0E0E]">
                                       Confirmed
@@ -591,7 +591,7 @@ export function AccountClient({
                                   {/* Step 2 */}
                                   <div className="flex flex-col items-center text-center">
                                     <div className="w-8 h-8 rounded-full bg-[#0E0E0E] text-white flex items-center justify-center text-xs font-bold mb-2">
-                                      <Clock className="w-4 h-4 text-[#C5A880]" />
+                                      <Clock className="w-4 h-4 text-[#0E0E0E]" />
                                     </div>
                                     <span className="text-[11px] font-bold text-[#0E0E0E]">
                                       Packaging
@@ -611,7 +611,7 @@ export function AccountClient({
                                           : "bg-[#E8E5DE] text-[#73706A]"
                                       }`}
                                     >
-                                      <Truck className="w-4 h-4 text-[#C5A880]" />
+                                      <Truck className="w-4 h-4 text-[#0E0E0E]" />
                                     </div>
                                     <span className="text-[11px] font-bold text-[#0E0E0E]">
                                       In Transit
@@ -800,7 +800,7 @@ export function AccountClient({
                           {addr.full_name}
                         </span>
                         {addr.is_default && (
-                          <span className="text-[10px] uppercase tracking-wider font-bold bg-[#FAF9F6] text-[#C5A880] border border-[#C5A880]/30 px-2 py-0.5 rounded-sm">
+                          <span className="text-[10px] uppercase tracking-wider font-bold bg-[#FAF9F6] text-[#0E0E0E] border border-[#E8E5DE] px-2 py-0.5 rounded-sm">
                             Primary Address
                           </span>
                         )}
@@ -825,7 +825,7 @@ export function AccountClient({
                         <button
                           type="button"
                           onClick={() => handleSetDefaultAddress(addr.id)}
-                          className="text-xs text-[#C5A880] hover:text-[#0E0E0E] font-semibold uppercase tracking-wider transition-colors"
+                          className="text-xs text-[#0E0E0E] hover:text-[#0E0E0E] font-semibold uppercase tracking-wider transition-colors"
                         >
                           Set as Primary
                         </button>
@@ -887,8 +887,8 @@ export function AccountClient({
                     <label className="block text-[10px] uppercase tracking-widest text-[#73706A] font-semibold mb-1">
                       Membership Status
                     </label>
-                    <div className="inline-flex items-center gap-1 text-xs font-bold text-[#C5A880]">
-                      <Star className="w-3.5 h-3.5 fill-[#C5A880]" />
+                    <div className="inline-flex items-center gap-1 text-xs font-bold text-[#0E0E0E]">
+                      <Star className="w-3.5 h-3.5 fill-[#0E0E0E]" />
                       DNORA Gold Tier
                     </div>
                   </div>

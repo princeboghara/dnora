@@ -52,7 +52,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md space-y-8 bg-white p-8 sm:p-10 rounded-sm border border-[#E8E5DE] shadow-sm">
         {/* Header */}
         <div className="text-center">
-          <span className="text-[11px] uppercase tracking-[0.25em] text-[#C5A880] font-semibold block mb-2">
+          <span className="text-[11px] uppercase tracking-[0.25em] text-[#0E0E0E] font-semibold block mb-2">
             Client Portal
           </span>
           <h1 className="text-3xl font-heading font-extrabold text-[#0E0E0E] tracking-tight">
@@ -179,7 +179,7 @@ export default function LoginPage() {
             Don&apos;t have an account?{" "}
             <Link
               href={`/register${redirectPath ? `?redirect=${encodeURIComponent(redirectPath)}` : ""}`}
-              className="font-semibold text-[#0E0E0E] underline hover:text-[#C5A880] transition-colors"
+              className="font-semibold text-[#0E0E0E] underline hover:text-[#73706A] transition-colors"
             >
               Create an account
             </Link>
@@ -187,7 +187,7 @@ export default function LoginPage() {
         </div>
 
         <div className="flex items-center justify-center gap-2 text-[11px] text-[#73706A]">
-          <ShieldCheck className="w-3.5 h-3.5 text-[#C5A880]" />
+          <ShieldCheck className="w-3.5 h-3.5 text-[#0E0E0E]" />
           <span>256-bit encrypted secure session</span>
         </div>
       </div>

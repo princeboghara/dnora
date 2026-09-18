@@ -32,12 +32,29 @@ export async function GET() {
       // Filter out outdated/placeholder items
       dbItems = dbItems.filter(
         (item: { id?: string; badge?: string }) =>
-          item.id !== "nav-orders" &&
           item.id !== "nav-analytics" &&
           item.badge !== "Soon" &&
           item.id !== "nav-announcements" && // Move into Store Front submenu
           item.id !== "nav-heroes" // Move into Store Front submenu
       );
+
+      // Verify if Orders item exists
+      let ordersItem = dbItems.find(
+        (item: { id?: string }) => item.id === "nav-orders"
+      );
+      if (!ordersItem) {
+        ordersItem = DEFAULT_SIDEBAR_ITEMS.find(
+          (item) => item.id === "nav-orders"
+        );
+        if (ordersItem) {
+          const dashIdx = dbItems.findIndex((it: { id?: string }) => it.id === "nav-dashboard");
+          if (dashIdx !== -1) {
+            dbItems.splice(dashIdx + 1, 0, ordersItem);
+          } else {
+            dbItems.unshift(ordersItem);
+          }
+        }
+      }
 
       // Verify if Store Front item exists
       let storefrontItem = dbItems.find(
@@ -92,13 +109,14 @@ export async function GET() {
       });
 
       // Enforce the requested sequence:
-      // 1. Dashboard, 2. Categories, 3. Products, 4. Customers, 5. Store Front
+      // 1. Dashboard, 2. Orders, 3. Categories, 4. Products, 5. Customers, 6. Store Front
       const sequenceMap: Record<string, number> = {
         "nav-dashboard": 1,
-        "nav-categories": 2,
-        "nav-products": 3,
-        "nav-customers": 4,
-        "nav-storefront": 5,
+        "nav-orders": 2,
+        "nav-categories": 3,
+        "nav-products": 4,
+        "nav-customers": 5,
+        "nav-storefront": 6,
       };
 
       dbItems.sort((a: SidebarMenuItem, b: SidebarMenuItem) => {

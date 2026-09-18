@@ -43,7 +43,7 @@ export default function AdminLoginPage() {
   return (
     <div className="min-h-screen bg-[#0E0E0E] flex flex-col justify-center items-center px-4 sm:px-6 lg:px-8 relative overflow-hidden">
       {/* Background Subtle Luxury Glow */}
-      <div className="absolute w-[500px] h-[500px] bg-[#C5A880]/10 rounded-full blur-3xl pointer-events-none -top-40 -right-40" />
+      <div className="absolute w-[500px] h-[500px] bg-[#0E0E0E]/10 rounded-full blur-3xl pointer-events-none -top-40 -right-40" />
 
       <div className="max-w-md w-full space-y-8 bg-[#161514] p-8 sm:p-10 rounded-xl border border-[#2A2926] shadow-2xl relative z-10">
         {/* Brand Header */}
@@ -51,7 +51,7 @@ export default function AdminLoginPage() {
           <div className="flex justify-center mb-3">
             <BrandLogo priority size="lg" />
           </div>
-          <span className="text-xs uppercase tracking-[0.25em] text-[#C5A880] font-semibold">
+          <span className="text-xs uppercase tracking-[0.25em] text-[#0E0E0E] font-semibold">
             Administrative Access
           </span>
           <p className="text-xs text-[#8C8983] mt-2">
@@ -73,7 +73,7 @@ export default function AdminLoginPage() {
                 autoFocus
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-[#0E0E0E] border border-[#3A3835] pl-10 pr-4 py-3 text-sm text-white rounded-md focus:outline-none focus:border-[#C5A880] transition-colors placeholder:text-[#5A5854]"
+                className="w-full bg-[#0E0E0E] border border-[#3A3835] pl-10 pr-4 py-3 text-sm text-white rounded-md focus:outline-none focus:border-[#0E0E0E] transition-colors placeholder:text-[#5A5854]"
                 placeholder="Enter password"
               />
             </div>
@@ -82,7 +82,7 @@ export default function AdminLoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full flex items-center justify-center gap-2 py-3.5 px-4 bg-[#FAF9F6] hover:bg-[#C5A880] text-[#0E0E0E] text-xs font-bold uppercase tracking-[0.2em] rounded-md transition-all shadow-md disabled:opacity-50"
+            className="w-full flex items-center justify-center gap-2 py-3.5 px-4 bg-[#FAF9F6] hover:bg-[#0E0E0E] text-[#0E0E0E] text-xs font-bold uppercase tracking-[0.2em] rounded-md transition-all shadow-md disabled:opacity-50"
           >
             <span>{loading ? "Verifying..." : "Enter Admin Suite"}</span>
             <ArrowRight className="w-4 h-4" />

@@ -153,25 +153,30 @@ export function HeroSlider({ banners }: HeroSliderProps) {
         <div
           className={`max-w-2xl flex flex-col ${alignmentClasses[currentAlign]} animate-in fade-in slide-in-from-bottom-6 duration-700`}
         >
-          {/* Subtitle / Collection Drop Tag */}
+          {/* Eyebrow / Collection Drop Tag */}
           {currentBanner.subtitle && (
-            <span className="text-[11px] sm:text-xs uppercase tracking-[0.28em] text-[#C5A880] font-bold mb-3 drop-shadow-sm">
+            <span className="text-[10px] sm:text-xs uppercase tracking-[0.3em] text-[#FAF9F6]/90 font-semibold mb-3 drop-shadow-sm">
               {currentBanner.subtitle}
             </span>
           )}
 
-          {/* Editorial Title */}
-          <h1 className="text-3xl sm:text-5xl md:text-6xl font-heading font-extrabold text-[#FAF9F6] tracking-tight leading-[1.08] mb-6 drop-shadow-sm">
+          {/* Editorial Campaign Title */}
+          <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-heading font-extrabold text-[#FAF9F6] tracking-tight leading-[1.06] mb-3 drop-shadow-sm">
             {currentBanner.title}
           </h1>
 
-          {/* Miraggio Styled CTA Button */}
+          {/* Short Supporting Editorial Text */}
+          <p className="text-xs sm:text-sm text-[#FAF9F6]/85 max-w-xl font-normal leading-relaxed mb-6 drop-shadow-sm">
+            Handcrafted architectural silhouettes sculpted from full-grain Italian leather.
+          </p>
+
+          {/* Minimal Editorial CTA Button */}
           <div>
             <Link
               href={currentBanner.button_link || "/shop"}
-              className="group inline-flex items-center gap-3 px-8 sm:px-10 py-3.5 sm:py-4 bg-[#FAF9F6] text-[#0E0E0E] text-[11px] sm:text-xs uppercase tracking-[0.22em] font-bold hover:bg-[#C5A880] hover:text-[#0E0E0E] transition-all rounded-sm shadow-xl hover:shadow-2xl cursor-pointer"
+              className="group inline-flex items-center gap-3 px-8 sm:px-10 py-3.5 sm:py-4 bg-[#FAF9F6] text-[#0E0E0E] border border-[#0E0E0E] hover:bg-[#0E0E0E] hover:text-[#FAF9F6] text-[11px] sm:text-xs uppercase tracking-[0.24em] font-bold rounded-xs transition-all duration-300 shadow-lg hover:shadow-xl cursor-pointer"
             >
-              <span>{currentBanner.button_text || "Explore Collection"}</span>
+              <span>{currentBanner.button_text || "SHOP COLLECTION"}</span>
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>
@@ -190,58 +195,25 @@ export function HeroSlider({ banners }: HeroSliderProps) {
         </button>
       )}
 
-      {/* MIRAGGIO-INSPIRED CLEAN BOTTOM AREA CONTROLS (< >) */}
+      {/* Minimalist Progress Indicators on bottom left (No capsule button) */}
       {activeBanners.length > 1 && (
-        <div className="absolute bottom-4 sm:bottom-8 inset-x-0 z-20 pointer-events-none">
-          <div className="max-w-7xl mx-auto px-4 sm:px-12 flex items-center justify-between gap-2">
-            {/* Left: Minimalist Progress Pill Indicators */}
-            <div className="flex items-center gap-1.5 sm:gap-2 pointer-events-auto">
-              {activeBanners.map((banner, index) => {
-                const isActive = index === currentIndex;
-                return (
-                  <button
-                    key={banner.id}
-                    type="button"
-                    onClick={() => setCurrentIndex(index)}
-                    aria-label={`Go to slide ${index + 1}`}
-                    className="h-1 sm:h-1.5 rounded-full transition-all duration-400 overflow-hidden cursor-pointer focus:outline-none"
-                    style={{
-                      width: isActive ? "32px" : "10px",
-                      backgroundColor: isActive ? "#FAF9F6" : "rgba(255, 255, 255, 0.4)",
-                    }}
-                  />
-                );
-              })}
-            </div>
-
-            {/* Right: Clean Bottom Navigation Dock with < > Controls and Slide Counter */}
-            <div className="flex items-center gap-1 pointer-events-auto bg-black/60 sm:bg-black/45 hover:bg-black/70 backdrop-blur-md border border-white/25 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full shadow-lg transition-colors">
-              {/* Previous (<) Control */}
+        <div className="absolute bottom-6 sm:bottom-8 left-6 sm:left-12 z-20 pointer-events-auto flex items-center gap-1.5 sm:gap-2">
+          {activeBanners.map((banner, index) => {
+            const isActive = index === currentIndex;
+            return (
               <button
+                key={banner.id}
                 type="button"
-                onClick={goToPrev}
-                aria-label="Previous slide"
-                className="p-1.5 sm:p-1 rounded-full text-white/90 hover:text-white hover:bg-white/20 active:scale-95 transition-all cursor-pointer"
-              >
-                <ChevronLeft className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
-              </button>
-
-              {/* Slide Counter (e.g. 01 / 04) */}
-              <span className="text-[10px] sm:text-[11px] font-mono tracking-widest text-white/95 px-1.5 sm:px-2 select-none">
-                {String(currentIndex + 1).padStart(2, "0")}&nbsp;/&nbsp;{String(activeBanners.length).padStart(2, "0")}
-              </span>
-
-              {/* Next (>) Control */}
-              <button
-                type="button"
-                onClick={goToNext}
-                aria-label="Next slide"
-                className="p-1.5 sm:p-1 rounded-full text-white/90 hover:text-white hover:bg-white/20 active:scale-95 transition-all cursor-pointer"
-              >
-                <ChevronRight className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
-              </button>
-            </div>
-          </div>
+                onClick={() => setCurrentIndex(index)}
+                aria-label={`Go to slide ${index + 1}`}
+                className="h-1 sm:h-1.5 rounded-full transition-all duration-400 overflow-hidden cursor-pointer focus:outline-none"
+                style={{
+                  width: isActive ? "28px" : "8px",
+                  backgroundColor: isActive ? "#FAF9F6" : "rgba(255, 255, 255, 0.35)",
+                }}
+              />
+            );
+          })}
         </div>
       )}
     </section>

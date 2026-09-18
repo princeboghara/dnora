@@ -328,7 +328,7 @@ export function ProductForm({ initialData, onSuccess, onCancel }: ProductFormPro
             className="w-4 h-4 accent-[#0E0E0E] rounded"
           />
           <div className="flex items-center gap-1.5 text-xs font-bold text-[#0E0E0E]">
-            <Sparkles className="w-3.5 h-3.5 text-[#C5A880]" />
+            <Sparkles className="w-3.5 h-3.5 text-[#0E0E0E]" />
             <span>Mark as New Arrival</span>
           </div>
         </label>
@@ -383,12 +383,12 @@ export function ProductForm({ initialData, onSuccess, onCancel }: ProductFormPro
               type="button"
               onClick={() => fileInputRef.current?.click()}
               disabled={uploading}
-              className="inline-flex items-center gap-1.5 text-xs text-[#0E0E0E] hover:text-[#C5A880] font-semibold uppercase tracking-wider disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 text-xs text-[#0E0E0E] hover:text-[#73706A] font-semibold uppercase tracking-wider disabled:opacity-50"
             >
               {uploading ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
               ) : (
-                <Upload className="w-3.5 h-3.5 text-[#C5A880]" />
+                <Upload className="w-3.5 h-3.5 text-[#0E0E0E]" />
               )}
               <span>Upload Image</span>
             </button>
@@ -463,7 +463,7 @@ export function ProductForm({ initialData, onSuccess, onCancel }: ProductFormPro
           {submitting ? (
             <Loader2 className="w-4 h-4 animate-spin" />
           ) : (
-            <Check className="w-4 h-4 text-[#C5A880]" />
+            <Check className="w-4 h-4 text-[#0E0E0E]" />
           )}
           <span>{initialData?.id ? "Update Handbag" : "Create Handbag"}</span>
         </button>

@@ -131,7 +131,7 @@ export function HeroPreviewModal({ isOpen, onClose, banner }: HeroPreviewModalPr
             >
               <div className={`flex flex-col ${alignmentClasses[align]}`}>
                 {banner.subtitle && (
-                  <span className="text-[10px] sm:text-xs uppercase tracking-[0.25em] text-[#C5A880] font-semibold mb-2">
+                  <span className="text-[10px] sm:text-xs uppercase tracking-[0.25em] text-[#0E0E0E] font-semibold mb-2">
                     {banner.subtitle}
                   </span>
                 )}

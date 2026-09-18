@@ -110,7 +110,7 @@ export function TopBar() {
           >
             {/* Optional Badge */}
             {current.badge && (
-              <span className="hidden sm:inline-block text-[9px] uppercase tracking-wider font-bold bg-[#C5A880]/20 text-[#C5A880] px-2 py-0.5 rounded-sm shrink-0">
+              <span className="hidden sm:inline-block text-[9px] uppercase tracking-wider font-bold bg-white/15 text-[#FAF9F6] border border-white/20 px-2 py-0.5 rounded-sm shrink-0">
                 {current.badge}
               </span>
             )}
@@ -119,7 +119,7 @@ export function TopBar() {
             {current.link ? (
               <Link
                 href={current.link}
-                className="inline-flex items-center gap-1.5 font-medium tracking-wider uppercase text-[10px] sm:text-[11px] hover:text-[#C5A880] transition-colors"
+                className="inline-flex items-center gap-1.5 font-medium tracking-wider uppercase text-[10px] sm:text-[11px] hover:text-[#FAF9F6]/80 hover:underline transition-colors"
               >
                 <span>{current.text}</span>
               </Link>

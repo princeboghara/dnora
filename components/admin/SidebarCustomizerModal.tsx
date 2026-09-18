@@ -429,7 +429,7 @@ export function SidebarCustomizerModal({
                 }
                 className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-[#0E0E0E] hover:bg-[#242321] text-white text-xs font-semibold uppercase tracking-wider rounded-sm transition-colors"
               >
-                <Plus className="w-3.5 h-3.5 text-[#C5A880]" />
+                <Plus className="w-3.5 h-3.5 text-[#0E0E0E]" />
                 Add Item
               </button>
             </div>
@@ -517,7 +517,7 @@ export function SidebarCustomizerModal({
                           className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium text-[#73706A] hover:text-[#0E0E0E] bg-white border border-[#E8E5DE] rounded-sm transition-colors"
                           title="Add Submenu Link"
                         >
-                          <Plus className="w-3 h-3 text-[#C5A880]" />
+                          <Plus className="w-3 h-3 text-[#0E0E0E]" />
                           Submenu
                         </button>
 
@@ -646,7 +646,7 @@ export function SidebarCustomizerModal({
                 </>
               ) : (
                 <>
-                  <Check className="w-3.5 h-3.5 text-[#C5A880]" />
+                  <Check className="w-3.5 h-3.5 text-[#0E0E0E]" />
                   Save & Apply Changes
                 </>
               )}

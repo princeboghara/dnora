@@ -187,7 +187,7 @@ export function HeroBannerForm({ initialData, onSuccess, onCancel }: HeroBannerF
               </>
             ) : (
               <>
-                <Upload className="w-4 h-4 text-[#C5A880]" />
+                <Upload className="w-4 h-4 text-[#0E0E0E]" />
                 <span>Upload {mediaType === "video" ? "Video" : "Image"}</span>
               </>
             )}
@@ -369,7 +369,7 @@ export function HeroBannerForm({ initialData, onSuccess, onCancel }: HeroBannerF
           disabled={submitting}
           className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#0E0E0E] hover:bg-[#2C2B29] text-[#FAF9F6] text-xs font-bold uppercase tracking-wider rounded transition-all shadow-md disabled:opacity-50"
         >
-          {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4 text-[#C5A880]" />}
+          {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4 text-[#0E0E0E]" />}
           <span>{initialData?.id ? "Update Banner" : "Save Hero Banner"}</span>
         </button>
       </div>

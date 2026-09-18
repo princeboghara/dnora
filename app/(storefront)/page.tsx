@@ -3,8 +3,8 @@ import { redirect } from "next/navigation";
 import { HeroSlider } from "@/components/hero/HeroSlider";
 import { CategoriesSection } from "@/components/storefront/CategoriesSection";
 import { BestSellersSection } from "@/components/storefront/BestSellersSection";
-import { EditorialSection } from "@/components/storefront/EditorialSection";
 import { NewArrivalsSection } from "@/components/storefront/NewArrivalsSection";
+import { PromotionalBanner } from "@/components/storefront/PromotionalBanner";
 import { SeenOnYouSection } from "@/components/storefront/SeenOnYouSection";
 import { CustomerReviews } from "@/components/storefront/CustomerReviews";
 import { store } from "@/lib/data/store";
@@ -33,25 +33,25 @@ export default async function HomePage(props: HomePageProps) {
 
   return (
     <>
-      {/* 2. Hero Banner (Image & Video Autoplay + Advance) */}
+      {/* 1. HERO BANNER */}
       <HeroSlider banners={heroBanners} />
 
-      {/* 3. Categories */}
+      {/* 2. CATEGORIES (Immediately after the first Hero Banner) */}
       <CategoriesSection categories={categories} />
 
-      {/* 4. Best Sellers */}
+      {/* 3. BEST SELLERS (Centered heading, 2-card carousel, max 4, View All) */}
       <BestSellersSection products={products} />
 
-      {/* 5. Product Visual / Editorial Purse Section */}
-      <EditorialSection />
-
-      {/* 6. New Arrivals */}
+      {/* 4. NEW ARRIVALS (Centered heading, 2-card carousel, max 4, View All) */}
       <NewArrivalsSection products={products} />
 
-      {/* 7. Seen On You (Customer Video Reel) */}
+      {/* 5. SECOND HERO / PROMOTIONAL BANNER */}
+      <PromotionalBanner />
+
+      {/* 6. SEEN ON YOU (Centered heading, horizontal scroll, viewport autoplay) */}
       <SeenOnYouSection videos={seenOnYou} />
 
-      {/* 8. Customer Reviews */}
+      {/* 7. CUSTOMER REVIEWS (Centered heading, horizontal scroll) */}
       <CustomerReviews reviews={reviews} />
     </>
   );

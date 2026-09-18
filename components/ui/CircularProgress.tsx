@@ -47,7 +47,7 @@ export function CircularProgress({
             cx={size / 2}
             cy={size / 2}
             r={radius}
-            stroke="#C5A880"
+            stroke="#0E0E0E"
             strokeWidth={strokeWidth}
             strokeDasharray={circumference}
             strokeDashoffset={isIndeterminate ? circumference * 0.75 : offset}

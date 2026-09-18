@@ -10,7 +10,7 @@ export function Badge({ className, variant = "default", ...props }: BadgeProps) 
     default: "bg-[#0E0E0E] text-[#FAF9F6] border-transparent",
     secondary: "bg-[#F5F3EF] text-[#3A3835] border-transparent",
     outline: "border-[#E8E5DE] text-[#1C1B1A] bg-transparent",
-    gold: "bg-[#C5A880]/15 text-[#8A6A3E] border-[#C5A880]/30",
+    gold: "bg-[#F5F3EF] text-[#0E0E0E] border-[#E8E5DE]",
     success: "bg-emerald-50 text-emerald-800 border-emerald-200",
     warning: "bg-amber-50 text-amber-800 border-amber-200",
     danger: "bg-rose-50 text-rose-800 border-rose-200",

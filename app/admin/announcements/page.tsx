@@ -236,7 +236,7 @@ export default function AdminAnnouncementsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#E8E5DE] pb-6">
         <div>
-          <span className="text-[11px] uppercase tracking-[0.25em] text-[#C5A880] font-semibold block mb-1">
+          <span className="text-[11px] uppercase tracking-[0.25em] text-[#0E0E0E] font-semibold block mb-1">
             Storefront Header Management
           </span>
           <h1 className="text-2xl sm:text-3xl font-heading font-extrabold text-[#0E0E0E] tracking-tight">
@@ -263,7 +263,7 @@ export default function AdminAnnouncementsPage() {
             type="button"
             onClick={handleSaveConfig}
             disabled={saving}
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#0E0E0E] text-[#FAF9F6] text-xs font-semibold uppercase tracking-wider rounded-sm hover:bg-[#C5A880] hover:text-[#0E0E0E] transition-all shadow-sm disabled:opacity-50"
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#0E0E0E] text-[#FAF9F6] text-xs font-semibold uppercase tracking-wider rounded-sm hover:bg-[#0E0E0E] hover:text-[#0E0E0E] transition-all shadow-sm disabled:opacity-50"
           >
             {saving ? (
               <>
@@ -284,7 +284,7 @@ export default function AdminAnnouncementsPage() {
       <div className="bg-white border border-[#E8E5DE] rounded-sm p-6 shadow-xs space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Eye className="w-4 h-4 text-[#C5A880]" />
+            <Eye className="w-4 h-4 text-[#0E0E0E]" />
             <h2 className="text-xs uppercase tracking-widest font-bold text-[#0E0E0E]">
               Live Storefront Preview
             </h2>
@@ -336,7 +336,7 @@ export default function AdminAnnouncementsPage() {
 
               <div className="flex items-center justify-center gap-2 text-center truncate px-2">
                 {currentPreviewItem.badge && (
-                  <span className="text-[9px] uppercase tracking-wider font-bold bg-[#C5A880]/20 text-[#C5A880] px-2 py-0.5 rounded shrink-0">
+                  <span className="text-[9px] uppercase tracking-wider font-bold bg-[#F5F3EF] text-[#0E0E0E] px-2 py-0.5 rounded shrink-0">
                     {currentPreviewItem.badge}
                   </span>
                 )}
@@ -344,7 +344,7 @@ export default function AdminAnnouncementsPage() {
                   {currentPreviewItem.text}
                 </span>
                 {currentPreviewItem.link && (
-                  <ExternalLink className="w-3 h-3 text-[#C5A880] shrink-0" />
+                  <ExternalLink className="w-3 h-3 text-[#0E0E0E] shrink-0" />
                 )}
               </div>
 
@@ -369,7 +369,7 @@ export default function AdminAnnouncementsPage() {
         {/* Swiping Interval Controller */}
         <div className="bg-white border border-[#E8E5DE] rounded-sm p-6 shadow-xs space-y-4">
           <div className="flex items-center gap-2">
-            <Clock className="w-4 h-4 text-[#C5A880]" />
+            <Clock className="w-4 h-4 text-[#0E0E0E]" />
             <h2 className="text-xs uppercase tracking-widest font-bold text-[#0E0E0E]">
               Auto-Swipe Interval Timer
             </h2>
@@ -381,7 +381,7 @@ export default function AdminAnnouncementsPage() {
           <div className="space-y-3 pt-2">
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold text-[#0E0E0E]">
-                Switch Interval: <span className="text-[#C5A880] text-sm font-bold">{config.interval_seconds} seconds</span>
+                Switch Interval: <span className="text-[#0E0E0E] text-sm font-bold">{config.interval_seconds} seconds</span>
               </span>
               <span className="text-[11px] text-[#73706A] font-mono">(Range: 2s – 15s)</span>
             </div>
@@ -413,7 +413,7 @@ export default function AdminAnnouncementsPage() {
         {/* Master Active Status */}
         <div className="bg-white border border-[#E8E5DE] rounded-sm p-6 shadow-xs space-y-4">
           <div className="flex items-center gap-2">
-            <Megaphone className="w-4 h-4 text-[#C5A880]" />
+            <Megaphone className="w-4 h-4 text-[#0E0E0E]" />
             <h2 className="text-xs uppercase tracking-widest font-bold text-[#0E0E0E]">
               Announcement Bar Visibility
             </h2>
@@ -466,7 +466,7 @@ export default function AdminAnnouncementsPage() {
           <button
             type="button"
             onClick={handleOpenAdd}
-            className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#0E0E0E] text-[#FAF9F6] text-xs font-semibold uppercase tracking-wider rounded-sm hover:bg-[#C5A880] hover:text-[#0E0E0E] transition-all shrink-0"
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#0E0E0E] text-[#FAF9F6] text-xs font-semibold uppercase tracking-wider rounded-sm hover:bg-[#0E0E0E] hover:text-[#0E0E0E] transition-all shrink-0"
           >
             <Plus className="w-4 h-4" />
             <span>Add Announcement</span>
@@ -475,12 +475,12 @@ export default function AdminAnnouncementsPage() {
 
         {loading ? (
           <div className="py-12 text-center text-xs text-[#73706A] flex items-center justify-center gap-2">
-            <Loader2 className="w-4 h-4 animate-spin text-[#C5A880]" />
+            <Loader2 className="w-4 h-4 animate-spin text-[#0E0E0E]" />
             <span>Loading announcements from atelier database...</span>
           </div>
         ) : config.items.length === 0 ? (
           <div className="py-12 text-center border-2 border-dashed border-[#E8E5DE] rounded-sm p-8 space-y-3">
-            <Megaphone className="w-8 h-8 text-[#C5A880] mx-auto opacity-70" />
+            <Megaphone className="w-8 h-8 text-[#0E0E0E] mx-auto opacity-70" />
             <h3 className="text-sm font-bold text-[#0E0E0E]">No Announcements Configured</h3>
             <p className="text-xs text-[#73706A] max-w-sm mx-auto">
               Create your first promotional headline to notify clients of limited drops, complimentary shipping, or atelier perks.
@@ -488,7 +488,7 @@ export default function AdminAnnouncementsPage() {
             <button
               type="button"
               onClick={handleOpenAdd}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-[#0E0E0E] text-[#FAF9F6] text-xs font-semibold uppercase tracking-wider rounded-sm hover:bg-[#C5A880] hover:text-[#0E0E0E] transition-all mt-2"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-[#0E0E0E] text-[#FAF9F6] text-xs font-semibold uppercase tracking-wider rounded-sm hover:bg-[#0E0E0E] hover:text-[#0E0E0E] transition-all mt-2"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>Create Announcement</span>
@@ -541,7 +541,7 @@ export default function AdminAnnouncementsPage() {
                         {item.text}
                       </span>
                       {item.badge && (
-                        <span className="text-[9px] uppercase tracking-wider font-bold bg-[#C5A880]/20 text-[#C5A880] px-2 py-0.5 rounded shrink-0">
+                        <span className="text-[9px] uppercase tracking-wider font-bold bg-[#F5F3EF] text-[#0E0E0E] px-2 py-0.5 rounded shrink-0">
                           {item.badge}
                         </span>
                       )}
@@ -549,7 +549,7 @@ export default function AdminAnnouncementsPage() {
 
                     <div className="flex items-center gap-3 mt-1 text-[11px] text-[#73706A]">
                       {item.link ? (
-                        <span className="flex items-center gap-1 text-[#C5A880] truncate">
+                        <span className="flex items-center gap-1 text-[#0E0E0E] truncate">
                           <ExternalLink className="w-3 h-3 shrink-0" />
                           <span className="truncate">{item.link}</span>
                         </span>
@@ -682,7 +682,7 @@ export default function AdminAnnouncementsPage() {
             </button>
             <button
               type="submit"
-              className="px-5 py-2 bg-[#0E0E0E] text-[#FAF9F6] text-xs font-semibold uppercase tracking-wider rounded-sm hover:bg-[#C5A880] hover:text-[#0E0E0E] transition-all"
+              className="px-5 py-2 bg-[#0E0E0E] text-[#FAF9F6] text-xs font-semibold uppercase tracking-wider rounded-sm hover:bg-[#0E0E0E] hover:text-[#0E0E0E] transition-all"
             >
               {editingItem ? "Update Item" : "Add to Bar"}
             </button>

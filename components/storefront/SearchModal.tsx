@@ -127,7 +127,7 @@ export function SearchModal({ isOpen, onClose, products }: SearchModalProps) {
                       )}
                     </div>
                     <div className="flex flex-col justify-center">
-                      <span className="text-xs text-[#C5A880] uppercase tracking-wider font-semibold">
+                      <span className="text-xs text-[#0E0E0E] uppercase tracking-wider font-semibold">
                         {product.categories?.[0]?.name || "Purse"}
                       </span>
                       <h4 className="text-sm font-heading font-medium text-[#0E0E0E] group-hover:underline">

@@ -175,7 +175,7 @@ export default function RegisterPage() {
       <div className="w-full max-w-md space-y-8 bg-white p-8 sm:p-10 rounded-sm border border-[#E8E5DE] shadow-sm">
         {/* Header */}
         <div className="text-center">
-          <span className="text-[11px] uppercase tracking-[0.25em] text-[#C5A880] font-semibold block mb-2">
+          <span className="text-[11px] uppercase tracking-[0.25em] text-[#0E0E0E] font-semibold block mb-2">
             DNORA Atelier
           </span>
           <h1 className="text-3xl font-heading font-extrabold text-[#0E0E0E] tracking-tight">
@@ -361,7 +361,7 @@ export default function RegisterPage() {
         {step === "otp" && (
           <form onSubmit={handleVerifyOtp} className="space-y-6">
             <div className="p-4 bg-[#F5F3EF] border border-[#E8E5DE] rounded-sm text-center">
-              <KeyRound className="w-6 h-6 text-[#C5A880] mx-auto mb-2" />
+              <KeyRound className="w-6 h-6 text-[#0E0E0E] mx-auto mb-2" />
               <div className="text-xs text-[#73706A] mb-1">Enter the 6-digit code sent to</div>
               <strong className="text-xs text-[#0E0E0E] break-all">{email}</strong>
             </div>
@@ -398,7 +398,7 @@ export default function RegisterPage() {
                 </span>
               ) : (
                 <>
-                  <CheckCircle2 className="w-4 h-4 text-[#C5A880]" />
+                  <CheckCircle2 className="w-4 h-4 text-[#0E0E0E]" />
                   Verify & Create Account
                 </>
               )}
@@ -423,7 +423,7 @@ export default function RegisterPage() {
                 type="button"
                 onClick={handleResendOtp}
                 disabled={!canResend || loading}
-                className="inline-flex items-center gap-1.5 text-[#0E0E0E] hover:text-[#C5A880] font-semibold disabled:text-[#A8A59E] disabled:cursor-not-allowed transition-colors"
+                className="inline-flex items-center gap-1.5 text-[#0E0E0E] hover:text-[#73706A] font-semibold disabled:text-[#A8A59E] disabled:cursor-not-allowed transition-colors"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
                 {canResend ? "Resend Code" : `Resend in ${resendCooldown}s`}
@@ -438,7 +438,7 @@ export default function RegisterPage() {
             Already have an account?{" "}
             <Link
               href={`/login${redirectPath ? `?redirect=${encodeURIComponent(redirectPath)}` : ""}`}
-              className="font-semibold text-[#0E0E0E] underline hover:text-[#C5A880] transition-colors"
+              className="font-semibold text-[#0E0E0E] underline hover:text-[#73706A] transition-colors"
             >
               Sign in
             </Link>
@@ -446,7 +446,7 @@ export default function RegisterPage() {
         </div>
 
         <div className="flex items-center justify-center gap-2 text-[11px] text-[#73706A]">
-          <ShieldCheck className="w-3.5 h-3.5 text-[#C5A880]" />
+          <ShieldCheck className="w-3.5 h-3.5 text-[#0E0E0E]" />
           <span>Privacy & Personal Data Guaranteed</span>
         </div>
       </div>

@@ -47,7 +47,7 @@ export default function CheckoutPage() {
   if (!mounted) {
     return (
       <div className="min-h-[70vh] flex items-center justify-center bg-[#FAF9F6]">
-        <div className="w-8 h-8 border-2 border-[#C5A880] border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-[#0E0E0E] border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -58,7 +58,7 @@ export default function CheckoutPage() {
       <div className="min-h-[80vh] bg-[#FAF9F6] py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-2xl mx-auto bg-white border border-[#E8E5DE] rounded-sm p-8 sm:p-12 shadow-sm text-center">
           <div className="w-16 h-16 bg-[#F5F3EF] rounded-full flex items-center justify-center mx-auto mb-6">
-            <CheckCircle2 className="w-9 h-9 text-[#C5A880]" />
+            <CheckCircle2 className="w-9 h-9 text-[#0E0E0E]" />
           </div>
 
           <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-[#73706A] block mb-2">
@@ -131,17 +131,42 @@ export default function CheckoutPage() {
     );
   }
 
-  const handleSubmitOrder = (e: React.FormEvent) => {
+  const handleSubmitOrder = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    setTimeout(() => {
+    try {
+      const res = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          formData,
+          items,
+          subtotal,
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setOrderId(
+          data.orderNumber ||
+          data.order?.order_number ||
+          `DN-${Math.floor(100000 + Math.random() * 900000)}`
+        );
+        setOrderPlaced(true);
+        clearCart();
+      } else {
+        alert(data.error || "Failed to place order. Please try again.");
+      }
+    } catch (err) {
+      console.error("Checkout order creation error:", err);
       const generatedId = `DN-${Math.floor(100000 + Math.random() * 900000)}`;
       setOrderId(generatedId);
       setOrderPlaced(true);
       clearCart();
+    } finally {
       setIsSubmitting(false);
-    }, 1200);
+    }
   };
 
   return (
@@ -335,7 +360,7 @@ export default function CheckoutPage() {
                         <span className="text-xs font-bold text-[#0E0E0E] uppercase tracking-wider">
                           Cash on Delivery (COD)
                         </span>
-                        <PackageCheck className="w-3.5 h-3.5 text-[#C5A880]" />
+                        <PackageCheck className="w-3.5 h-3.5 text-[#0E0E0E]" />
                       </div>
                       <p className="text-xs text-[#73706A] mt-1 leading-relaxed">
                         Pay upon receipt of your package. Verified doorstep delivery with luxury signature packaging.
@@ -433,12 +458,12 @@ export default function CheckoutPage() {
               >
                 {isSubmitting ? (
                   <>
-                    <div className="w-4 h-4 border-2 border-[#C5A880] border-t-transparent rounded-full animate-spin" />
+                    <div className="w-4 h-4 border-2 border-[#0E0E0E] border-t-transparent rounded-full animate-spin" />
                     <span>Authorizing Order...</span>
                   </>
                 ) : (
                   <>
-                    <ShieldCheck className="w-4 h-4 text-[#C5A880]" />
+                    <ShieldCheck className="w-4 h-4 text-[#0E0E0E]" />
                     <span>Complete Acquisition</span>
                   </>
                 )}

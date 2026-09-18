@@ -84,7 +84,7 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 lg:py-32">
           {/* Breadcrumbs */}
-          <nav className="flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-[#C5A880] mb-6">
+          <nav className="flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-[#0E0E0E] mb-6">
             <Link href="/" className="hover:text-white transition-colors">
               Home
             </Link>
@@ -98,7 +98,7 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
 
           {/* Title & Tagline */}
           <div className="max-w-2xl">
-            <span className="inline-block text-xs uppercase tracking-[0.25em] text-[#C5A880] font-semibold mb-3">
+            <span className="inline-block text-xs uppercase tracking-[0.25em] text-[#0E0E0E] font-semibold mb-3">
               Curated Silhouette
             </span>
             <h1 className="text-3xl sm:text-5xl lg:text-6xl font-heading font-extrabold tracking-tight text-white capitalize mb-4">
@@ -171,7 +171,7 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
         {products.length === 0 ? (
           <div className="text-center py-20 bg-white rounded-2xl border border-[#E8E5DE] max-w-xl mx-auto px-6">
             <div className="w-14 h-14 mx-auto rounded-full bg-[#FAF9F6] flex items-center justify-center mb-4">
-              <ShoppingBag className="w-6 h-6 text-[#C5A880]" />
+              <ShoppingBag className="w-6 h-6 text-[#0E0E0E]" />
             </div>
             <h2 className="text-lg font-bold text-[#0E0E0E] uppercase tracking-wide mb-2">
               New Designs Arriving Soon

@@ -267,7 +267,7 @@ export default function AdminCustomersPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-[#E8E5DE] pb-6">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-[11px] uppercase tracking-[0.25em] text-[#C5A880] font-bold">
+            <span className="text-[11px] uppercase tracking-[0.25em] text-[#0E0E0E] font-bold">
               Directory & CRM
             </span>
           </div>
@@ -286,7 +286,7 @@ export default function AdminCustomersPage() {
           }}
           className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-[#0E0E0E] hover:bg-[#242321] text-white text-xs font-semibold uppercase tracking-widest transition-colors shadow-sm rounded-sm shrink-0"
         >
-          <Plus className="w-4 h-4 text-[#C5A880]" />
+          <Plus className="w-4 h-4 text-[#0E0E0E]" />
           Add Customer
         </button>
       </div>
@@ -302,7 +302,7 @@ export default function AdminCustomersPage() {
             <span className="text-[11px] text-[#73706A]">Registered accounts</span>
           </div>
           <div className="w-10 h-10 rounded-full bg-[#FAF9F6] border border-[#E8E5DE] flex items-center justify-center text-[#0E0E0E]">
-            <Users className="w-5 h-5 text-[#C5A880]" />
+            <Users className="w-5 h-5 text-[#0E0E0E]" />
           </div>
         </div>
 
@@ -319,7 +319,7 @@ export default function AdminCustomersPage() {
             </span>
           </div>
           <div className="w-10 h-10 rounded-full bg-[#FAF9F6] border border-[#E8E5DE] flex items-center justify-center text-[#0E0E0E]">
-            <ShoppingBag className="w-5 h-5 text-[#C5A880]" />
+            <ShoppingBag className="w-5 h-5 text-[#0E0E0E]" />
           </div>
         </div>
 
@@ -334,7 +334,7 @@ export default function AdminCustomersPage() {
             <span className="text-[11px] text-[#73706A]">Across all orders</span>
           </div>
           <div className="w-10 h-10 rounded-full bg-[#FAF9F6] border border-[#E8E5DE] flex items-center justify-center text-[#0E0E0E]">
-            <DollarSign className="w-5 h-5 text-[#C5A880]" />
+            <DollarSign className="w-5 h-5 text-[#0E0E0E]" />
           </div>
         </div>
 
@@ -349,7 +349,7 @@ export default function AdminCustomersPage() {
             <span className="text-[11px] text-[#73706A]">Customer lifetime value</span>
           </div>
           <div className="w-10 h-10 rounded-full bg-[#FAF9F6] border border-[#E8E5DE] flex items-center justify-center text-[#0E0E0E]">
-            <UserCheck className="w-5 h-5 text-[#C5A880]" />
+            <UserCheck className="w-5 h-5 text-[#0E0E0E]" />
           </div>
         </div>
       </div>
@@ -402,7 +402,7 @@ export default function AdminCustomersPage() {
                 setRoleFilter("all");
                 setOrdersFilter("all");
               }}
-              className="text-xs text-[#C5A880] hover:underline font-medium px-2 py-1"
+              className="text-xs text-[#0E0E0E] hover:underline font-medium px-2 py-1"
             >
               Reset Filters
             </button>
@@ -414,7 +414,7 @@ export default function AdminCustomersPage() {
       <div className="bg-white border border-[#E8E5DE] rounded-sm shadow-sm overflow-hidden">
         {loading ? (
           <div className="py-20 flex flex-col items-center justify-center gap-3">
-            <Loader2 className="w-8 h-8 text-[#C5A880] animate-spin" />
+            <Loader2 className="w-8 h-8 text-[#0E0E0E] animate-spin" />
             <p className="text-xs text-[#73706A] uppercase tracking-widest">
               Loading Customers...
             </p>
@@ -437,7 +437,7 @@ export default function AdminCustomersPage() {
               }}
               className="inline-flex items-center gap-2 px-4 py-2 bg-[#0E0E0E] text-white text-xs uppercase tracking-widest font-semibold rounded-sm hover:bg-[#242321]"
             >
-              <Plus className="w-3.5 h-3.5 text-[#C5A880]" />
+              <Plus className="w-3.5 h-3.5 text-[#0E0E0E]" />
               Add Customer Manually
             </button>
           </div>
@@ -472,7 +472,7 @@ export default function AdminCustomersPage() {
                       {/* Customer Profile */}
                       <td className="py-4 px-4 sm:px-6">
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-full bg-[#0E0E0E] text-[#FAF9F6] font-bold flex items-center justify-center text-xs shrink-0 border border-[#C5A880]/30 shadow-sm">
+                          <div className="w-9 h-9 rounded-full bg-[#0E0E0E] text-[#FAF9F6] font-bold flex items-center justify-center text-xs shrink-0 border border-[#E8E5DE] shadow-sm">
                             {initials}
                           </div>
                           <div>
@@ -481,7 +481,7 @@ export default function AdminCustomersPage() {
                                 {customer.full_name || "Unnamed Client"}
                               </span>
                               {customer.role === "admin" && (
-                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-xs text-[9px] font-bold uppercase tracking-wider bg-[#C5A880]/20 text-[#8F7449] border border-[#C5A880]/40">
+                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-xs text-[9px] font-bold uppercase tracking-wider bg-[#F5F3EF] text-[#8F7449] border border-[#0E0E0E]/40">
                                   <ShieldCheck className="w-2.5 h-2.5" />
                                   Admin
                                 </span>
@@ -501,7 +501,7 @@ export default function AdminCustomersPage() {
                             <Mail className="w-3.5 h-3.5 text-[#73706A] shrink-0" />
                             <a
                               href={`mailto:${customer.email}`}
-                              className="hover:text-[#C5A880] transition-colors truncate max-w-[180px] block"
+                              className="hover:text-[#73706A] transition-colors truncate max-w-[180px] block"
                               title={customer.email}
                             >
                               {customer.email}
@@ -523,7 +523,7 @@ export default function AdminCustomersPage() {
                         {addr && (addr.address_line1 || addr.city) ? (
                           <div className="space-y-0.5">
                             <div className="flex items-start gap-1 text-[#0E0E0E]">
-                              <MapPin className="w-3.5 h-3.5 text-[#C5A880] shrink-0 mt-0.5" />
+                              <MapPin className="w-3.5 h-3.5 text-[#0E0E0E] shrink-0 mt-0.5" />
                               <span className="line-clamp-1 font-medium">
                                 {addr.address_line1}
                                 {addr.address_line2 ? `, ${addr.address_line2}` : ""}
@@ -535,7 +535,7 @@ export default function AdminCustomersPage() {
                             <div className="text-[10px] text-[#A8A59E] pl-4 uppercase tracking-wider font-semibold">
                               {addr.country || "India"}
                               {customer.addresses && customer.addresses.length > 1 && (
-                                <span className="ml-2 text-[#C5A880] font-normal">
+                                <span className="ml-2 text-[#0E0E0E] font-normal">
                                   (+{customer.addresses.length - 1} more)
                                 </span>
                               )}
@@ -816,7 +816,7 @@ export default function AdminCustomersPage() {
                 </>
               ) : (
                 <>
-                  <Check className="w-3.5 h-3.5 text-[#C5A880]" />
+                  <Check className="w-3.5 h-3.5 text-[#0E0E0E]" />
                   {editingCustomer ? "Update Customer" : "Create Customer"}
                 </>
               )}

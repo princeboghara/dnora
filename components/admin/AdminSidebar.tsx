@@ -114,7 +114,7 @@ export function AdminSidebar({
           <div className="flex items-center justify-between p-6 border-b border-[#242321] shrink-0">
             <div className="flex items-center gap-2">
               <BrandLogo size="sm" href="/admin" />
-              <span className="text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded bg-[#C5A880]/20 text-[#C5A880]">
+              <span className="text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded bg-[#F5F3EF] text-[#0E0E0E]">
                 Admin
               </span>
             </div>
@@ -196,7 +196,7 @@ export function AdminSidebar({
                                 "w-4 h-4 shrink-0 transition-colors",
                                 isActive
                                   ? "text-[#0E0E0E]"
-                                  : "text-[#73706A] group-hover:text-[#C5A880]"
+                                  : "text-[#73706A] group-hover:text-[#73706A]"
                               )}
                             />
                             <span className="truncate">{item.label}</span>
@@ -224,7 +224,7 @@ export function AdminSidebar({
                                 "w-4 h-4 shrink-0 transition-colors",
                                 isActive
                                   ? "text-[#0E0E0E]"
-                                  : "text-[#73706A] group-hover:text-[#C5A880]"
+                                  : "text-[#73706A] group-hover:text-[#73706A]"
                               )}
                             />
                             <span className="truncate">{item.label}</span>
@@ -303,7 +303,7 @@ export function AdminSidebar({
                                     className={cn(
                                       "w-full flex items-center justify-between px-3 py-1.5 rounded-md text-[11px] font-medium transition-all duration-200 text-left",
                                       isSubActive
-                                        ? "bg-[#C5A880]/20 text-[#C5A880] font-semibold"
+                                        ? "bg-[#F5F3EF] text-[#0E0E0E] font-semibold"
                                         : "text-[#A8A49C] hover:text-[#FAF9F6] hover:bg-[#1C1B1A]"
                                     )}
                                   >
@@ -325,7 +325,7 @@ export function AdminSidebar({
                                   className={cn(
                                     "flex items-center justify-between px-3 py-1.5 rounded-md text-[11px] font-medium transition-all duration-200",
                                     isSubActive
-                                      ? "bg-[#C5A880]/20 text-[#C5A880] font-semibold"
+                                      ? "bg-[#F5F3EF] text-[#0E0E0E] font-semibold"
                                       : "text-[#A8A49C] hover:text-[#FAF9F6] hover:bg-[#1C1B1A]"
                                   )}
                                 >
@@ -358,7 +358,7 @@ export function AdminSidebar({
             className="w-full flex items-center justify-between px-3 py-2.5 rounded-md text-xs font-semibold text-[#A8A49C] hover:text-[#FAF9F6] hover:bg-[#1C1B1A] border border-[#242321] hover:border-[#383633] transition-all group"
           >
             <span className="flex items-center gap-2.5">
-              <Sliders className="w-4 h-4 text-[#C5A880] group-hover:rotate-45 transition-transform duration-300" />
+              <Sliders className="w-4 h-4 text-[#0E0E0E] group-hover:rotate-45 transition-transform duration-300" />
               <span>Edit Sidebar</span>
             </span>
             <span className="text-[9px] uppercase tracking-widest px-1.5 py-0.5 rounded bg-[#1C1B1A] text-[#73706A] group-hover:text-[#A8A49C]">

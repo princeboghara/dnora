@@ -366,7 +366,7 @@ export default function AdminCategoriesPage() {
         <div>
           <div className="flex items-center gap-2">
             <span className="p-2 rounded-lg bg-[#FAF9F6] border border-[#E5E0D8] text-[#0E0E0E]">
-              <Folder className="w-5 h-5 text-[#C5A880]" />
+              <Folder className="w-5 h-5 text-[#0E0E0E]" />
             </span>
             <div>
               <h1 className="text-xl font-bold tracking-tight text-[#0E0E0E] uppercase">
@@ -410,7 +410,7 @@ export default function AdminCategoriesPage() {
       {/* Category List */}
       {loading ? (
         <div className="flex flex-col items-center justify-center py-16 bg-white rounded-xl border border-[#E5E0D8]">
-          <Loader2 className="w-8 h-8 animate-spin text-[#C5A880] mb-2" />
+          <Loader2 className="w-8 h-8 animate-spin text-[#0E0E0E] mb-2" />
           <p className="text-xs text-[#73706A]">Loading categories...</p>
         </div>
       ) : filteredCategories.length === 0 ? (
@@ -437,7 +437,7 @@ export default function AdminCategoriesPage() {
           {filteredCategories.map((cat) => (
             <div
               key={cat.id}
-              className="group bg-white rounded-xl border border-[#E5E0D8] hover:border-[#C5A880] shadow-sm hover:shadow-md transition-all flex flex-col overflow-hidden"
+              className="group bg-white rounded-xl border border-[#E5E0D8] hover:border-[#0E0E0E] shadow-sm hover:shadow-md transition-all flex flex-col overflow-hidden"
             >
               {/* Image / Hero Banner Preview */}
               <div className="relative w-full h-40 bg-[#FAF9F6] border-b border-[#E5E0D8] overflow-hidden">
@@ -451,7 +451,7 @@ export default function AdminCategoriesPage() {
                   />
                 ) : (
                   <div className="w-full h-full flex flex-col items-center justify-center text-[#73706A]">
-                    <ImageIcon className="w-8 h-8 mb-1 stroke-1 text-[#C5A880]" />
+                    <ImageIcon className="w-8 h-8 mb-1 stroke-1 text-[#0E0E0E]" />
                     <span className="text-[10px] tracking-wider uppercase">No Banner Image</span>
                   </div>
                 )}
@@ -459,7 +459,7 @@ export default function AdminCategoriesPage() {
                   <Link
                     href={`/category/${cat.slug}`}
                     target="_blank"
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-white/90 backdrop-blur text-[#0E0E0E] hover:text-[#C5A880] text-[10px] font-semibold tracking-wider uppercase rounded-full shadow-sm border border-[#E5E0D8] transition-colors"
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-white/90 backdrop-blur text-[#0E0E0E] hover:text-[#73706A] text-[10px] font-semibold tracking-wider uppercase rounded-full shadow-sm border border-[#E5E0D8] transition-colors"
                   >
                     <span>View Page</span>
                     <ExternalLink className="w-3 h-3" />
@@ -475,7 +475,7 @@ export default function AdminCategoriesPage() {
                       {cat.name}
                     </h3>
                   </div>
-                  <p className="text-[11px] font-mono text-[#C5A880] mb-2 truncate">
+                  <p className="text-[11px] font-mono text-[#0E0E0E] mb-2 truncate">
                     /category/{cat.slug}
                   </p>
                   <p className="text-xs text-[#73706A] line-clamp-2 leading-relaxed">
@@ -581,10 +581,10 @@ export default function AdminCategoriesPage() {
             {!imageUrl ? (
               <div
                 onClick={() => fileInputRef.current?.click()}
-                className="group border-2 border-dashed border-[#E5E0D8] hover:border-[#C5A880] bg-[#FAF9F6] hover:bg-[#F5F3EF] rounded-xl p-6 text-center cursor-pointer transition-all"
+                className="group border-2 border-dashed border-[#E5E0D8] hover:border-[#0E0E0E] bg-[#FAF9F6] hover:bg-[#F5F3EF] rounded-xl p-6 text-center cursor-pointer transition-all"
               >
                 <div className="w-12 h-12 mx-auto rounded-full bg-white flex items-center justify-center border border-[#E5E0D8] group-hover:scale-105 transition-transform mb-3 shadow-sm">
-                  <Upload className="w-5 h-5 text-[#C5A880]" />
+                  <Upload className="w-5 h-5 text-[#0E0E0E]" />
                 </div>
                 <p className="text-xs font-semibold text-[#0E0E0E] uppercase tracking-wider mb-1">
                   Upload Category Photo
@@ -619,7 +619,7 @@ export default function AdminCategoriesPage() {
                     }}
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#0E0E0E] bg-white border border-[#E5E0D8] hover:bg-[#FAF9F6] rounded-md transition-colors shadow-xs"
                   >
-                    <Crop className="w-3.5 h-3.5 text-[#C5A880]" />
+                    <Crop className="w-3.5 h-3.5 text-[#0E0E0E]" />
                     <span>Crop &amp; Adjust Image</span>
                   </button>
 
@@ -732,7 +732,7 @@ export default function AdminCategoriesPage() {
 
             {/* Drag Hint Badge */}
             <div className="absolute top-2 left-2 px-2.5 py-1 bg-black/70 backdrop-blur-md rounded-md text-[10px] font-semibold uppercase tracking-wider text-white flex items-center gap-1.5 pointer-events-none">
-              <Move className="w-3 h-3 text-[#C5A880]" />
+              <Move className="w-3 h-3 text-[#0E0E0E]" />
               <span>Drag to Pan</span>
             </div>
 
@@ -752,7 +752,7 @@ export default function AdminCategoriesPage() {
             {/* Zoom Slider */}
             <div className="flex items-center gap-3">
               <span className="text-xs font-semibold uppercase tracking-wider text-[#0E0E0E] w-14 shrink-0 flex items-center gap-1">
-                <ZoomIn className="w-3.5 h-3.5 text-[#C5A880]" />
+                <ZoomIn className="w-3.5 h-3.5 text-[#0E0E0E]" />
                 Zoom
               </span>
               <button
@@ -825,7 +825,7 @@ export default function AdminCategoriesPage() {
               {uploadingImage ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
               ) : (
-                <Crop className="w-3.5 h-3.5 text-[#C5A880]" />
+                <Crop className="w-3.5 h-3.5 text-[#0E0E0E]" />
               )}
               <span>Apply Crop &amp; Upload</span>
             </button>

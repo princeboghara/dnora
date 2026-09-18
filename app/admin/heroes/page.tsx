@@ -101,7 +101,7 @@ export default function HeroManagerPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-[#E8E5DE]">
         <div>
-          <span className="text-xs uppercase tracking-[0.2em] text-[#C5A880] font-semibold block mb-1">
+          <span className="text-xs uppercase tracking-[0.2em] text-[#0E0E0E] font-semibold block mb-1">
             Storefront Experience
           </span>
           <h1 className="text-2xl sm:text-3xl font-heading font-extrabold text-[#0E0E0E] tracking-tight">
@@ -116,7 +116,7 @@ export default function HeroManagerPage() {
           onClick={() => setIsCreateOpen(true)}
           className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#0E0E0E] hover:bg-[#2C2B29] text-xs font-bold uppercase tracking-wider text-[#FAF9F6] rounded transition-all shadow-md shrink-0"
         >
-          <Plus className="w-4 h-4 text-[#C5A880]" />
+          <Plus className="w-4 h-4 text-[#0E0E0E]" />
           <span>Create Hero Banner</span>
         </button>
       </div>
@@ -192,7 +192,7 @@ export default function HeroManagerPage() {
                           {banner.subtitle}
                         </span>
                       )}
-                      <span className="text-[10px] text-[#C5A880] block mt-0.5">
+                      <span className="text-[10px] text-[#0E0E0E] block mt-0.5">
                         CTA: {banner.button_text} &rarr; {banner.button_link}
                       </span>
                     </td>

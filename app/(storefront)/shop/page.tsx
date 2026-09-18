@@ -41,7 +41,7 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Page Header */}
         <div className="mb-10 text-center max-w-2xl mx-auto">
-          <span className="text-xs uppercase tracking-[0.25em] text-[#C5A880] font-semibold block mb-2">
+          <span className="text-xs uppercase tracking-[0.25em] text-[#0E0E0E] font-semibold block mb-2">
             The Complete Atelier Collection
           </span>
           <h1 className="text-3xl sm:text-5xl font-heading font-extrabold text-[#0E0E0E] tracking-tight">

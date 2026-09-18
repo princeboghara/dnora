@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { ShieldCheck, Truck, RotateCcw, ArrowLeft } from "lucide-react";
 import { store } from "@/lib/data/store";
 import { ProductCard } from "@/components/storefront/ProductCard";
+import { YouMayAlsoLikeCarousel } from "@/components/storefront/YouMayAlsoLikeCarousel";
 // Client-side interactive handbag detail component (gallery, quantity, wishlist, bag)
 import { ProductDetailClient } from "@/components/storefront/ProductDetailClient";
 import type { Metadata } from "next";
@@ -82,7 +83,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
 
           <div className="flex items-start gap-4">
             <div className="p-3 bg-white border border-[#E8E5DE] rounded-sm shrink-0">
-              <ShieldCheck className="w-5 h-5 text-[#C5A880]" />
+              <ShieldCheck className="w-5 h-5 text-[#0E0E0E]" />
             </div>
             <div>
               <h4 className="text-xs uppercase tracking-widest font-heading font-bold text-[#0E0E0E] mb-1">
@@ -109,23 +110,9 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
           </div>
         </div>
 
-        {/* Related Products */}
+        {/* YOU MAY ALSO LIKE Horizontal Carousel */}
         {relatedProducts.length > 0 && (
-          <div className="mt-24">
-            <div className="mb-10 text-center">
-              <span className="text-xs uppercase tracking-[0.25em] text-[#C5A880] font-semibold block mb-2">
-                Curated Recommendations
-              </span>
-              <h2 className="text-2xl sm:text-3xl font-heading font-extrabold text-[#0E0E0E] tracking-tight">
-                You May Also Admire
-              </h2>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {relatedProducts.map((item) => (
-                <ProductCard key={item.id} product={item} />
-              ))}
-            </div>
-          </div>
+          <YouMayAlsoLikeCarousel products={relatedProducts} />
         )}
       </div>
     </div>

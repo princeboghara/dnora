@@ -1,7 +1,7 @@
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Sparkles } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 export function EditorialSection() {
   return (
@@ -22,36 +22,36 @@ export function EditorialSection() {
             {/* Floating Luxury Detail Box */}
             <div className="hidden sm:block absolute -bottom-8 -right-8 w-64 p-6 bg-white border border-[#E8E5DE] shadow-2xl rounded-sm">
               <div className="flex items-center gap-2 mb-2">
-                <Sparkles className="w-4 h-4 text-[#C5A880]" />
+                <span className="w-1.5 h-1.5 rounded-full bg-[#0E0E0E]" />
                 <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-[#0E0E0E]">
                   Florence Atelier
                 </span>
               </div>
               <p className="text-xs text-[#73706A] leading-relaxed">
-                Sculpted from 100% full-grain calfskin, conditioned with organic oils for effortless tactile drape.
+                Sculpted from full-grain Italian calfskin, conditioned with organic waxes for effortless tactile drape.
               </p>
             </div>
           </div>
 
-          {/* Right Column: Editorial Manifesto & Detail Visual */}
+          {/* Right Column: Editorial Atelier Story */}
           <div className="lg:col-span-6 flex flex-col justify-center lg:pl-6">
-            <span className="text-xs uppercase tracking-[0.25em] text-[#C5A880] font-bold mb-3 block">
+            <span className="text-xs uppercase tracking-[0.25em] text-[#73706A] font-bold mb-3 block">
               Architectural Craftsmanship
             </span>
 
             <h2 className="text-3xl sm:text-5xl font-heading font-extrabold text-[#0E0E0E] tracking-tight leading-[1.1] mb-6">
-              Sculpted Forms. Pure Discipline.
+              The DNORA Atelier
             </h2>
 
             <p className="text-base text-[#3A3835] leading-relaxed mb-8">
-              At DNORA, we reject fleeting trends. We approach women&rsquo;s handbag design through the lens of architectural reduction—every curve serves purpose, every edge is burnished by hand, and every silhouette balances uncompromising structure with effortless grace.
+              At DNORA, we approach women&rsquo;s luxury leather goods through the lens of architectural reduction—every curve serves a deliberate purpose, every edge is burnished by hand, and every silhouette balances uncompromising structure with effortless grace.
             </p>
 
-            {/* Architectural Pillars */}
+            {/* Architectural Craft Pillars */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4 pb-8 border-y border-[#E8E5DE]">
               <div>
                 <span className="font-heading font-bold text-sm text-[#0E0E0E] block mb-1">
-                  01 / Tuscan Vegetable Calfskin
+                  01 / Tuscan Full-Grain Calfskin
                 </span>
                 <p className="text-xs text-[#73706A] leading-normal">
                   Sourced exclusively from certified historic tanneries in Santa Croce, Italy.
@@ -59,10 +59,10 @@ export function EditorialSection() {
               </div>
               <div>
                 <span className="font-heading font-bold text-sm text-[#0E0E0E] block mb-1">
-                  02 / Bespoke Brass Hardware
+                  02 / Hand-Milled Solid Hardware
                 </span>
                 <p className="text-xs text-[#73706A] leading-normal">
-                  Custom milled solid brass with brushed champagne satin electrochemical finish.
+                  Custom milled solid metal hardware with subtle satin finish and scratch-resistant coating.
                 </p>
               </div>
             </div>
@@ -71,7 +71,7 @@ export function EditorialSection() {
             <div className="pt-8">
               <Link
                 href="/shop"
-                className="group inline-flex items-center gap-3 px-8 py-4 bg-[#0E0E0E] text-[#FAF9F6] text-xs font-semibold uppercase tracking-[0.2em] hover:bg-[#C5A880] hover:text-[#0E0E0E] transition-all rounded shadow-md"
+                className="group inline-flex items-center gap-3 px-8 py-4 bg-[#0E0E0E] text-[#FAF9F6] text-xs font-semibold uppercase tracking-[0.2em] hover:bg-[#262626] transition-all rounded-xs shadow-md"
               >
                 <span>Explore The Atelier Story</span>
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />

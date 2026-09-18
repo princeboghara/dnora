@@ -9,6 +9,18 @@ export const DEFAULT_SIDEBAR_ITEMS: SidebarMenuItem[] = [
     is_active: true,
   },
   {
+    id: "nav-orders",
+    label: "Orders",
+    href: "/admin/orders",
+    icon: "Package",
+    is_active: true,
+    submenus: [
+      { id: "sub-ord-all", label: "All Orders", href: "/admin/orders" },
+      { id: "sub-ord-processing", label: "Processing", href: "/admin/orders?status=processing" },
+      { id: "sub-ord-shipped", label: "Shipped", href: "/admin/orders?status=shipped" },
+    ],
+  },
+  {
     id: "nav-categories",
     label: "Categories",
     href: "/admin/categories",

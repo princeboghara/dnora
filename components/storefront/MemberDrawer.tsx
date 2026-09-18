@@ -48,23 +48,14 @@ interface MemberDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   user?: UserSession | null;
-  items?: SidebarMenuItem[];
 }
 
-export function MemberDrawer({ isOpen, onClose, user, items: propItems }: MemberDrawerProps) {
-  const rawPathname = usePathname();
-  const pathname = rawPathname || "/";
+export function MemberDrawer({ isOpen, onClose, user }: MemberDrawerProps) {
+  const pathname = usePathname();
   const router = useRouter();
-  const [items, setItems] = useState<SidebarMenuItem[]>(propItems || DEFAULT_STOREFRONT_NAVIGATION);
-  const [loading, setLoading] = useState(!propItems || propItems.length === 0);
+  const [items, setItems] = useState<SidebarMenuItem[]>(DEFAULT_STOREFRONT_NAVIGATION);
+  const [loading, setLoading] = useState(true);
   const [userExpandedOverrides, setUserExpandedOverrides] = useState<Record<string, boolean>>({});
-
-  useEffect(() => {
-    if (propItems && propItems.length > 0) {
-      setItems(propItems);
-      setLoading(false);
-    }
-  }, [propItems]);
 
   // Fetch dynamic navigation configuration
   useEffect(() => {
@@ -160,7 +151,7 @@ export function MemberDrawer({ isOpen, onClose, user, items: propItems }: Member
                       <span className="text-xs font-bold text-[#0E0E0E] truncate">
                         {user.full_name || user.email.split("@")[0]}
                       </span>
-                      <span className="px-1.5 py-0.2 bg-[#C5A880]/20 text-[#8F7449] text-[9px] font-bold uppercase tracking-wider rounded-xs shrink-0">
+                      <span className="px-1.5 py-0.2 bg-[#F5F3EF] text-[#8F7449] text-[9px] font-bold uppercase tracking-wider rounded-xs shrink-0">
                         Member
                       </span>
                     </div>
@@ -169,7 +160,7 @@ export function MemberDrawer({ isOpen, onClose, user, items: propItems }: Member
                       onClick={onClose}
                       className="text-[11px] text-[#73706A] hover:text-[#0E0E0E] font-medium flex items-center gap-1 mt-0.5"
                     >
-                      <Package className="w-3 h-3 text-[#C5A880]" />
+                      <Package className="w-3 h-3 text-[#0E0E0E]" />
                       <span>My Account & Orders</span>
                     </Link>
                   </div>
@@ -187,7 +178,7 @@ export function MemberDrawer({ isOpen, onClose, user, items: propItems }: Member
             ) : (
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <span className="text-[10px] uppercase tracking-widest text-[#C5A880] font-bold block">
+                  <span className="text-[10px] uppercase tracking-widest text-[#0E0E0E] font-bold block">
                     Welcome to Maison DNORA
                   </span>
                   <span className="text-xs font-medium text-[#73706A]">
@@ -259,7 +250,7 @@ export function MemberDrawer({ isOpen, onClose, user, items: propItems }: Member
                           <IconComp className="w-4 h-4 text-[#8F7449] shrink-0" />
                           <span className="truncate">{item.label}</span>
                           {item.badge && (
-                            <span className="text-[9px] uppercase tracking-wider px-1.5 py-0.2 rounded font-bold bg-[#C5A880]/20 text-[#8F7449] shrink-0">
+                            <span className="text-[9px] uppercase tracking-wider px-1.5 py-0.2 rounded font-bold bg-[#F5F3EF] text-[#8F7449] shrink-0">
                               {item.badge}
                             </span>
                           )}
@@ -273,7 +264,7 @@ export function MemberDrawer({ isOpen, onClose, user, items: propItems }: Member
                           <IconComp className="w-4 h-4 text-[#8F7449] shrink-0" />
                           <span className="truncate">{item.label}</span>
                           {item.badge && (
-                            <span className="text-[9px] uppercase tracking-wider px-1.5 py-0.2 rounded font-bold bg-[#C5A880]/20 text-[#8F7449] shrink-0">
+                            <span className="text-[9px] uppercase tracking-wider px-1.5 py-0.2 rounded font-bold bg-[#F5F3EF] text-[#8F7449] shrink-0">
                               {item.badge}
                             </span>
                           )}
@@ -328,7 +319,7 @@ export function MemberDrawer({ isOpen, onClose, user, items: propItems }: Member
                                 className={cn(
                                   "flex items-center justify-between px-3 py-1.5 rounded-sm text-[11px] font-medium transition-colors",
                                   isSubActive
-                                    ? "bg-[#C5A880]/15 text-[#8F7449] font-bold"
+                                    ? "bg-[#F5F3EF] text-[#8F7449] font-bold"
                                     : "text-[#73706A] hover:text-[#0E0E0E] hover:bg-[#FAF9F6]"
                                 )}
                               >

@@ -12,8 +12,8 @@
   --color-dnora-cream: #F5F3EF;
   --color-dnora-ivory: #FAF9F6;
   --color-dnora-white: #FFFFFF;
-  --color-dnora-gold: #C5A880;
-  --color-dnora-gold-dark: #A9895E;
+  --color-dnora-gold: #0E0E0E;
+  --color-dnora-gold-dark: #262626;
   --color-dnora-border: #E8E5DE;
   --color-dnora-border-light: #F2EFE9;
 
@@ -29,7 +29,7 @@
   --border: #E8E5DE;
   --primary: #0E0E0E;
   --primary-foreground: #FFFFFF;
-  --accent: #C5A880;
+  --accent: #0E0E0E;
   --muted: #73706A;
   --muted-bg: #F5F3EF;
 }
@@ -108,3 +108,15 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   text-transform: uppercase;
   font-weight: 600;
 }
+
+/* Hide scrollbars for luxury carousels */
+.scrollbar-none::-webkit-scrollbar,
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-none,
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
