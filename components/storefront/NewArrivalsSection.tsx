@@ -11,6 +11,8 @@ interface NewArrivalsSectionProps {
   headingFontFamily?: string;
   headingFontWeight?: string;
   cardGap?: number;
+  cardSize?: "sm" | "md" | "lg";
+  cardWidth?: number;
 }
 
 export function NewArrivalsSection({
@@ -22,6 +24,8 @@ export function NewArrivalsSection({
   headingFontFamily,
   headingFontWeight,
   cardGap,
+  cardSize,
+  cardWidth,
 }: NewArrivalsSectionProps) {
   const activeProducts = products.filter((p) => p.status === "active");
   const newArrivals = activeProducts.filter((p) => p.is_new_arrival);
@@ -30,7 +34,7 @@ export function NewArrivalsSection({
   if (displayProducts.length === 0) return null;
 
   return (
-    <section id="new-arrivals" className="py-10 sm:py-14 bg-white border-t border-[#E8E5DE]">
+    <section id="new-arrivals" className="py-6 sm:py-8 bg-white border-t border-slate-200/80">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <HorizontalProductCarousel
           title={title}
@@ -42,6 +46,8 @@ export function NewArrivalsSection({
           headingFontFamily={headingFontFamily}
           headingFontWeight={headingFontWeight}
           cardGap={cardGap}
+          cardSize={cardSize}
+          cardWidth={cardWidth}
         />
       </div>
     </section>

@@ -221,17 +221,17 @@ export async function sendWelcomeEmail({ email, name }: SendWelcomeOptions): Pro
         
         <div class="hero-banner">
           <div class="title">Welcome to DNORA</div>
-          <div class="subtitle">Membership Confirmed & Activated</div>
+          <div class="subtitle">Account Confirmed & Activated</div>
         </div>
 
         <p class="text">
           Dear ${recipientName},<br><br>
-          It is an absolute pleasure to welcome you to the exclusive <strong>DNORA Client Registry</strong>. Your account has been successfully verified and is now fully active.
+          It is an absolute pleasure to welcome you to <strong>DNORA Luxury Lifestyle</strong>. Your account has been successfully verified and is now fully active.
         </p>
 
         <div class="perks">
           <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; color: #73706A; margin-bottom: 12px;">
-            Your Member Privileges
+            Account Benefits
           </div>
           <div class="perk-item">
             <span class="perk-bullet">&#9670;</span>
@@ -274,7 +274,7 @@ export async function sendWelcomeEmail({ email, name }: SendWelcomeOptions): Pro
       const { data, error } = await resend.emails.send({
         from: fromEmail,
         to: [email],
-        subject: "Welcome to DNORA — Your Membership is Active",
+        subject: "Welcome to DNORA — Your Account is Active",
         html: htmlContent,
       });
 
@@ -316,8 +316,8 @@ export async function sendWelcomeEmail({ email, name }: SendWelcomeOptions): Pro
           ? `"DNORA Atelier" <${gmailUser}>`
           : process.env.EMAIL_FROM || `"DNORA Atelier" <${smtpUser}>`,
         to: email,
-        subject: "Welcome to DNORA — Your Membership is Active",
-        text: `Dear ${recipientName},\n\nWelcome to DNORA. Your membership account has been verified and is active.\n\nExplore our collections: ${siteUrl}/shop`,
+        subject: "Welcome to DNORA — Your Account is Active",
+        text: `Dear ${recipientName},\n\nWelcome to DNORA. Your client account has been verified and is active.\n\nExplore our collections: ${siteUrl}/shop`,
         html: htmlContent,
       });
 

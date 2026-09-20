@@ -287,6 +287,8 @@ export interface HomepageConfig {
     heading_font_family?: string;
     heading_font_weight?: string;
     card_gap?: number;
+    card_size?: "sm" | "md" | "lg";
+    card_width?: number;
   };
   best_sellers?: {
     enabled: boolean;
@@ -298,6 +300,8 @@ export interface HomepageConfig {
     heading_font_family?: string;
     heading_font_weight?: string;
     card_gap?: number;
+    card_size?: "sm" | "md" | "lg";
+    card_width?: number;
     product_ids?: string[];
   };
   new_in?: {
@@ -310,6 +314,8 @@ export interface HomepageConfig {
     heading_font_family?: string;
     heading_font_weight?: string;
     card_gap?: number;
+    card_size?: "sm" | "md" | "lg";
+    card_width?: number;
     product_ids?: string[];
   };
   middle_banner?: {
@@ -334,6 +340,8 @@ export interface HomepageConfig {
     heading_font_family?: string;
     heading_font_weight?: string;
     card_gap?: number;
+    card_size?: "sm" | "md" | "lg";
+    card_width?: number;
   };
   customer_reviews?: {
     enabled: boolean;

@@ -12,6 +12,8 @@ export interface SectionStyleValues {
   heading_font_family?: string;
   heading_font_weight?: string;
   card_gap?: number;
+  card_size?: "sm" | "md" | "lg";
+  card_width?: number;
 }
 
 interface SectionStyleFieldsProps {
@@ -39,6 +41,7 @@ export function SectionStyleFields({
   values,
   onChange,
   defaultGap = 20,
+  sectionType = "products",
 }: SectionStyleFieldsProps) {
   const currentColor = values.heading_color || "#0F172A";
   const currentFontSizeStr = values.heading_font_size || "32px";
@@ -46,6 +49,62 @@ export function SectionStyleFields({
   const currentFontFamily = values.heading_font_family || "arial-rounded";
   const currentFontWeight = values.heading_font_weight || "800";
   const currentGap = values.card_gap !== undefined ? values.card_gap : defaultGap;
+  const currentCardSize = values.card_size || "md";
+
+  const sizeConfig =
+    sectionType === "categories"
+      ? {
+          label: "Round Circle Size",
+          min: 72,
+          max: 160,
+          step: 4,
+          defaultWidth: 112,
+          smThreshold: 96,
+          lgThreshold: 128,
+          presets: [
+            { label: "Small", val: 88, sizeKey: "sm" as const },
+            { label: "Medium", val: 112, sizeKey: "md" as const },
+            { label: "Large", val: 144, sizeKey: "lg" as const },
+          ],
+        }
+      : sectionType === "videos"
+      ? {
+          label: "Video Reel Card Size",
+          min: 180,
+          max: 380,
+          step: 10,
+          defaultWidth: 280,
+          smThreshold: 240,
+          lgThreshold: 320,
+          presets: [
+            { label: "Small", val: 220, sizeKey: "sm" as const },
+            { label: "Medium", val: 280, sizeKey: "md" as const },
+            { label: "Large", val: 340, sizeKey: "lg" as const },
+          ],
+        }
+      : {
+          label: "Product Card Size",
+          min: 180,
+          max: 360,
+          step: 5,
+          defaultWidth: 260,
+          smThreshold: 220,
+          lgThreshold: 300,
+          presets: [
+            { label: "Small", val: 200, sizeKey: "sm" as const },
+            { label: "Medium", val: 260, sizeKey: "md" as const },
+            { label: "Large", val: 320, sizeKey: "lg" as const },
+          ],
+        };
+
+  const currentCardWidth =
+    values.card_width !== undefined
+      ? values.card_width
+      : values.card_size === "sm"
+      ? sizeConfig.presets[0].val
+      : values.card_size === "lg"
+      ? sizeConfig.presets[2].val
+      : sizeConfig.defaultWidth;
 
   const handleUpdate = (patch: Partial<SectionStyleValues>) => {
     onChange({
@@ -288,6 +347,69 @@ export function SectionStyleFields({
                   }`}
                 >
                   {preset.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* 6. Custom Card Size Slider & Presets */}
+          <div>
+            <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
+              <span className="flex items-center gap-1.5">
+                <Maximize2 className="w-3.5 h-3.5 text-indigo-600" />
+                <span>{sizeConfig.label}</span>
+              </span>
+              <span className="font-mono text-xs font-bold text-slate-900 bg-white border border-slate-200 px-2.5 py-0.5 rounded-lg shadow-2xs">
+                {currentCardWidth}px
+              </span>
+            </div>
+
+            {/* Custom Sizing Slider */}
+            <input
+              type="range"
+              min={sizeConfig.min}
+              max={sizeConfig.max}
+              step={sizeConfig.step}
+              value={currentCardWidth}
+              onChange={(e) => {
+                const val = Number(e.target.value);
+                const sizeTag =
+                  val <= sizeConfig.smThreshold ? "sm" : val >= sizeConfig.lgThreshold ? "lg" : "md";
+                handleUpdate({ card_width: val, card_size: sizeTag });
+              }}
+              className="w-full accent-indigo-600 cursor-pointer h-2 bg-slate-200 rounded-lg"
+            />
+
+            {/* Quick Sizing Presets (Small, Medium, Large) */}
+            <div className="grid grid-cols-3 gap-2 mt-2.5">
+              {sizeConfig.presets.map((preset) => (
+                <button
+                  key={preset.label}
+                  type="button"
+                  onClick={() =>
+                    handleUpdate({
+                      card_width: preset.val,
+                      card_size: preset.sizeKey,
+                    })
+                  }
+                  className={`py-2 px-2 rounded-xl border flex flex-col items-center justify-center gap-0.5 transition-all cursor-pointer ${
+                    currentCardWidth === preset.val ||
+                    (values.card_size === preset.sizeKey && Math.abs(currentCardWidth - preset.val) < 15)
+                      ? "bg-slate-900 text-white border-slate-900 shadow-xs ring-2 ring-indigo-500/20"
+                      : "bg-white text-slate-700 border-slate-200 hover:text-slate-900 hover:bg-slate-50 shadow-2xs active:scale-95"
+                  }`}
+                >
+                  <span className="text-xs font-bold leading-tight">{preset.label}</span>
+                  <span
+                    className={`text-[10px] font-mono ${
+                      currentCardWidth === preset.val ||
+                      (values.card_size === preset.sizeKey && Math.abs(currentCardWidth - preset.val) < 15)
+                        ? "text-slate-300"
+                        : "text-slate-400"
+                    }`}
+                  >
+                    {preset.val}px
+                  </span>
                 </button>
               ))}
             </div>

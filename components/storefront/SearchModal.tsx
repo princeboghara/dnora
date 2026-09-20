@@ -46,25 +46,25 @@ export function SearchModal({ isOpen, onClose, products }: SearchModalProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-[#FAF9F6]/95 backdrop-blur-xl animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex flex-col bg-white/98 backdrop-blur-xl animate-in fade-in duration-200">
       {/* Search Header */}
-      <div className="border-b border-[#E8E5DE] px-4 sm:px-8 py-6">
+      <div className="border-b border-slate-200 px-4 sm:px-8 py-6">
         <div className="max-w-5xl mx-auto flex items-center justify-between gap-4">
           <div className="flex-1 flex items-center gap-3">
-            <Search className="w-6 h-6 text-[#73706A] shrink-0" />
+            <Search className="w-6 h-6 text-slate-400 shrink-0" />
             <input
               ref={inputRef}
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search by handbag name, silhouette, or category..."
-              className="w-full bg-transparent text-xl sm:text-2xl text-[#0E0E0E] font-heading placeholder:text-[#A8A49C] focus:outline-none tracking-tight"
+              className="w-full bg-transparent text-xl sm:text-2xl text-slate-900 font-heading placeholder:text-slate-400 focus:outline-none tracking-tight"
             />
           </div>
           <button
             onClick={handleClose}
             aria-label="Close search"
-            className="p-2 rounded-full hover:bg-[#EAE6DF] transition-colors text-[#0E0E0E]"
+            className="p-2 rounded-full hover:bg-slate-100 transition-colors text-slate-800 cursor-pointer"
           >
             <X className="w-6 h-6" />
           </button>
@@ -76,7 +76,7 @@ export function SearchModal({ isOpen, onClose, products }: SearchModalProps) {
         <div className="max-w-5xl mx-auto">
           {query.trim() === "" ? (
             <div>
-              <p className="text-xs uppercase tracking-widest text-[#73706A] font-semibold mb-4">
+              <p className="text-xs uppercase tracking-widest text-slate-500 font-semibold mb-4">
                 Popular Searches
               </p>
               <div className="flex flex-wrap gap-2">
@@ -85,7 +85,7 @@ export function SearchModal({ isOpen, onClose, products }: SearchModalProps) {
                     <button
                       key={term}
                       onClick={() => setQuery(term)}
-                      className="px-4 py-2 text-xs uppercase tracking-wider font-medium rounded-full border border-[#E8E5DE] bg-white hover:border-[#0E0E0E] hover:bg-[#0E0E0E] hover:text-[#FAF9F6] transition-all"
+                      className="px-4 py-2 text-xs uppercase tracking-wider font-medium rounded-full border border-slate-200 bg-white hover:border-slate-900 hover:bg-slate-900 hover:text-white transition-all cursor-pointer"
                     >
                       {term}
                     </button>
@@ -95,16 +95,16 @@ export function SearchModal({ isOpen, onClose, products }: SearchModalProps) {
             </div>
           ) : filtered.length === 0 ? (
             <div className="text-center py-16">
-              <p className="text-lg font-heading text-[#0E0E0E] mb-2">
+              <p className="text-lg font-heading text-slate-900 mb-2">
                 No luxury purses matching &ldquo;{query}&rdquo;
               </p>
-              <p className="text-sm text-[#73706A]">
+              <p className="text-sm text-slate-500">
                 Try adjusting your search terms or explore all handbags in our main catalog.
               </p>
             </div>
           ) : (
             <div>
-              <p className="text-xs uppercase tracking-widest text-[#73706A] font-semibold mb-6">
+              <p className="text-xs uppercase tracking-widest text-slate-500 font-semibold mb-6">
                 Found {filtered.length} {filtered.length === 1 ? "Result" : "Results"}
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
@@ -113,9 +113,9 @@ export function SearchModal({ isOpen, onClose, products }: SearchModalProps) {
                     key={product.id}
                     href={`/product/${product.slug}`}
                     onClick={onClose}
-                    className="group flex gap-4 p-3 rounded-lg border border-[#E8E5DE] bg-white hover:border-[#0E0E0E] transition-all"
+                    className="group flex gap-4 p-3 rounded-xl border border-slate-200 bg-white hover:border-slate-900 transition-all shadow-xs"
                   >
-                    <div className="relative w-20 h-24 bg-[#F5F3EF] rounded overflow-hidden shrink-0">
+                    <div className="relative w-20 h-24 bg-slate-50 rounded-lg overflow-hidden shrink-0 border border-slate-100">
                       {product.images[0] && (
                         <Image
                           src={product.images[0].secure_url}
@@ -127,13 +127,13 @@ export function SearchModal({ isOpen, onClose, products }: SearchModalProps) {
                       )}
                     </div>
                     <div className="flex flex-col justify-center">
-                      <span className="text-xs text-[#0E0E0E] uppercase tracking-wider font-semibold">
+                      <span className="text-xs text-slate-500 uppercase tracking-wider font-semibold">
                         {product.categories?.[0]?.name || "Purse"}
                       </span>
-                      <h4 className="text-sm font-heading font-medium text-[#0E0E0E] group-hover:underline">
+                      <h4 className="text-sm font-heading font-medium text-slate-900 group-hover:underline">
                         {product.name}
                       </h4>
-                      <p className="text-xs text-[#1C1B1A] font-semibold mt-1">
+                      <p className="text-xs text-slate-900 font-semibold mt-1">
                         {formatPrice(product.price)}
                       </p>
                     </div>

@@ -18,14 +18,18 @@ import {
   Loader2,
 } from "lucide-react";
 import { AnnouncementItem, AnnouncementConfig } from "@/types";
-import { DEFAULT_ANNOUNCEMENT_CONFIG } from "@/lib/data/default-announcements";
 import { useToast } from "@/components/ui/Toast";
 import { Modal } from "@/components/ui/Modal";
 import { PageLinkSelect } from "@/components/admin/PageLinkSelect";
 
 export default function AdminAnnouncementsPage() {
   const { showToast } = useToast();
-  const [config, setConfig] = useState<AnnouncementConfig>(DEFAULT_ANNOUNCEMENT_CONFIG);
+  const [config, setConfig] = useState<AnnouncementConfig>({
+    id: "default",
+    interval_seconds: 4,
+    is_active: true,
+    items: [],
+  });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 

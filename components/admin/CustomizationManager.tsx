@@ -22,7 +22,7 @@ import {
   Volume2,
   VolumeX,
 } from "lucide-react";
-import { HomepageConfig, HeroBanner, AnnouncementConfig, ProductCategory, Product, SeenOnYouVideo } from "@/types";
+import { HomepageConfig, HeroBanner, AnnouncementConfig, ProductCategory, Product, SeenOnYouVideo, CustomerReview } from "@/types";
 import { useToast } from "@/components/ui/Toast";
 import { PageLinkSelect } from "@/components/admin/PageLinkSelect";
 import { SectionStyleFields } from "@/components/admin/SectionStyleFields";
@@ -35,6 +35,7 @@ import { CategorySectionManager } from "@/components/admin/customization/Categor
 import { ProductSelectorManager } from "@/components/admin/customization/ProductSelectorManager";
 import { SeenOnYouManager } from "@/components/admin/customization/SeenOnYouManager";
 import { MiddleBannerSectionManager } from "@/components/admin/customization/MiddleBannerSectionManager";
+import { ReviewSectionManager } from "@/components/admin/customization/ReviewSectionManager";
 
 export const DEFAULT_CONFIG: HomepageConfig = {
   topbar: {
@@ -54,6 +55,8 @@ export const DEFAULT_CONFIG: HomepageConfig = {
     heading_font_family: "arial-rounded",
     heading_font_weight: "800",
     card_gap: 24,
+    card_size: "md",
+    card_width: 112,
   },
   best_sellers: {
     enabled: true,
@@ -65,6 +68,8 @@ export const DEFAULT_CONFIG: HomepageConfig = {
     heading_font_family: "arial-rounded",
     heading_font_weight: "800",
     card_gap: 20,
+    card_size: "md",
+    card_width: 260,
   },
   new_in: {
     enabled: true,
@@ -76,6 +81,8 @@ export const DEFAULT_CONFIG: HomepageConfig = {
     heading_font_family: "arial-rounded",
     heading_font_weight: "800",
     card_gap: 20,
+    card_size: "md",
+    card_width: 260,
   },
   middle_banner: {
     enabled: true,
@@ -88,7 +95,7 @@ export const DEFAULT_CONFIG: HomepageConfig = {
     image_url:
       "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=1800&q=85",
     media_type: "image",
-    height: "55vh",
+    height: "450px",
   },
   seen_on_you: {
     enabled: true,
@@ -98,6 +105,8 @@ export const DEFAULT_CONFIG: HomepageConfig = {
     heading_font_family: "arial-rounded",
     heading_font_weight: "800",
     card_gap: 12,
+    card_size: "md",
+    card_width: 280,
   },
   customer_reviews: {
     enabled: true,
@@ -244,6 +253,7 @@ export function CustomizationManager({
   const [categoriesList, setCategoriesList] = useState<ProductCategory[]>([]);
   const [productsList, setProductsList] = useState<Product[]>([]);
   const [seenOnYouList, setSeenOnYouList] = useState<SeenOnYouVideo[]>([]);
+  const [reviewsList, setReviewsList] = useState<CustomerReview[]>([]);
 
   // Staging states to prevent premature storefront alterations until "Publish Changes" is clicked
   const [pendingAnnouncements, setPendingAnnouncements] = useState<AnnouncementConfig | null>(null);
@@ -412,6 +422,28 @@ export function CustomizationManager({
     };
   }, []);
 
+  // Load Customer Reviews for Live Preview
+  useEffect(() => {
+    let isMounted = true;
+    async function loadReviews() {
+      try {
+        const res = await fetch(`/api/admin/reviews?t=${Date.now()}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (isMounted && data.success && Array.isArray(data.reviews)) {
+            setReviewsList(data.reviews);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load reviews for preview:", err);
+      }
+    }
+    loadReviews();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   // Auto-swipe for Announcement Bar Preview
   const activeAnnouncements = (announcementsData?.items || []).filter((i) => i.is_active);
   const goToNextAnn = useCallback(() => {
@@ -500,6 +532,15 @@ export function CustomizationManager({
           });
         }
         setStagedProductToggles(new Map());
+      }
+
+      // 4. Publish Middle Banner directly to middle_banners table
+      if (config.middle_banner) {
+        await fetch("/api/middle-banner", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(config.middle_banner),
+        });
       }
 
       showToast("Storefront changes published successfully!", "success");
@@ -809,23 +850,31 @@ export function CustomizationManager({
                 className="flex items-start justify-center overflow-x-auto py-2 transition-all"
                 style={{ gap: `${config.categories?.card_gap ?? 24}px` }}
               >
-                {(categoriesList.length > 0
-                  ? categoriesList.slice(0, 5)
-                  : [
-                      { id: "1", name: "Tote Bags", image_url: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=300&q=80" },
-                      { id: "2", name: "Shoulder Bags", image_url: "https://images.unsplash.com/photo-1590874103328-eac38a683ce7?auto=format&fit=crop&w=300&q=80" },
-                      { id: "3", name: "Crossbody", image_url: "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=300&q=80" },
-                    ]
-                ).map((cat) => (
-                  <div key={cat.id} className="flex flex-col items-center shrink-0">
-                    <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden bg-slate-100 border border-slate-200 shadow-sm">
-                      <img src={cat.image_url || "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=300&q=80"} alt={cat.name} className="w-full h-full object-cover" />
-                    </div>
-                    <span className="mt-2 text-[11px] font-bold uppercase tracking-wider text-slate-900">
-                      {cat.name}
-                    </span>
+                {categoriesList.length > 0 ? (
+                  categoriesList.slice(0, 5).map((cat) => {
+                    const catCirclePx =
+                      config.categories?.card_width ||
+                      (config.categories?.card_size === "sm" ? 88 : config.categories?.card_size === "lg" ? 144 : 112);
+                    const catCircleScaled = Math.min(Math.max(Math.round(catCirclePx * 0.78), 60), 125);
+                    return (
+                      <div key={cat.id} className="flex flex-col items-center shrink-0 transition-all">
+                        <div
+                          style={{ width: `${catCircleScaled}px`, height: `${catCircleScaled}px` }}
+                          className="relative rounded-full overflow-hidden bg-slate-100 border border-slate-200 shadow-sm transition-all"
+                        >
+                          <img src={cat.image_url || "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=300&q=80"} alt={cat.name} className="w-full h-full object-cover" />
+                        </div>
+                        <span className="mt-2 text-[11px] font-bold uppercase tracking-wider text-slate-900">
+                          {cat.name}
+                        </span>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="w-full py-8 text-center text-xs text-slate-400">
+                    No categories in database. Add categories in Category Master below.
                   </div>
-                ))}
+                )}
               </div>
             </div>
           )}
@@ -857,10 +906,15 @@ export function CustomizationManager({
                 {productsList.filter((p) => p.is_best_seller).length > 0 ? (
                   productsList.filter((p) => p.is_best_seller).slice(0, 4).map((prod) => {
                     const img = (prod.images?.[0] as any)?.secure_url || (prod.images?.[0] as any)?.image_url || "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=400&q=80";
+                    const bsCardPx =
+                      config.best_sellers?.card_width ||
+                      (config.best_sellers?.card_size === "sm" ? 200 : config.best_sellers?.card_size === "lg" ? 320 : 260);
+                    const bsCardScaled = Math.min(Math.max(Math.round(bsCardPx * 0.58), 110), 200);
                     return (
                       <div
                         key={prod.id}
-                        className="w-32 sm:w-36 bg-white border border-slate-200 rounded-xl overflow-hidden text-left shadow-xs shrink-0 flex flex-col justify-between"
+                        style={{ width: `${bsCardScaled}px` }}
+                        className="bg-white border border-slate-200 rounded-xl overflow-hidden text-left shadow-xs shrink-0 flex flex-col justify-between transition-all"
                       >
                         <div>
                           <div className="aspect-[4/5] bg-slate-100 relative overflow-hidden">
@@ -963,10 +1017,15 @@ export function CustomizationManager({
                 {productsList.filter((p) => p.is_new_arrival).length > 0 ? (
                   productsList.filter((p) => p.is_new_arrival).slice(0, 4).map((prod) => {
                     const img = (prod.images?.[0] as any)?.secure_url || (prod.images?.[0] as any)?.image_url || "https://images.unsplash.com/photo-1590874103328-eac38a683ce7?auto=format&fit=crop&w=400&q=80";
+                    const newInCardPx =
+                      config.new_in?.card_width ||
+                      (config.new_in?.card_size === "sm" ? 200 : config.new_in?.card_size === "lg" ? 320 : 260);
+                    const newInCardScaled = Math.min(Math.max(Math.round(newInCardPx * 0.58), 110), 200);
                     return (
                       <div
                         key={prod.id}
-                        className="w-32 sm:w-36 bg-white border border-slate-200 rounded-xl overflow-hidden text-left shadow-xs shrink-0 flex flex-col justify-between"
+                        style={{ width: `${newInCardScaled}px` }}
+                        className="bg-white border border-slate-200 rounded-xl overflow-hidden text-left shadow-xs shrink-0 flex flex-col justify-between transition-all"
                       >
                         <div>
                           <div className="aspect-[4/5] bg-slate-100 relative overflow-hidden">
@@ -1016,32 +1075,38 @@ export function CustomizationManager({
                 className="flex items-center justify-center overflow-x-auto py-2 transition-all"
                 style={{ gap: `${config.seen_on_you?.card_gap ?? 12}px` }}
               >
-                {(seenOnYouList.length > 0
-                  ? seenOnYouList.slice(0, 4)
-                  : [
-                      { id: "1", customer_name: "Aria Vance", caption: "The Italian calfskin finish is unreal", thumbnail_url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80", video_url: "" },
-                      { id: "2", customer_name: "Elena Rostova", caption: "Everyday luxury staple piece", thumbnail_url: "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=300&q=80", video_url: "" },
-                      { id: "3", customer_name: "Meera Patel", caption: "Sculpted silhouette with precision hardware", thumbnail_url: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=300&q=80", video_url: "" },
-                    ]
-                ).map((reel) => (
-                  <div
-                    key={reel.id}
-                    className="relative w-28 sm:w-36 aspect-[9/16] rounded-xl overflow-hidden bg-slate-900 border border-slate-200 shrink-0 text-left shadow-xs"
-                  >
-                    <img
-                      src={reel.thumbnail_url || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80"}
-                      alt={reel.customer_name}
-                      className="absolute inset-0 w-full h-full object-cover opacity-90"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20" />
-                    <div className="absolute bottom-2 left-2 right-2 text-white">
-                      <p className="text-[10px] font-bold text-white leading-tight">{reel.customer_name}</p>
-                      {reel.caption && (
-                        <p className="text-[9px] text-slate-300 line-clamp-1">{reel.caption}</p>
-                      )}
-                    </div>
+                {seenOnYouList.length > 0 ? (
+                  seenOnYouList.slice(0, 4).map((reel) => {
+                    const reelCardPx =
+                      config.seen_on_you?.card_width ||
+                      (config.seen_on_you?.card_size === "sm" ? 220 : config.seen_on_you?.card_size === "lg" ? 340 : 280);
+                    const reelCardScaled = Math.min(Math.max(Math.round(reelCardPx * 0.48), 95), 180);
+                    return (
+                      <div
+                        key={reel.id}
+                        style={{ width: `${reelCardScaled}px` }}
+                        className="relative aspect-[9/16] rounded-xl overflow-hidden bg-slate-900 border border-slate-200 shrink-0 text-left shadow-xs transition-all"
+                      >
+                        <img
+                          src={reel.thumbnail_url || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80"}
+                          alt={reel.customer_name}
+                          className="absolute inset-0 w-full h-full object-cover opacity-90"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20" />
+                        <div className="absolute bottom-2 left-2 right-2 text-white">
+                          <p className="text-[10px] font-bold text-white leading-tight">{reel.customer_name}</p>
+                          {reel.caption && (
+                            <p className="text-[9px] text-slate-300 line-clamp-1">{reel.caption}</p>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="w-full py-8 text-center text-xs text-slate-400">
+                    No videos in database. Upload videos in Seen On You Manager below.
                   </div>
-                ))}
+                )}
               </div>
             </div>
           )}
@@ -1053,21 +1118,29 @@ export function CustomizationManager({
                 {config.customer_reviews?.title || "CUSTOMER REVIEWS"}
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-left">
-                {[
-                  { name: "Sophia Laurent", city: "Paris", review: "The leather grain and stitching are on par with Hermès. Exquisite craftsmanship." },
-                  { name: "Amara Sinclair", city: "New York", review: "Balanced perfectly on the shoulder. Stunning hardware." },
-                ].map((rev, idx) => (
-                  <div key={idx} className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-2 shadow-2xs">
-                    <div className="flex text-amber-400 gap-0.5 text-xs">
-                      {"★".repeat(5)}
-                    </div>
-                    <p className="text-xs text-slate-700 italic">&ldquo;{rev.review}&rdquo;</p>
-                    <div className="flex items-center justify-between text-[11px] pt-1">
-                      <span className="font-bold text-slate-900">{rev.name}</span>
-                      <span className="text-slate-400">{rev.city}</span>
-                    </div>
+                {reviewsList.filter((r) => r.status === "active").length > 0 ? (
+                  reviewsList
+                    .filter((r) => r.status === "active")
+                    .slice(0, 4)
+                    .map((rev) => (
+                      <div key={rev.id} className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-2 shadow-2xs">
+                        <div className="flex text-amber-400 gap-0.5 text-xs">
+                          {Array.from({ length: rev.rating || 5 }).map((_, i) => (
+                            <span key={i}>★</span>
+                          ))}
+                        </div>
+                        <p className="text-xs text-slate-700 italic line-clamp-3">&ldquo;{rev.review}&rdquo;</p>
+                        <div className="flex items-center justify-between text-[11px] pt-1">
+                          <span className="font-bold text-slate-900">{rev.customer_name}</span>
+                          {rev.product_name && <span className="text-slate-400 text-[10px]">{rev.product_name}</span>}
+                        </div>
+                      </div>
+                    ))
+                ) : (
+                  <div className="col-span-2 py-8 text-center text-xs text-slate-400">
+                    No active reviews in database. Add reviews in Customer Reviews Manager below.
                   </div>
-                ))}
+                )}
               </div>
             </div>
           )}
@@ -1157,12 +1230,15 @@ export function CustomizationManager({
               <SectionStyleFields
                 title="Categories"
                 sampleTitle={config.categories?.title || "CATEGORIES"}
+                sectionType="categories"
                 values={{
                   heading_color: config.categories?.heading_color || "#0F172A",
                   heading_font_size: config.categories?.heading_font_size || "32px",
                   heading_font_family: config.categories?.heading_font_family || "arial-rounded",
                   heading_font_weight: config.categories?.heading_font_weight || "800",
                   card_gap: config.categories?.card_gap ?? 24,
+                  card_size: config.categories?.card_size || "md",
+                  card_width: config.categories?.card_width,
                 }}
                 defaultGap={24}
                 onChange={(updates) =>
@@ -1231,12 +1307,15 @@ export function CustomizationManager({
               <SectionStyleFields
                 title="Best Sellers"
                 sampleTitle={config.best_sellers?.title || "BEST SELLERS"}
+                sectionType="products"
                 values={{
                   heading_color: config.best_sellers?.heading_color || "#0F172A",
                   heading_font_size: config.best_sellers?.heading_font_size || "32px",
                   heading_font_family: config.best_sellers?.heading_font_family || "arial-rounded",
                   heading_font_weight: config.best_sellers?.heading_font_weight || "800",
                   card_gap: config.best_sellers?.card_gap ?? 20,
+                  card_size: config.best_sellers?.card_size || "md",
+                  card_width: config.best_sellers?.card_width,
                 }}
                 defaultGap={20}
                 onChange={(updates) =>
@@ -1327,12 +1406,15 @@ export function CustomizationManager({
               <SectionStyleFields
                 title="New In"
                 sampleTitle={config.new_in?.title || "NEW IN"}
+                sectionType="products"
                 values={{
                   heading_color: config.new_in?.heading_color || "#0F172A",
                   heading_font_size: config.new_in?.heading_font_size || "32px",
                   heading_font_family: config.new_in?.heading_font_family || "arial-rounded",
                   heading_font_weight: config.new_in?.heading_font_weight || "800",
                   card_gap: config.new_in?.card_gap ?? 20,
+                  card_size: config.new_in?.card_size || "md",
+                  card_width: config.new_in?.card_width,
                 }}
                 defaultGap={20}
                 onChange={(updates) =>
@@ -1388,12 +1470,15 @@ export function CustomizationManager({
               <SectionStyleFields
                 title="Seen On You"
                 sampleTitle={config.seen_on_you?.title || "SEEN ON YOU"}
+                sectionType="videos"
                 values={{
                   heading_color: config.seen_on_you?.heading_color || "#0F172A",
                   heading_font_size: config.seen_on_you?.heading_font_size || "32px",
                   heading_font_family: config.seen_on_you?.heading_font_family || "arial-rounded",
                   heading_font_weight: config.seen_on_you?.heading_font_weight || "800",
                   card_gap: config.seen_on_you?.card_gap ?? 12,
+                  card_size: config.seen_on_you?.card_size || "md",
+                  card_width: config.seen_on_you?.card_width,
                 }}
                 defaultGap={12}
                 onChange={(updates) =>
@@ -1416,26 +1501,35 @@ export function CustomizationManager({
 
         {/* --- 8. REVIEWS --- */}
         {activeTab === "reviews" && (
-          <div className="bg-white rounded-2xl border border-slate-200/90 p-6 shadow-xs space-y-4 text-left">
-            <h3 className="text-sm font-bold text-slate-900">
-              Customer Reviews Configuration
-            </h3>
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
-                Section Heading Title
-              </label>
-              <input
-                type="text"
-                value={config.customer_reviews?.title || "CUSTOMER REVIEWS"}
-                onChange={(e) =>
-                  setConfig({
-                    ...config,
-                    customer_reviews: { ...config.customer_reviews!, title: e.target.value },
-                  })
-                }
-                className="w-full max-w-md px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs text-slate-900 font-bold"
-              />
+          <div className="space-y-6">
+            <div className="bg-white rounded-2xl border border-slate-200/90 p-6 shadow-xs space-y-4 text-left">
+              <h3 className="text-sm font-bold text-slate-900">
+                Customer Reviews Section Heading
+              </h3>
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                  Section Heading Title
+                </label>
+                <input
+                  type="text"
+                  value={config.customer_reviews?.title || "CUSTOMER REVIEWS"}
+                  onChange={(e) =>
+                    setConfig({
+                      ...config,
+                      customer_reviews: { ...config.customer_reviews!, title: e.target.value },
+                    })
+                  }
+                  className="w-full max-w-md px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs text-slate-900 font-bold"
+                />
+              </div>
             </div>
+
+            {/* Embedded Customer Reviews Database Manager */}
+            <ReviewSectionManager
+              onReviewsChange={(revs) => {
+                setReviewsList(revs);
+              }}
+            />
           </div>
         )}
 

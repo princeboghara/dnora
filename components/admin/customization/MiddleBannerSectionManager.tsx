@@ -42,11 +42,20 @@ export function MiddleBannerSectionManager({ data, onChange }: MiddleBannerSecti
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
 
+  const rawHeight = data.height || "450px";
+  let currentHeightNum = 450;
+  if (rawHeight.includes("vh")) {
+    const vh = parseInt(rawHeight.replace("vh", ""), 10) || 55;
+    currentHeightNum = Math.round((vh / 100) * 800);
+  } else if (rawHeight.includes("px")) {
+    currentHeightNum = parseInt(rawHeight.replace("px", ""), 10) || 450;
+  }
+
   const HEIGHT_PRESETS = [
-    { label: "Compact (45vh)", value: "45vh" },
-    { label: "Standard (55vh)", value: "55vh" },
-    { label: "Prominent (65vh)", value: "65vh" },
-    { label: "Heroic (75vh)", value: "75vh" },
+    { label: "Compact", value: 340, text: "340px" },
+    { label: "Standard", value: 450, text: "450px" },
+    { label: "Prominent", value: 550, text: "550px" },
+    { label: "Heroic", value: 680, text: "680px" },
   ];
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -94,30 +103,56 @@ export function MiddleBannerSectionManager({ data, onChange }: MiddleBannerSecti
     <div className="space-y-6">
       {/* Banner Sizing & Media Type Row */}
       <div className="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-xs space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-              <Sliders className="w-4 h-4 text-indigo-600" />
-              <span>Middle Banner Height & Sizing</span>
-            </h3>
-            <p className="text-xs text-slate-500">
-              Control the vertical display height of the editorial middle banner.
-            </p>
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                <Sliders className="w-4 h-4 text-indigo-600" />
+                <span>Middle Banner Height & Sizing</span>
+              </h3>
+              <p className="text-xs text-slate-500">
+                Smoothly scale the vertical display height with the slider or choose a preset.
+              </p>
+            </div>
+            <span className="font-mono text-xs font-bold text-slate-900 bg-slate-100 border border-slate-200 px-2.5 py-0.5 rounded-lg shadow-2xs">
+              {currentHeightNum}px
+            </span>
           </div>
 
-          <div className="flex items-center gap-2 flex-wrap">
+          {/* Range Slider for Middle Banner Height */}
+          <input
+            type="range"
+            min="260"
+            max="750"
+            step="10"
+            value={currentHeightNum}
+            onChange={(e) => onChange({ height: `${e.target.value}px` })}
+            className="w-full accent-indigo-600 cursor-pointer h-2 bg-slate-200 rounded-lg"
+          />
+
+          {/* Presets */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {HEIGHT_PRESETS.map((preset) => (
               <button
-                key={preset.value}
+                key={preset.text}
                 type="button"
-                onClick={() => onChange({ height: preset.value })}
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                  (data.height || "55vh") === preset.value
-                    ? "bg-slate-900 text-white shadow-xs"
-                    : "bg-slate-100 hover:bg-slate-200 text-slate-700"
+                onClick={() => onChange({ height: preset.text })}
+                className={`py-2 px-3 rounded-xl border flex items-center justify-between transition-all cursor-pointer ${
+                  currentHeightNum === preset.value || Math.abs(currentHeightNum - preset.value) < 15
+                    ? "bg-slate-900 text-white border-slate-900 shadow-xs ring-2 ring-indigo-500/20"
+                    : "bg-slate-50 text-slate-700 border-slate-200 hover:text-slate-900 hover:bg-white shadow-2xs active:scale-95"
                 }`}
               >
-                {preset.label}
+                <span className="text-xs font-bold">{preset.label}</span>
+                <span
+                  className={`text-[10px] font-mono ${
+                    currentHeightNum === preset.value || Math.abs(currentHeightNum - preset.value) < 15
+                      ? "text-slate-300"
+                      : "text-slate-400"
+                  }`}
+                >
+                  {preset.text}
+                </span>
               </button>
             ))}
           </div>

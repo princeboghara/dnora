@@ -8,6 +8,8 @@ import {
   Order,
   OrderItem,
   HomepageConfig,
+  AnnouncementConfig,
+  AnnouncementItem,
 } from "@/types";
 import { db } from "@/lib/db";
 import { slugify } from "../utils";
@@ -550,16 +552,213 @@ class DataStore {
   }
 
   // REVIEWS
-  async getReviews(): Promise<CustomerReview[]> {
+  async getReviews(activeOnly = true): Promise<CustomerReview[]> {
     try {
+      const where = activeOnly ? "WHERE status = 'active'" : "";
       const res = await db.query(
-        `SELECT * FROM public.customer_reviews WHERE status = 'active' ORDER BY created_at DESC`
+        `SELECT * FROM public.customer_reviews ${where} ORDER BY created_at DESC`
       );
       return res.rows;
     } catch (err) {
       console.error("Error fetching reviews from database:", err);
       return [];
     }
+  }
+
+  async getReviewById(id: string): Promise<CustomerReview | null> {
+    try {
+      const res = await db.query(`SELECT * FROM public.customer_reviews WHERE id = $1 LIMIT 1`, [id]);
+      return res.rows[0] || null;
+    } catch {
+      return null;
+    }
+  }
+
+  async createReview(data: Omit<CustomerReview, "id" | "created_at">): Promise<CustomerReview> {
+    const res = await db.query(
+      `INSERT INTO public.customer_reviews 
+        (customer_name, rating, review, image_url, verified_purchase, product_name, status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       RETURNING *`,
+      [
+        data.customer_name.trim(),
+        Number(data.rating) || 5,
+        data.review.trim(),
+        data.image_url || null,
+        data.verified_purchase ?? true,
+        data.product_name || null,
+        data.status || "active",
+      ]
+    );
+    return res.rows[0];
+  }
+
+  async updateReview(id: string, updates: Partial<CustomerReview>): Promise<CustomerReview | null> {
+    const fields: string[] = [];
+    const values: (string | number | boolean | null)[] = [];
+    let i = 1;
+
+    for (const [key, val] of Object.entries(updates)) {
+      if (key !== "id" && key !== "created_at" && val !== undefined) {
+        fields.push(`${key} = $${i}`);
+        values.push(val);
+        i++;
+      }
+    }
+
+    if (fields.length === 0) return this.getReviewById(id);
+
+    values.push(id);
+    const res = await db.query(
+      `UPDATE public.customer_reviews SET ${fields.join(", ")} WHERE id = $${i} RETURNING *`,
+      values
+    );
+    return res.rows[0] || null;
+  }
+
+  async deleteReview(id: string): Promise<boolean> {
+    try {
+      const res = await db.query(`DELETE FROM public.customer_reviews WHERE id = $1`, [id]);
+      return (res.rowCount ?? 0) > 0;
+    } catch {
+      return false;
+    }
+  }
+
+  // ANNOUNCEMENTS
+  async getAnnouncements(activeOnly = false): Promise<AnnouncementItem[]> {
+    try {
+      const where = activeOnly ? "WHERE is_active = true" : "";
+      const res = await db.query(
+        `SELECT * FROM public.announcements ${where} ORDER BY sort_order ASC, created_at ASC`
+      );
+      return res.rows.map((r) => ({
+        id: r.id,
+        text: r.text,
+        link: r.link,
+        badge: r.badge,
+        is_active: Boolean(r.is_active),
+        sort_order: Number(r.sort_order),
+      }));
+    } catch (err) {
+      console.error("Error fetching announcements from database:", err);
+      return [];
+    }
+  }
+
+  async getAnnouncementsConfig(): Promise<AnnouncementConfig> {
+    try {
+      const [items, cfgRes] = await Promise.all([
+        this.getAnnouncements(false),
+        db.query(`SELECT interval_seconds, is_active, updated_at FROM public.announcements_config WHERE id = 'default' LIMIT 1`),
+      ]);
+      const cfg = cfgRes.rows[0] || {};
+      return {
+        id: "default",
+        interval_seconds: Number(cfg.interval_seconds) || 4,
+        is_active: cfg.is_active !== undefined ? Boolean(cfg.is_active) : true,
+        items,
+        updated_at: cfg.updated_at,
+      };
+    } catch (err) {
+      console.error("Error fetching announcements config:", err);
+      return {
+        id: "default",
+        interval_seconds: 4,
+        is_active: true,
+        items: [],
+      };
+    }
+  }
+
+  async saveAnnouncementsConfig(config: {
+    interval_seconds: number;
+    is_active: boolean;
+    items: AnnouncementItem[];
+  }): Promise<AnnouncementConfig> {
+    // 1. Sync items into public.announcements
+    for (let i = 0; i < config.items.length; i++) {
+      const it = config.items[i];
+      const id = it.id || `ann-${Date.now()}-${i}`;
+      await db.query(
+        `INSERT INTO public.announcements (id, text, link, badge, is_active, sort_order, updated_at)
+         VALUES ($1, $2, $3, $4, $5, $6, timezone('utc'::text, now()))
+         ON CONFLICT (id) DO UPDATE SET
+           text = EXCLUDED.text,
+           link = EXCLUDED.link,
+           badge = EXCLUDED.badge,
+           is_active = EXCLUDED.is_active,
+           sort_order = EXCLUDED.sort_order,
+           updated_at = timezone('utc'::text, now())`,
+        [id, it.text, it.link || "/shop", it.badge || null, it.is_active ?? true, it.sort_order ?? (i + 1)]
+      );
+    }
+
+    // Remove deleted announcements
+    const currentIds = config.items.map((it) => it.id).filter(Boolean);
+    if (currentIds.length > 0) {
+      await db.query(`DELETE FROM public.announcements WHERE id NOT IN (${currentIds.map((_, idx) => `$${idx + 1}`).join(", ")})`, currentIds);
+    }
+
+    // 2. Update announcements_config table
+    await db.query(
+      `INSERT INTO public.announcements_config (id, interval_seconds, is_active, items, updated_at)
+       VALUES ('default', $1, $2, $3, timezone('utc'::text, now()))
+       ON CONFLICT (id) DO UPDATE SET
+         interval_seconds = EXCLUDED.interval_seconds,
+         is_active = EXCLUDED.is_active,
+         items = EXCLUDED.items,
+         updated_at = timezone('utc'::text, now())`,
+      [config.interval_seconds || 4, config.is_active ?? true, JSON.stringify(config.items)]
+    );
+
+    return this.getAnnouncementsConfig();
+  }
+
+  // MIDDLE BANNER
+  async getMiddleBanner(): Promise<Record<string, unknown> | null> {
+    try {
+      const res = await db.query(`SELECT * FROM public.middle_banners WHERE id = 'default' LIMIT 1`);
+      if (res.rows.length > 0) return res.rows[0];
+      return null;
+    } catch (err) {
+      console.error("Error fetching middle banner:", err);
+      return null;
+    }
+  }
+
+  async updateMiddleBanner(data: Record<string, unknown>): Promise<Record<string, unknown>> {
+    const res = await db.query(
+      `INSERT INTO public.middle_banners 
+        (id, eyebrow, title, description, button_text, button_link, media_type, media_url, image_url, height, is_active, updated_at)
+       VALUES ('default', $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, timezone('utc'::text, now()))
+       ON CONFLICT (id) DO UPDATE SET
+         eyebrow = EXCLUDED.eyebrow,
+         title = EXCLUDED.title,
+         description = EXCLUDED.description,
+         button_text = EXCLUDED.button_text,
+         button_link = EXCLUDED.button_link,
+         media_type = EXCLUDED.media_type,
+         media_url = EXCLUDED.media_url,
+         image_url = EXCLUDED.image_url,
+         height = EXCLUDED.height,
+         is_active = EXCLUDED.is_active,
+         updated_at = timezone('utc'::text, now())
+       RETURNING *`,
+      [
+        (data.eyebrow as string) || null,
+        (data.title as string) || "ARCHITECTURAL LEATHER",
+        (data.description as string) || null,
+        (data.button_text as string) || "DISCOVER THE ATELIER",
+        (data.button_link as string) || "/shop",
+        (data.media_type as string) || "image",
+        (data.media_url as string) || null,
+        (data.image_url as string) || null,
+        (data.height as string) || "55vh",
+        (data.is_active as boolean) ?? (data.enabled as boolean) ?? true,
+      ]
+    );
+    return res.rows[0];
   }
 
   // SEEN ON YOU

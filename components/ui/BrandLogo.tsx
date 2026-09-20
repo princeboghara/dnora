@@ -19,11 +19,11 @@ export function BrandLogo({
   size = "xl",
 }: BrandLogoProps) {
   const sizeMap = {
-    sm: { width: 95, height: 22, class: "h-4 sm:h-4.5 w-auto", textClass: "text-base tracking-[0.25em]" },
-    md: { width: 110, height: 26, class: "h-5 sm:h-5.5 w-auto", textClass: "text-lg tracking-[0.28em]" },
-    lg: { width: 135, height: 32, class: "h-6 sm:h-7 w-auto", textClass: "text-xl tracking-[0.3em]" },
-    xl: { width: 165, height: 38, class: "h-7 sm:h-8 w-auto", textClass: "text-2xl tracking-[0.32em]" },
-    "2xl": { width: 200, height: 46, class: "h-9 sm:h-10 w-auto", textClass: "text-2xl sm:text-3xl tracking-[0.35em]" },
+    sm: { width: 100, height: 24, class: "h-4.5 sm:h-5 lg:h-6 w-auto", textClass: "text-base tracking-[0.25em]" },
+    md: { width: 130, height: 32, class: "h-5.5 sm:h-6.5 lg:h-8.5 w-auto", textClass: "text-lg tracking-[0.28em]" },
+    lg: { width: 160, height: 38, class: "h-6.5 sm:h-7.5 lg:h-9.5 xl:h-10 w-auto", textClass: "text-xl tracking-[0.3em]" },
+    xl: { width: 190, height: 45, class: "h-7.5 sm:h-8.5 lg:h-11 xl:h-12 w-auto", textClass: "text-2xl tracking-[0.32em]" },
+    "2xl": { width: 220, height: 52, class: "h-9 sm:h-10 lg:h-12 xl:h-14 w-auto", textClass: "text-2xl sm:text-3xl tracking-[0.35em]" },
   };
 
   const selectedSize = sizeMap[size];

@@ -189,3 +189,76 @@ export async function setDefaultAddress(
     return false;
   }
 }
+
+export async function updateUserAddress(
+  addressId: string,
+  userId: string,
+  data: Partial<Omit<UserAddress, "id" | "user_id" | "created_at">>
+): Promise<UserAddress | null> {
+  try {
+    if (!isValidUUID(addressId) || !isValidUUID(userId)) return null;
+
+    if (data.is_default) {
+      await db.query(
+        `UPDATE public.user_addresses SET is_default = false WHERE user_id = $1`,
+        [userId]
+      );
+    }
+
+    const res = await db.query(
+      `UPDATE public.user_addresses 
+       SET full_name = COALESCE($1, full_name),
+           phone = COALESCE($2, phone),
+           address_line1 = COALESCE($3, address_line1),
+           address_line2 = $4,
+           city = COALESCE($5, city),
+           state = COALESCE($6, state),
+           postal_code = COALESCE($7, postal_code),
+           country = COALESCE($8, country),
+           is_default = COALESCE($9, is_default)
+       WHERE id = $10 AND user_id = $11
+       RETURNING *`,
+      [
+        data.full_name || null,
+        data.phone || null,
+        data.address_line1 || null,
+        data.address_line2 !== undefined ? data.address_line2 : null,
+        data.city || null,
+        data.state || null,
+        data.postal_code || null,
+        data.country || null,
+        data.is_default !== undefined ? Boolean(data.is_default) : null,
+        addressId,
+        userId,
+      ]
+    );
+
+    return res.rows[0] || null;
+  } catch (err) {
+    console.error("Error updating user address in DB:", err);
+    return null;
+  }
+}
+
+export async function updateUserProfile(
+  userId: string,
+  data: { full_name?: string; phone?: string }
+): Promise<boolean> {
+  try {
+    if (!isValidUUID(userId)) return false;
+
+    const res = await db.query(
+      `UPDATE public.users 
+       SET full_name = COALESCE($1, full_name),
+           phone = COALESCE($2, phone)
+       WHERE id = $3`,
+      [data.full_name || null, data.phone || null, userId]
+    );
+
+    return (res.rowCount ?? 0) > 0;
+  } catch (err) {
+    console.error("Error updating user profile in DB:", err);
+    return false;
+  }
+}
+

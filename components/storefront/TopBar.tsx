@@ -4,7 +4,6 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { AnnouncementConfig, AnnouncementItem } from "@/types";
-import { DEFAULT_ANNOUNCEMENT_CONFIG } from "@/lib/data/default-announcements";
 
 interface TopBarProps {
   topbarConfig?: {
@@ -15,13 +14,18 @@ interface TopBarProps {
 }
 
 export function TopBar({ topbarConfig }: TopBarProps) {
-  const [config, setConfig] = useState<AnnouncementConfig>(DEFAULT_ANNOUNCEMENT_CONFIG);
+  const [config, setConfig] = useState<AnnouncementConfig>({
+    id: "default",
+    interval_seconds: 4,
+    is_active: true,
+    items: [],
+  });
   const [index, setIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Fetch dynamic announcements configuration
+  // Fetch dynamic announcements configuration from database API
   useEffect(() => {
     let isMounted = true;
     async function loadConfig() {
@@ -44,21 +48,8 @@ export function TopBar({ topbarConfig }: TopBarProps) {
     };
   }, []);
 
-  // If topbarConfig provides custom text, prepend/use it
-  const baseItems: AnnouncementItem[] = config.items.filter((i) => i.is_active);
-  const activeItems: AnnouncementItem[] = topbarConfig?.text
-    ? [
-        {
-          id: "custom-topbar",
-          text: topbarConfig.text,
-          link: topbarConfig.link || "",
-          badge: "Featured",
-          is_active: true,
-          sort_order: 0,
-        },
-        ...baseItems.filter((it) => it.text !== topbarConfig.text),
-      ]
-    : baseItems;
+  // Use active announcements loaded strictly from database
+  const activeItems: AnnouncementItem[] = (config.items || []).filter((i) => i.is_active);
 
   const goToNext = useCallback(() => {
     if (activeItems.length <= 1) return;
@@ -105,7 +96,7 @@ export function TopBar({ topbarConfig }: TopBarProps) {
     <aside
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      className="bg-[#0E0E0E] text-[#FAF9F6] border-b border-[#242321] select-none relative z-50 transition-colors"
+      className="bg-slate-950 text-white border-b border-slate-800/80 select-none relative z-50 transition-colors"
       aria-label="Store Announcement"
     >
       <div className="max-w-7xl mx-auto px-3 sm:px-6 py-2 flex items-center justify-between text-xs min-h-[36px]">
@@ -115,7 +106,7 @@ export function TopBar({ topbarConfig }: TopBarProps) {
             type="button"
             onClick={goToPrev}
             aria-label="Previous announcement"
-            className="text-[#FAF9F6]/60 hover:text-[#FAF9F6] p-1 transition-colors rounded hover:bg-white/10 shrink-0"
+            className="text-white/70 hover:text-white p-1 transition-colors rounded hover:bg-white/10 shrink-0 cursor-pointer"
           >
             <ChevronLeft className="w-3.5 h-3.5" />
           </button>
@@ -132,7 +123,7 @@ export function TopBar({ topbarConfig }: TopBarProps) {
           >
             {/* Optional Badge */}
             {current.badge && (
-              <span className="hidden sm:inline-block text-[9px] uppercase tracking-wider font-bold bg-white/15 text-[#FAF9F6] border border-white/20 px-2 py-0.5 rounded-sm shrink-0">
+              <span className="hidden sm:inline-block text-[9px] uppercase tracking-wider font-bold bg-white/15 text-white border border-white/20 px-2 py-0.5 rounded-sm shrink-0">
                 {current.badge}
               </span>
             )}
@@ -141,12 +132,12 @@ export function TopBar({ topbarConfig }: TopBarProps) {
             {current.link ? (
               <Link
                 href={current.link}
-                className="inline-flex items-center gap-1.5 font-medium tracking-wider uppercase text-[10px] sm:text-[11px] hover:text-[#FAF9F6]/80 hover:underline transition-colors"
+                className="inline-flex items-center gap-1.5 font-medium tracking-wider uppercase text-[10px] sm:text-[11px] text-white hover:text-white/80 hover:underline transition-colors"
               >
                 <span>{current.text}</span>
               </Link>
             ) : (
-              <span className="font-medium tracking-wider uppercase text-[10px] sm:text-[11px] text-[#FAF9F6]">
+              <span className="font-medium tracking-wider uppercase text-[10px] sm:text-[11px] text-white">
                 {current.text}
               </span>
             )}
@@ -159,7 +150,7 @@ export function TopBar({ topbarConfig }: TopBarProps) {
             type="button"
             onClick={goToNext}
             aria-label="Next announcement"
-            className="text-[#FAF9F6]/60 hover:text-[#FAF9F6] p-1 transition-colors rounded hover:bg-white/10 shrink-0"
+            className="text-white/70 hover:text-white p-1 transition-colors rounded hover:bg-white/10 shrink-0 cursor-pointer"
           >
             <ChevronRight className="w-3.5 h-3.5" />
           </button>

@@ -11,6 +11,8 @@ interface BestSellersSectionProps {
   headingFontFamily?: string;
   headingFontWeight?: string;
   cardGap?: number;
+  cardSize?: "sm" | "md" | "lg";
+  cardWidth?: number;
 }
 
 export function BestSellersSection({
@@ -22,6 +24,8 @@ export function BestSellersSection({
   headingFontFamily,
   headingFontWeight,
   cardGap,
+  cardSize,
+  cardWidth,
 }: BestSellersSectionProps) {
   const activeProducts = products.filter((p) => p.status === "active");
   const bestSellers = activeProducts.filter((p) => p.is_best_seller);
@@ -30,7 +34,7 @@ export function BestSellersSection({
   if (displayProducts.length === 0) return null;
 
   return (
-    <section id="best-sellers" className="py-10 sm:py-14 bg-[#FAF9F6] border-t border-[#E8E5DE]">
+    <section id="best-sellers" className="py-6 sm:py-8 bg-[#F8FAFC] border-t border-slate-200/80">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <HorizontalProductCarousel
           title={title}
@@ -42,6 +46,8 @@ export function BestSellersSection({
           headingFontFamily={headingFontFamily}
           headingFontWeight={headingFontWeight}
           cardGap={cardGap}
+          cardSize={cardSize}
+          cardWidth={cardWidth}
         />
       </div>
     </section>

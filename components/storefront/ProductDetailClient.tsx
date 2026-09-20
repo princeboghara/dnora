@@ -134,10 +134,10 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
                   setSelectedImageIndex(idx);
                   setIsZoomActive(false);
                 }}
-                className={`relative w-18 h-24 sm:w-20 sm:h-28 rounded-xs overflow-hidden bg-[#F5F3EF] border transition-all cursor-pointer ${
+                className={`relative w-18 h-24 sm:w-20 sm:h-28 rounded-xl overflow-hidden bg-slate-50 border transition-all cursor-pointer ${
                   idx === safeImageIndex
-                    ? "border-[#0E0E0E] ring-2 ring-[#0E0E0E]"
-                    : "border-[#E8E5DE] opacity-70 hover:opacity-100"
+                    ? "border-slate-900 ring-2 ring-slate-900"
+                    : "border-slate-200 opacity-70 hover:opacity-100"
                 }`}
               >
                 <Image
@@ -157,8 +157,8 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
           onClick={handleImageClick}
           onMouseLeave={() => setIsZoomActive(false)}
           onMouseMove={handleMouseMove}
-          className={`relative flex-1 aspect-[4/5] min-h-[440px] sm:min-h-[540px] lg:min-h-[620px] bg-[#F5F3EF] rounded-xs overflow-hidden border border-[#E8E5DE] shadow-sm select-none group transition-all ${
-            isZoomActive ? "cursor-zoom-out ring-2 ring-[#0E0E0E]" : "cursor-zoom-in"
+          className={`relative flex-1 aspect-[4/5] min-h-[440px] sm:min-h-[540px] lg:min-h-[620px] bg-slate-50 rounded-2xl overflow-hidden border border-slate-200 shadow-sm select-none group transition-all ${
+            isZoomActive ? "cursor-zoom-out ring-2 ring-slate-900" : "cursor-zoom-in"
           }`}
           title={isZoomActive ? "Click to exit zoom" : "Click to activate zoom"}
         >
@@ -185,12 +185,12 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
           {/* Badges */}
           <div className="absolute top-4 left-4 flex flex-col gap-2 z-10 pointer-events-none">
             {product.is_best_seller && (
-              <span className="bg-[#0E0E0E] text-[#FAF9F6] text-[10px] font-bold tracking-[0.18em] uppercase px-3 py-1 rounded-xs shadow-xs">
+              <span className="bg-slate-900 text-white text-[10px] font-bold tracking-[0.16em] uppercase px-3 py-1 rounded-sm shadow-xs">
                 Best Seller
               </span>
             )}
             {product.is_new_arrival && (
-              <span className="bg-[#FAF9F6] text-[#0E0E0E] border border-[#0E0E0E]/20 text-[10px] font-bold tracking-[0.18em] uppercase px-3 py-1 rounded-xs shadow-xs">
+              <span className="bg-white text-slate-900 border border-slate-300 text-[10px] font-bold tracking-[0.16em] uppercase px-3 py-1 rounded-sm shadow-xs">
                 New In
               </span>
             )}
@@ -199,13 +199,13 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
           {/* Floating Zoom Action Badge */}
           <div className="absolute bottom-4 inset-x-0 flex justify-center pointer-events-none z-10">
             {isZoomActive ? (
-              <span className="bg-[#0E0E0E]/90 backdrop-blur-md text-[#FAF9F6] text-[10px] font-bold uppercase tracking-widest px-3.5 py-1.5 rounded-full shadow-md border border-white/20 flex items-center gap-1.5">
+              <span className="bg-slate-900/90 backdrop-blur-md text-white text-[10px] font-bold uppercase tracking-widest px-3.5 py-1.5 rounded-full shadow-md border border-white/20 flex items-center gap-1.5">
                 <ZoomOut className="w-3.5 h-3.5 text-white" />
                 <span>Click to Exit Zoom</span>
               </span>
             ) : (
-              <span className="bg-white/90 backdrop-blur-md text-[#0E0E0E] text-[10px] font-bold uppercase tracking-widest px-3.5 py-1.5 rounded-full shadow-xs border border-[#E8E5DE] flex items-center gap-1.5 opacity-90 group-hover:opacity-100 transition-opacity">
-                <ZoomIn className="w-3.5 h-3.5 text-[#0E0E0E]" />
+              <span className="bg-white/95 backdrop-blur-md text-slate-900 text-[10px] font-bold uppercase tracking-widest px-3.5 py-1.5 rounded-full shadow-xs border border-slate-200 flex items-center gap-1.5 opacity-90 group-hover:opacity-100 transition-opacity">
+                <ZoomIn className="w-3.5 h-3.5 text-slate-900" />
                 <span>Click to Zoom</span>
               </span>
             )}
@@ -217,23 +217,23 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
       <div className="lg:col-span-5 flex flex-col space-y-6">
         <div>
           {/* Category & SKU */}
-          <div className="flex items-center justify-between text-xs text-[#73706A] uppercase tracking-[0.2em] font-semibold mb-2">
+          <div className="flex items-center justify-between text-xs text-slate-500 uppercase tracking-[0.2em] font-semibold mb-2">
             <span>{product.categories?.[0]?.name || "DNORA Atelier"}</span>
             <span>SKU: {product.sku}</span>
           </div>
 
           {/* Title */}
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-heading font-extrabold text-[#0E0E0E] tracking-tight leading-tight mb-3">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-heading font-extrabold text-slate-900 tracking-tight leading-tight mb-3">
             {product.name}
           </h1>
 
           {/* Price */}
-          <div className="flex items-center gap-3 pb-5 border-b border-[#E8E5DE]">
-            <span className="text-2xl sm:text-3xl font-bold text-[#0E0E0E]">
+          <div className="flex items-center gap-3 pb-5 border-b border-slate-200">
+            <span className="text-2xl sm:text-3xl font-bold text-slate-900">
               {formatPrice(product.price)}
             </span>
             {product.compare_at_price && product.compare_at_price > product.price && (
-              <span className="text-base text-[#73706A] line-through">
+              <span className="text-base text-slate-400 line-through">
                 {formatPrice(product.compare_at_price)}
               </span>
             )}
@@ -251,15 +251,15 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
 
           {/* PRODUCT COLOUR SELECTOR — NORMAL / BIG COMFORTABLE BUTTONS */}
           {product.color_variants && product.color_variants.length > 0 && (
-            <div className="py-5 border-b border-[#E8E5DE]">
+            <div className="py-5 border-b border-slate-200">
               <div className="flex items-center justify-between mb-3">
-                <span className="text-xs uppercase tracking-[0.18em] font-bold text-[#0E0E0E]">
+                <span className="text-xs uppercase tracking-[0.18em] font-bold text-slate-900">
                   Color:{" "}
-                  <span className="font-semibold text-[#73706A]">
+                  <span className="font-semibold text-slate-500">
                     {activeVariant?.name || "Original Edition"}
                   </span>
                 </span>
-                <span className="text-[11px] text-[#73706A] uppercase tracking-wider font-semibold">
+                <span className="text-[11px] text-slate-500 uppercase tracking-wider font-semibold">
                   {product.color_variants.length} Colors
                 </span>
               </div>
@@ -268,7 +268,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
               <div className="flex items-center gap-3 flex-wrap">
                 {product.color_variants.map((v) => {
                   const isSelected = v.id === selectedVariantId;
-                  const bg = v.color_hex || v.hex || "#0E0E0E";
+                  const bg = v.color_hex || v.hex || "#0F172A";
                   return (
                     <button
                       key={v.id}
@@ -280,8 +280,8 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
                       }}
                       className={`relative w-9 h-9 sm:w-10 sm:h-10 rounded-full border-2 transition-all flex items-center justify-center cursor-pointer ${
                         isSelected
-                          ? "border-[#0E0E0E] ring-2 ring-[#0E0E0E] ring-offset-2 scale-105 shadow-sm"
-                          : "border-[#E8E5DE] hover:border-[#0E0E0E] opacity-80 hover:opacity-100"
+                          ? "border-slate-900 ring-2 ring-slate-900 ring-offset-2 scale-105 shadow-sm"
+                          : "border-slate-200 hover:border-slate-900 opacity-80 hover:opacity-100"
                       }`}
                       title={v.name}
                       aria-label={`Select ${v.name} color`}
@@ -303,12 +303,12 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
           </p>
 
           {/* Detailed Full Description */}
-          <div className="bg-[#FAF9F6] p-4 sm:p-5 rounded-xs border border-[#E8E5DE] mb-6">
-            <h3 className="text-xs uppercase tracking-[0.2em] font-bold text-[#0E0E0E] mb-2 flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-[#0E0E0E]" />
+          <div className="bg-slate-50 p-4 sm:p-5 rounded-xl border border-slate-200 mb-6">
+            <h3 className="text-xs uppercase tracking-[0.2em] font-bold text-slate-900 mb-2 flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-slate-900" />
               Artisan Details
             </h3>
-            <p className="text-xs text-[#73706A] leading-relaxed whitespace-pre-line">
+            <p className="text-xs text-slate-600 leading-relaxed whitespace-pre-line">
               {product.description}
             </p>
           </div>
@@ -317,25 +317,25 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
           <div className="space-y-4">
             {/* Quantity Selector */}
             <div className="flex items-center gap-3">
-              <span className="text-xs font-bold uppercase tracking-wider text-[#0E0E0E]">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-900">
                 Quantity:
               </span>
-              <div className="flex items-center border border-[#E8E5DE] bg-white rounded-xs">
+              <div className="flex items-center border border-slate-200 bg-white rounded-lg overflow-hidden shadow-2xs">
                 <button
                   type="button"
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="p-2 text-[#73706A] hover:text-[#0E0E0E] transition-colors cursor-pointer"
+                  className="p-2.5 text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors cursor-pointer"
                   aria-label="Decrease quantity"
                 >
                   <Minus className="w-3.5 h-3.5" />
                 </button>
-                <span className="w-10 text-center text-xs font-bold text-[#0E0E0E]">
+                <span className="w-10 text-center text-xs font-bold text-slate-900">
                   {quantity}
                 </span>
                 <button
                   type="button"
                   onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
-                  className="p-2 text-[#73706A] hover:text-[#0E0E0E] transition-colors cursor-pointer"
+                  className="p-2.5 text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors cursor-pointer"
                   aria-label="Increase quantity"
                 >
                   <Plus className="w-3.5 h-3.5" />
@@ -343,17 +343,17 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
               </div>
             </div>
 
-            {/* GLOBAL BUTTON REDESIGN: BUY NOW + ADD TO CART (Clean, Professional, Rectangular) */}
-            <div className="flex flex-col sm:flex-row items-center gap-3 pt-1">
+            {/* GLOBAL BUTTON REDESIGN: BUY NOW + ADD TO CART (Exact Same Size, Rectangular, Luxury) */}
+            <div className="flex flex-col sm:flex-row items-center gap-2.5 sm:gap-3 pt-1">
               {/* ADD TO CART */}
               <button
                 type="button"
                 onClick={handleAddToCart}
                 disabled={product.stock <= 0}
-                className="w-full sm:w-1/2 flex items-center justify-center gap-2 py-4 px-6 bg-white border border-[#0E0E0E] hover:bg-[#FAF9F6] text-[#0E0E0E] text-xs font-bold uppercase tracking-[0.18em] rounded-xs transition-colors shadow-xs disabled:opacity-50 active:scale-[0.99] cursor-pointer"
+                className="w-full sm:flex-1 h-11 sm:h-13 flex items-center justify-center gap-2 px-3 sm:px-6 bg-white border border-slate-300 hover:bg-slate-50 text-slate-900 text-xs font-bold uppercase tracking-normal sm:tracking-[0.14em] rounded-xl transition-all shadow-2xs disabled:opacity-50 active:scale-[0.99] cursor-pointer"
               >
-                <ShoppingBag className="w-4 h-4 text-[#0E0E0E]" />
-                <span>Add to Cart</span>
+                <ShoppingBag className="w-4 h-4 text-slate-900 shrink-0" />
+                <span className="truncate whitespace-nowrap">Add to Bag</span>
               </button>
 
               {/* BUY NOW */}
@@ -361,14 +361,14 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
                 type="button"
                 onClick={handleBuyNow}
                 disabled={product.stock <= 0 || buyingNow}
-                className="w-full sm:w-1/2 flex items-center justify-center gap-2 py-4 px-6 bg-[#0E0E0E] hover:bg-[#262626] text-[#FAF9F6] text-xs font-bold uppercase tracking-[0.18em] rounded-xs transition-colors shadow-md disabled:opacity-50 active:scale-[0.99] cursor-pointer"
+                className="w-full sm:flex-1 h-11 sm:h-13 flex items-center justify-center gap-2 px-3 sm:px-6 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold uppercase tracking-normal sm:tracking-[0.14em] rounded-xl transition-all shadow-md disabled:opacity-50 active:scale-[0.99] cursor-pointer border border-slate-900"
               >
                 {buyingNow ? (
-                  <Loader2 className="w-4 h-4 animate-spin text-white" />
+                  <Loader2 className="w-4 h-4 animate-spin text-white shrink-0" />
                 ) : (
                   <>
-                    <span>Buy Now</span>
-                    <ArrowRight className="w-4 h-4 text-white" />
+                    <span className="truncate whitespace-nowrap">Buy Now</span>
+                    <ArrowRight className="w-4 h-4 text-white shrink-0" />
                   </>
                 )}
               </button>
@@ -378,11 +378,11 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
                 type="button"
                 onClick={() => setIsWishlisted(!isWishlisted)}
                 aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
-                className="hidden sm:flex p-3.5 rounded-xs border border-[#E8E5DE] bg-white hover:border-[#0E0E0E] transition-colors shrink-0 cursor-pointer"
+                className="hidden sm:flex h-12 sm:h-13 w-12 sm:w-13 items-center justify-center rounded-xl border border-slate-200 bg-white hover:border-slate-900 transition-colors shrink-0 cursor-pointer shadow-2xs"
               >
                 <Heart
                   className={`w-4 h-4 transition-colors ${
-                    isWishlisted ? "fill-[#0E0E0E] text-[#0E0E0E]" : "text-[#0E0E0E]"
+                    isWishlisted ? "fill-slate-900 text-slate-900" : "text-slate-700"
                   }`}
                 />
               </button>

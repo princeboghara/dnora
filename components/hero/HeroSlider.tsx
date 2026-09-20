@@ -157,18 +157,18 @@ export function HeroSlider({ banners, height }: HeroSliderProps) {
         >
           {/* Eyebrow / Collection Drop Tag */}
           {currentBanner.subtitle && (
-            <span className="text-[10px] sm:text-xs uppercase tracking-[0.3em] text-[#FAF9F6]/90 font-semibold mb-3 drop-shadow-sm">
+            <span className="text-[10px] sm:text-xs uppercase tracking-[0.3em] text-white/90 font-semibold mb-3 drop-shadow-sm">
               {currentBanner.subtitle}
             </span>
           )}
 
           {/* Editorial Campaign Title */}
-          <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-heading font-extrabold text-[#FAF9F6] tracking-tight leading-[1.06] mb-3 drop-shadow-sm">
+          <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-heading font-extrabold text-white tracking-tight leading-[1.06] mb-3 drop-shadow-sm">
             {currentBanner.title}
           </h1>
 
           {/* Short Supporting Editorial Text */}
-          <p className="text-xs sm:text-sm text-[#FAF9F6]/85 max-w-xl font-normal leading-relaxed mb-6 drop-shadow-sm">
+          <p className="text-xs sm:text-sm text-white/85 max-w-xl font-normal leading-relaxed mb-6 drop-shadow-sm">
             Handcrafted architectural silhouettes sculpted from full-grain Italian leather.
           </p>
 
@@ -176,7 +176,7 @@ export function HeroSlider({ banners, height }: HeroSliderProps) {
           <div>
             <Link
               href={currentBanner.button_link || "/shop"}
-              className="group inline-flex items-center gap-3 px-8 sm:px-10 py-3.5 sm:py-4 bg-[#FAF9F6] text-[#0E0E0E] border border-[#0E0E0E] hover:bg-[#0E0E0E] hover:text-[#FAF9F6] text-[11px] sm:text-xs uppercase tracking-[0.24em] font-bold rounded-xs transition-all duration-300 shadow-lg hover:shadow-xl cursor-pointer"
+              className="group inline-flex items-center gap-3 px-8 sm:px-10 py-3.5 sm:py-4 bg-white text-slate-900 border border-white hover:bg-slate-900 hover:text-white text-[11px] sm:text-xs uppercase tracking-[0.24em] font-bold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl cursor-pointer"
             >
               <span>{currentBanner.button_text || "SHOP COLLECTION"}</span>
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -211,7 +211,7 @@ export function HeroSlider({ banners, height }: HeroSliderProps) {
                 className="h-1 sm:h-1.5 rounded-full transition-all duration-400 overflow-hidden cursor-pointer focus:outline-none"
                 style={{
                   width: isActive ? "28px" : "8px",
-                  backgroundColor: isActive ? "#FAF9F6" : "rgba(255, 255, 255, 0.35)",
+                  backgroundColor: isActive ? "#FFFFFF" : "rgba(255, 255, 255, 0.35)",
                 }}
               />
             );

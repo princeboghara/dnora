@@ -12,6 +12,7 @@ import {
   Sparkles,
   Loader2,
   ExternalLink,
+  Package,
 } from "lucide-react";
 import { Product } from "@/types";
 import { useToast } from "@/components/ui/Toast";
@@ -97,7 +98,6 @@ export default function ProductManagerPage() {
     }
   };
 
-  // Filtered in-memory list
   const filteredProducts = products.filter((p) => {
     const matchesSearch =
       !searchQuery ||
@@ -110,40 +110,44 @@ export default function ProductManagerPage() {
   });
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-[#E8E5DE]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-slate-200">
         <div>
-          <span className="text-xs uppercase tracking-[0.2em] text-[#0E0E0E] font-semibold block mb-1">
-            Inventory &amp; Merchandising
-          </span>
-          <h1 className="text-2xl sm:text-3xl font-heading font-extrabold text-[#0E0E0E] tracking-tight">
-            Product Manager
-          </h1>
-          <p className="text-xs text-[#73706A] mt-1">
-            Create, edit, organize Cloudinary imagery, and toggle Best Seller or New Arrival flags.
-          </p>
+          <div className="flex items-center gap-2">
+            <span className="p-2 rounded-xl bg-slate-100 border border-slate-200 text-slate-900">
+              <Package className="w-5 h-5" />
+            </span>
+            <div>
+              <h1 className="text-xl sm:text-2xl font-heading font-extrabold tracking-tight text-slate-900 uppercase">
+                Product Master
+              </h1>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Create, edit, organize imagery, and toggle merchandising flags.
+              </p>
+            </div>
+          </div>
         </div>
 
         <Link
           href="/admin/products/new"
-          className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#0E0E0E] hover:bg-[#2C2B29] text-xs font-bold uppercase tracking-wider text-[#FAF9F6] rounded transition-all shadow-md shrink-0"
+          className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-xs font-bold uppercase tracking-wider text-white rounded-xl transition-all shadow-xs shrink-0 cursor-pointer"
         >
-          <Plus className="w-4 h-4 text-[#0E0E0E]" />
+          <Plus className="w-4 h-4 text-white" />
           <span>Add New Handbag</span>
         </Link>
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white p-4 rounded-lg border border-[#E8E5DE] shadow-sm">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
         <div className="relative w-full sm:w-80">
-          <Search className="w-4 h-4 text-[#73706A] absolute left-3 top-3" />
+          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search by handbag name or SKU..."
-            className="w-full bg-[#FAF9F6] border border-[#E8E5DE] pl-9 pr-4 py-2 text-xs text-[#0E0E0E] rounded focus:outline-none focus:border-[#0E0E0E]"
+            className="w-full bg-slate-50 border border-slate-200 pl-9 pr-4 py-2 text-xs text-slate-900 rounded-xl focus:outline-none focus:border-slate-900 focus:bg-white transition-colors"
           />
         </div>
 
@@ -151,7 +155,7 @@ export default function ProductManagerPage() {
           <select
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
-            className="bg-[#FAF9F6] border border-[#E8E5DE] px-3 py-2 text-xs text-[#0E0E0E] rounded focus:outline-none focus:border-[#0E0E0E]"
+            className="bg-slate-50 border border-slate-200 px-3 py-2 text-xs text-slate-900 rounded-xl focus:outline-none focus:border-slate-900 cursor-pointer font-medium"
           >
             <option value="">All Categories</option>
             <option value="shoulder-bags">Shoulder Bags</option>
@@ -164,7 +168,7 @@ export default function ProductManagerPage() {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="bg-[#FAF9F6] border border-[#E8E5DE] px-3 py-2 text-xs text-[#0E0E0E] rounded focus:outline-none focus:border-[#0E0E0E]"
+            className="bg-slate-50 border border-slate-200 px-3 py-2 text-xs text-slate-900 rounded-xl focus:outline-none focus:border-slate-900 cursor-pointer font-medium"
           >
             <option value="">All Statuses</option>
             <option value="active">Active</option>
@@ -175,16 +179,16 @@ export default function ProductManagerPage() {
       </div>
 
       {/* Product Table */}
-      <div className="bg-white border border-[#E8E5DE] rounded-lg shadow-sm overflow-hidden">
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
         {loading ? (
-          <div className="flex items-center justify-center p-16 text-[#73706A]">
-            <Loader2 className="w-6 h-6 animate-spin mr-3" />
+          <div className="flex items-center justify-center p-16 text-slate-500">
+            <Loader2 className="w-6 h-6 animate-spin mr-3 text-slate-900" />
             <span className="text-sm">Loading products catalog...</span>
           </div>
         ) : filteredProducts.length === 0 ? (
           <div className="p-16 text-center">
-            <p className="text-base font-heading text-[#0E0E0E] mb-2">No matching products found</p>
-            <p className="text-xs text-[#73706A]">
+            <p className="text-base font-heading font-bold text-slate-900 mb-2">No matching products found</p>
+            <p className="text-xs text-slate-500">
               Adjust your filters or add a new handbag to the DNORA catalog.
             </p>
           </div>
@@ -192,7 +196,7 @@ export default function ProductManagerPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-[#E8E5DE] bg-[#FAF9F6] text-[10px] font-bold uppercase tracking-[0.18em] text-[#73706A]">
+                <tr className="border-b border-slate-200 bg-slate-50 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">
                   <th className="py-3.5 px-4 sm:px-6">Image</th>
                   <th className="py-3.5 px-4">Product Name &amp; SKU</th>
                   <th className="py-3.5 px-4">Price</th>
@@ -203,18 +207,18 @@ export default function ProductManagerPage() {
                   <th className="py-3.5 px-4 sm:px-6 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#E8E5DE] text-xs">
+              <tbody className="divide-y divide-slate-100 text-xs">
                 {filteredProducts.map((product) => (
-                  <tr key={product.id} className="hover:bg-[#FAF9F6]/60 transition-colors">
+                  <tr key={product.id} className="hover:bg-slate-50/70 transition-colors">
                     {/* Thumbnail */}
                     <td className="py-3.5 px-4 sm:px-6">
-                      <div className="relative w-14 h-16 bg-[#F5F3EF] rounded overflow-hidden border border-[#E8E5DE] shrink-0">
+                      <div className="relative w-12 h-14 bg-slate-100 rounded-lg overflow-hidden border border-slate-200 shrink-0 shadow-2xs">
                         {product.images[0] && (
                           <Image
                             src={product.images[0].secure_url}
                             alt={product.name}
                             fill
-                            sizes="56px"
+                            sizes="48px"
                             className="object-cover"
                           />
                         )}
@@ -224,26 +228,26 @@ export default function ProductManagerPage() {
                     {/* Product Name & SKU */}
                     <td className="py-3.5 px-4 max-w-xs">
                       <div className="flex items-center gap-1.5">
-                        <span className="font-heading font-bold text-sm text-[#0E0E0E]">
+                        <span className="font-heading font-bold text-sm text-slate-900">
                           {product.name}
                         </span>
                         <a
                           href={`/product/${product.slug}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-[#A8A49C] hover:text-[#0E0E0E]"
+                          className="text-slate-400 hover:text-slate-900 transition-colors"
                           title="View on site"
                         >
                           <ExternalLink className="w-3.5 h-3.5" />
                         </a>
                       </div>
-                      <span className="text-[11px] text-[#73706A] font-mono block">
+                      <span className="text-[11px] text-slate-500 font-mono block">
                         {product.sku} • {product.categories?.[0]?.name || "Purse"}
                       </span>
                     </td>
 
                     {/* Price */}
-                    <td className="py-3.5 px-4 font-semibold text-[#0E0E0E]">
+                    <td className="py-3.5 px-4 font-bold text-slate-900 font-mono">
                       {formatPrice(product.price)}
                     </td>
 
@@ -251,7 +255,7 @@ export default function ProductManagerPage() {
                     <td className="py-3.5 px-4">
                       <span
                         className={`font-semibold ${
-                          product.stock < 10 ? "text-rose-700" : "text-[#0E0E0E]"
+                          product.stock < 10 ? "text-rose-600" : "text-slate-700"
                         }`}
                       >
                         {product.stock} units
@@ -262,14 +266,14 @@ export default function ProductManagerPage() {
                     <td className="py-3.5 px-4">
                       <button
                         onClick={() => handleToggleFlag(product, "is_best_seller")}
-                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wider transition-colors ${
+                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-colors cursor-pointer ${
                           product.is_best_seller
-                            ? "bg-[#0E0E0E] text-[#FAF9F6]"
-                            : "bg-[#F5F3EF] text-[#73706A] hover:bg-[#EAE6DF]"
+                            ? "bg-slate-900 text-white shadow-2xs"
+                            : "bg-slate-100 text-slate-500 hover:bg-slate-200"
                         }`}
                         title="Toggle Best Seller section placement"
                       >
-                        <Flame className={`w-3 h-3 ${product.is_best_seller ? "text-amber-400" : "text-gray-400"}`} />
+                        <Flame className={`w-3 h-3 ${product.is_best_seller ? "text-amber-400" : "text-slate-400"}`} />
                         <span>{product.is_best_seller ? "ON" : "OFF"}</span>
                       </button>
                     </td>
@@ -278,10 +282,10 @@ export default function ProductManagerPage() {
                     <td className="py-3.5 px-4">
                       <button
                         onClick={() => handleToggleFlag(product, "is_new_arrival")}
-                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wider transition-colors ${
+                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-colors cursor-pointer ${
                           product.is_new_arrival
-                            ? "bg-[#0E0E0E] text-[#0E0E0E]"
-                            : "bg-[#F5F3EF] text-[#73706A] hover:bg-[#EAE6DF]"
+                            ? "bg-slate-900 text-white shadow-2xs"
+                            : "bg-slate-100 text-slate-500 hover:bg-slate-200"
                         }`}
                         title="Toggle New Arrival section placement"
                       >
@@ -293,10 +297,10 @@ export default function ProductManagerPage() {
                     {/* Status Badge */}
                     <td className="py-3.5 px-4">
                       <span
-                        className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
+                        className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
                           product.status === "active"
-                            ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
-                            : "bg-gray-100 text-gray-700 border border-gray-200"
+                            ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                            : "bg-slate-100 text-slate-600 border border-slate-200"
                         }`}
                       >
                         {product.status}
@@ -305,17 +309,17 @@ export default function ProductManagerPage() {
 
                     {/* Actions */}
                     <td className="py-3.5 px-4 sm:px-6 text-right">
-                      <div className="flex items-center justify-end gap-2">
+                      <div className="flex items-center justify-end gap-1.5">
                         <Link
                           href={`/admin/products/${product.id}/edit`}
-                          className="p-1.5 rounded hover:bg-[#F5F3EF] text-[#3A3835] hover:text-[#0E0E0E]"
+                          className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition-colors"
                           title="Edit Handbag"
                         >
                           <Edit2 className="w-4 h-4" />
                         </Link>
                         <button
                           onClick={() => handleDelete(product.id, product.name)}
-                          className="p-1.5 rounded hover:bg-rose-50 text-[#73706A] hover:text-rose-600"
+                          className="p-1.5 rounded-lg hover:bg-rose-50 text-slate-400 hover:text-rose-600 transition-colors cursor-pointer"
                           title="Delete Product"
                         >
                           <Trash2 className="w-4 h-4" />

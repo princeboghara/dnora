@@ -16,6 +16,8 @@ interface SeenOnYouSectionProps {
   headingFontFamily?: string;
   headingFontWeight?: string;
   cardGap?: number;
+  cardSize?: "sm" | "md" | "lg";
+  cardWidth?: number;
 }
 
 export function SeenOnYouSection({
@@ -26,6 +28,8 @@ export function SeenOnYouSection({
   headingFontFamily,
   headingFontWeight,
   cardGap,
+  cardSize = "md",
+  cardWidth,
 }: SeenOnYouSectionProps) {
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
@@ -43,12 +47,12 @@ export function SeenOnYouSection({
   const resolvedFont = getResolvedFontFamily(headingFontFamily);
 
   return (
-    <section id="seen-on-you" className="py-10 sm:py-14 bg-[#FAF9F6] border-t border-[#E8E5DE]">
+    <section id="seen-on-you" className="py-6 sm:py-8 bg-[#F8FAFC] border-t border-slate-200/80">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Centered Section Heading */}
-        <div className="text-center max-w-xl mx-auto mb-6 sm:mb-8">
+        <div className="text-center max-w-xl mx-auto mb-3.5 sm:mb-5">
           <h2
-            className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#0E0E0E] tracking-tight uppercase font-arial-rounded"
+            className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight uppercase font-arial-rounded"
             style={{
               fontFamily: resolvedFont,
               color: headingColor || undefined,
@@ -70,7 +74,7 @@ export function SeenOnYouSection({
             type="button"
             onClick={() => handleScroll("left")}
             aria-label="Previous looks"
-            className="hidden sm:flex absolute -left-4 lg:-left-5 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-white/95 border border-[#E8E5DE] shadow-sm items-center justify-center text-[#0E0E0E] hover:bg-[#F5F3EF] hover:scale-105 active:scale-95 transition-all cursor-pointer"
+            className="hidden sm:flex absolute -left-4 lg:-left-5 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-white/95 border border-slate-200 shadow-sm items-center justify-center text-slate-900 hover:bg-slate-50 hover:scale-105 active:scale-95 transition-all cursor-pointer"
           >
             <ChevronLeft className="w-3.5 h-3.5" />
           </button>
@@ -79,7 +83,7 @@ export function SeenOnYouSection({
             type="button"
             onClick={() => handleScroll("right")}
             aria-label="Next looks"
-            className="hidden sm:flex absolute -right-4 lg:-right-5 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-white/95 border border-[#E8E5DE] shadow-sm items-center justify-center text-[#0E0E0E] hover:bg-[#F5F3EF] hover:scale-105 active:scale-95 transition-all cursor-pointer"
+            className="hidden sm:flex absolute -right-4 lg:-right-5 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-white/95 border border-slate-200 shadow-sm items-center justify-center text-slate-900 hover:bg-slate-50 hover:scale-105 active:scale-95 transition-all cursor-pointer"
           >
             <ChevronRight className="w-3.5 h-3.5" />
           </button>
@@ -97,7 +101,13 @@ export function SeenOnYouSection({
             }}
           >
             {videos.map((item, idx) => (
-              <AutoplayVideoCard key={item.id} item={item} index={idx + 1} />
+              <AutoplayVideoCard
+                key={item.id}
+                item={item}
+                index={idx + 1}
+                cardSize={cardSize}
+                cardWidth={cardWidth}
+              />
             ))}
           </div>
         </div>
@@ -109,9 +119,11 @@ export function SeenOnYouSection({
 interface AutoplayVideoCardProps {
   item: SeenOnYouVideo;
   index: number;
+  cardSize?: "sm" | "md" | "lg";
+  cardWidth?: number;
 }
 
-function AutoplayVideoCard({ item, index }: AutoplayVideoCardProps) {
+function AutoplayVideoCard({ item, index, cardSize = "md", cardWidth }: AutoplayVideoCardProps) {
   const cardRef = useRef<HTMLDivElement | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -127,14 +139,10 @@ function AutoplayVideoCard({ item, index }: AutoplayVideoCardProps) {
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
-            // Video is at least 50% visible in viewport -> start playback automatically
             videoEl.play().then(() => {
               setIsPlaying(true);
-            }).catch(() => {
-              // Autoplay error handling fallback
-            });
+            }).catch(() => {});
           } else {
-            // Video left viewport -> pause playback
             videoEl.pause();
             setIsPlaying(false);
           }
@@ -160,10 +168,27 @@ function AutoplayVideoCard({ item, index }: AutoplayVideoCardProps) {
     setIsMuted(nextMuted);
   };
 
+  const cardWidthClass =
+    cardWidth !== undefined
+      ? "w-48 sm:w-[var(--reel-w)]"
+      : cardSize === "sm"
+      ? "w-48 sm:w-56 md:w-60"
+      : cardSize === "lg"
+      ? "w-72 sm:w-80 md:w-88"
+      : "w-60 sm:w-68 md:w-72";
+
+  const cardCustomStyle = cardWidth
+    ? ({ "--reel-w": `${cardWidth}px` } as React.CSSProperties)
+    : undefined;
+
   return (
     <div
       ref={cardRef}
-      className="group relative w-60 sm:w-68 md:w-72 aspect-[9/16] shrink-0 snap-start rounded-xs overflow-hidden bg-[#0E0E0E] border border-[#E8E5DE] shadow-sm transition-all duration-300 select-none"
+      style={cardCustomStyle}
+      className={cn(
+        "group relative aspect-[9/16] shrink-0 snap-start rounded-xl overflow-hidden bg-slate-950 border border-slate-200 shadow-sm transition-all duration-300 select-none",
+        cardWidthClass
+      )}
     >
       {/* Fallback Poster Image */}
       {item.thumbnail_url && (
@@ -221,7 +246,7 @@ function AutoplayVideoCard({ item, index }: AutoplayVideoCardProps) {
           {item.customer_name}
         </span>
 
-        <p className="text-xs text-[#FAF9F6] line-clamp-2 leading-relaxed mb-3 font-normal opacity-90">
+        <p className="text-xs text-white line-clamp-2 leading-relaxed mb-3 font-normal opacity-90">
           &ldquo;{item.caption}&rdquo;
         </p>
 
@@ -230,7 +255,7 @@ function AutoplayVideoCard({ item, index }: AutoplayVideoCardProps) {
           <div className="pointer-events-auto">
             <Link
               href={item.product_slug ? `/product/${item.product_slug}` : "/shop"}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white text-[#0E0E0E] hover:bg-[#FAF9F6] text-[10px] font-bold uppercase tracking-[0.16em] rounded-xs shadow-sm transition-all active:scale-95"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-white text-slate-900 hover:bg-slate-100 text-[10px] font-bold uppercase tracking-[0.16em] rounded-lg shadow-sm transition-all active:scale-95 cursor-pointer"
             >
               <span>Shop Look</span>
               <ArrowUpRight className="w-3 h-3" />

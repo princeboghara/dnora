@@ -25,10 +25,10 @@ export function YouMayAlsoLikeCarousel({ products }: YouMayAlsoLikeCarouselProps
   };
 
   return (
-    <div className="mt-16 sm:mt-20 pt-10 sm:pt-14 border-t border-[#E8E5DE]">
+    <div className="mt-10 sm:mt-12 pt-8 sm:pt-10 border-t border-slate-200/80">
       {/* Centered Heading */}
-      <div className="text-center max-w-xl mx-auto mb-6 sm:mb-8">
-        <h2 className="text-2xl sm:text-3xl lg:text-4xl font-heading font-extrabold text-[#0E0E0E] tracking-tight uppercase">
+      <div className="text-center max-w-xl mx-auto mb-4 sm:mb-6">
+        <h2 className="text-2xl sm:text-3xl lg:text-4xl font-heading font-extrabold text-slate-900 tracking-tight uppercase">
           YOU MAY ALSO LIKE
         </h2>
       </div>
@@ -40,7 +40,7 @@ export function YouMayAlsoLikeCarousel({ products }: YouMayAlsoLikeCarouselProps
           type="button"
           onClick={() => handleScroll("left")}
           aria-label="Previous products"
-          className="hidden sm:flex absolute -left-4 lg:-left-5 top-1/2 -translate-y-1/2 z-20 w-8 h-8 lg:w-9 lg:h-9 rounded-full bg-white/95 border border-[#E8E5DE] shadow-sm items-center justify-center text-[#0E0E0E] hover:bg-[#F5F3EF] hover:scale-105 active:scale-95 transition-all cursor-pointer"
+          className="hidden sm:flex absolute -left-4 lg:-left-5 top-1/2 -translate-y-1/2 z-20 w-8 h-8 lg:w-9 lg:h-9 rounded-full bg-white border border-slate-200 shadow-sm items-center justify-center text-slate-900 hover:bg-slate-50 hover:scale-105 active:scale-95 transition-all cursor-pointer"
         >
           <ChevronLeft className="w-4 h-4" />
         </button>
@@ -50,7 +50,7 @@ export function YouMayAlsoLikeCarousel({ products }: YouMayAlsoLikeCarouselProps
           type="button"
           onClick={() => handleScroll("right")}
           aria-label="Next products"
-          className="hidden sm:flex absolute -right-4 lg:-right-5 top-1/2 -translate-y-1/2 z-20 w-8 h-8 lg:w-9 lg:h-9 rounded-full bg-white/95 border border-[#E8E5DE] shadow-sm items-center justify-center text-[#0E0E0E] hover:bg-[#F5F3EF] hover:scale-105 active:scale-95 transition-all cursor-pointer"
+          className="hidden sm:flex absolute -right-4 lg:-right-5 top-1/2 -translate-y-1/2 z-20 w-8 h-8 lg:w-9 lg:h-9 rounded-full bg-white border border-slate-200 shadow-sm items-center justify-center text-slate-900 hover:bg-slate-50 hover:scale-105 active:scale-95 transition-all cursor-pointer"
         >
           <ChevronRight className="w-4 h-4" />
         </button>

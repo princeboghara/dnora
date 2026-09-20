@@ -8,6 +8,7 @@ import { Heart, ShoppingBag, Loader2 } from "lucide-react";
 import { Product, ProductColorVariant } from "@/types";
 import { formatPrice } from "@/lib/utils";
 import { useCart } from "@/lib/store/cart-store";
+import { useWishlist } from "@/lib/store/wishlist-store";
 import { useToast } from "@/components/ui/Toast";
 
 interface ProductCardProps {
@@ -17,7 +18,8 @@ interface ProductCardProps {
 
 export function ProductCard({ product, priority = false }: ProductCardProps) {
   const router = useRouter();
-  const [isWishlisted, setIsWishlisted] = useState(false);
+  const { isInWishlist, toggleWishlist } = useWishlist();
+  const isWishlisted = isInWishlist(product.id);
   const [isHovered, setIsHovered] = useState(false);
   const [isBuying, setIsBuying] = useState(false);
   const [selectedVariant, setSelectedVariant] = useState<ProductColorVariant | null>(
@@ -90,7 +92,10 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
   const handleToggleWishlist = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setIsWishlisted(!isWishlisted);
+    toggleWishlist(product);
+    if (!isWishlisted) {
+      success(`Added "${product.name}" to your wishlist.`);
+    }
   };
 
   return (
@@ -100,7 +105,7 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
       onMouseLeave={() => setIsHovered(false)}
     >
       {/* 1. PRODUCT IMAGE FRAME (Controlled height & medium width) */}
-      <div className="relative w-full aspect-[4/5] bg-[#F5F3EF] overflow-hidden rounded-xs border border-[#E8E5DE]">
+      <div className="relative w-full aspect-[4/5] bg-slate-50 overflow-hidden rounded-xl border border-slate-200 shadow-xs">
         <Link href={`/product/${product.slug}`} className="relative block w-full h-full">
           {/* Primary Image with subtle crossfade */}
           {primaryImage && (
@@ -134,12 +139,12 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
         {/* Minimal Badges */}
         <div className="absolute top-2.5 left-2.5 flex flex-col gap-1 z-10 pointer-events-none">
           {product.is_best_seller && (
-            <span className="bg-[#0E0E0E] text-[#FAF9F6] text-[8px] sm:text-[9px] font-bold tracking-[0.18em] uppercase px-2 py-0.5 rounded-xs shadow-xs">
+            <span className="bg-slate-900 text-white text-[8px] sm:text-[9px] font-bold tracking-[0.16em] uppercase px-2 py-0.5 rounded-sm shadow-xs">
               Best Seller
             </span>
           )}
           {product.is_new_arrival && (
-            <span className="bg-[#FAF9F6] text-[#0E0E0E] border border-[#0E0E0E]/20 text-[8px] sm:text-[9px] font-bold tracking-[0.18em] uppercase px-2 py-0.5 rounded-xs shadow-xs">
+            <span className="bg-white text-slate-900 border border-slate-300 text-[8px] sm:text-[9px] font-bold tracking-[0.16em] uppercase px-2 py-0.5 rounded-sm shadow-xs">
               New Arrival
             </span>
           )}
@@ -150,44 +155,20 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
           type="button"
           onClick={handleToggleWishlist}
           aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
-          className="absolute top-2.5 right-2.5 z-10 p-1.5 rounded-full bg-white/90 hover:bg-white text-[#0E0E0E] shadow-xs backdrop-blur-md transition-all active:scale-95 cursor-pointer"
+          className="absolute top-2.5 right-2.5 z-10 p-1.5 rounded-full bg-white/95 hover:bg-white text-slate-900 shadow-xs backdrop-blur-md transition-all active:scale-95 cursor-pointer border border-slate-200"
         >
           <Heart
             className={`w-3.5 h-3.5 transition-colors ${
-              isWishlisted ? "fill-[#0E0E0E] text-[#0E0E0E]" : "text-[#0E0E0E]"
+              isWishlisted ? "fill-slate-900 text-slate-900" : "text-slate-700"
             }`}
           />
         </button>
-
-        {/* Desktop Quick Actions on Hover */}
-        <div className="absolute inset-x-2.5 bottom-2.5 z-10 hidden sm:flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          <button
-            type="button"
-            onClick={handleQuickAdd}
-            className="flex-1 flex items-center justify-center gap-1.5 py-2 px-2 bg-white hover:bg-[#F5F3EF] text-[#0E0E0E] border border-[#0E0E0E] text-[10px] font-medium tracking-[0.14em] uppercase rounded-xs shadow-xs transition-colors cursor-pointer active:scale-[0.98]"
-          >
-            <ShoppingBag className="w-3 h-3 text-[#0E0E0E]" />
-            <span>Add</span>
-          </button>
-          <button
-            type="button"
-            onClick={handleBuyNow}
-            disabled={isBuying}
-            className="flex-1 flex items-center justify-center gap-1.5 py-2 px-2 bg-[#0E0E0E] hover:bg-[#262626] text-[#FAF9F6] border border-[#0E0E0E] text-[10px] font-semibold tracking-[0.14em] uppercase rounded-xs shadow-xs transition-colors cursor-pointer active:scale-[0.98] disabled:opacity-60"
-          >
-            {isBuying ? (
-              <Loader2 className="w-3 h-3 animate-spin text-[#FAF9F6]" />
-            ) : (
-              <span>Buy Now</span>
-            )}
-          </button>
-        </div>
       </div>
 
       {/* PRODUCT CARD BODY (Exact requested order: Name -> Price -> Colour Swatches) */}
       <div className="mt-2.5 flex flex-col space-y-1">
         {/* 2. PRODUCT NAME */}
-        <h3 className="text-xs sm:text-sm font-heading font-medium text-[#0E0E0E] tracking-tight line-clamp-1">
+        <h3 className="text-xs sm:text-sm font-heading font-medium text-slate-900 tracking-tight line-clamp-1">
           <Link href={`/product/${product.slug}`} className="hover:underline">
             {product.name}
           </Link>
@@ -195,17 +176,17 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
 
         {/* 3. PRICE */}
         <div className="flex items-center gap-2">
-          <span className="text-xs sm:text-sm font-bold text-[#0E0E0E] tracking-tight">
+          <span className="text-xs sm:text-sm font-bold text-slate-900 tracking-tight">
             {formatPrice(product.price)}
           </span>
           {product.compare_at_price && product.compare_at_price > product.price && (
-            <span className="text-[10px] sm:text-[11px] text-[#73706A] line-through">
+            <span className="text-[10px] sm:text-[11px] text-slate-400 line-through">
               {formatPrice(product.compare_at_price)}
             </span>
           )}
         </div>
 
-        {/* 4. COLOUR SWATCHES (● ● ● ● with active black ring and dynamic image swap) */}
+        {/* 4. COLOUR SWATCHES */}
         {product.color_variants && product.color_variants.length > 0 && (
           <div
             className="flex items-center gap-2 pt-0.5"
@@ -217,7 +198,7 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
             <div className="flex items-center gap-1.5">
               {product.color_variants.slice(0, 5).map((variant) => {
                 const isSelected = selectedVariant?.name === variant.name;
-                const bg = variant.color_hex || variant.hex || "#0E0E0E";
+                const bg = variant.color_hex || variant.hex || "#0F172A";
                 return (
                   <button
                     key={variant.name}
@@ -227,8 +208,8 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
                     aria-label={`Select ${variant.name} color`}
                     className={`w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full transition-all duration-200 cursor-pointer ${
                       isSelected
-                        ? "ring-2 ring-[#0E0E0E] ring-offset-1 scale-110 shadow-xs"
-                        : "border border-black/20 hover:scale-110 opacity-75 hover:opacity-100"
+                        ? "ring-2 ring-slate-900 ring-offset-1 scale-110 shadow-xs"
+                        : "border border-slate-300 hover:scale-110 opacity-75 hover:opacity-100"
                     }`}
                     style={{ backgroundColor: bg }}
                   />
@@ -236,34 +217,36 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
               })}
             </div>
             {selectedVariant && (
-              <span className="text-[9px] sm:text-[10px] uppercase tracking-wider text-[#73706A] font-medium truncate">
+              <span className="text-[9px] sm:text-[10px] uppercase tracking-wider text-slate-500 font-medium truncate">
                 {selectedVariant.name}
               </span>
             )}
           </div>
         )}
 
-        {/* 5. PRODUCT ACTIONS (Visible on mobile, tablet, and laptop/desktop) */}
-        <div className="mt-3 flex items-center gap-2 pt-1">
+        {/* 5. PRODUCT ACTIONS (Normal Small Buttons: balanced height, clean typography) */}
+        <div className="mt-2 grid grid-cols-2 gap-1.5 pt-0.5">
           <button
             type="button"
             onClick={handleQuickAdd}
-            className="flex-1 flex items-center justify-center gap-1.5 py-2 sm:py-2.5 px-2 sm:px-3 bg-white hover:bg-[#F5F3EF] text-[#0E0E0E] text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.14em] rounded-sm border border-[#0E0E0E] transition-all duration-200 active:scale-[0.98] hover:shadow-xs cursor-pointer"
+            className="w-full h-8 sm:h-8.5 flex items-center justify-center gap-1 px-2 bg-white hover:bg-slate-50 text-slate-900 text-[10px] sm:text-[11px] font-semibold uppercase tracking-tight rounded-md border border-slate-300 transition-all duration-200 active:scale-[0.98] hover:shadow-2xs cursor-pointer shadow-2xs overflow-hidden"
           >
-            <ShoppingBag className="w-3.5 h-3.5 text-[#0E0E0E]" />
-            <span>Add to Cart</span>
+            <ShoppingBag className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-slate-900 shrink-0" />
+            <span className="truncate whitespace-nowrap">
+              <span className="hidden min-[380px]:inline">Add to Cart</span>
+              <span className="min-[380px]:hidden">Add</span>
+            </span>
           </button>
           <button
             type="button"
             onClick={handleBuyNow}
             disabled={isBuying}
-            className="flex-1 flex items-center justify-center gap-1.5 py-2 sm:py-2.5 px-2 sm:px-3 bg-[#0E0E0E] hover:bg-[#2A2A2A] text-[#FAF9F6] border border-[#0E0E0E] text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.14em] rounded-sm transition-all duration-200 active:scale-[0.98] hover:shadow-xs disabled:opacity-60 cursor-pointer"
+            className="w-full h-8 sm:h-8.5 flex items-center justify-center gap-1 px-2 bg-slate-900 hover:bg-slate-800 text-white text-[10px] sm:text-[11px] font-semibold uppercase tracking-tight rounded-md border border-slate-900 transition-all duration-200 active:scale-[0.98] hover:shadow-2xs disabled:opacity-60 cursor-pointer shadow-xs overflow-hidden"
           >
-            {isBuying ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin text-[#FAF9F6]" />
-            ) : (
-              <span>Buy Now</span>
+            {isBuying && (
+              <Loader2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 animate-spin text-white shrink-0" />
             )}
+            <span className="truncate whitespace-nowrap">Buy Now</span>
           </button>
         </div>
       </div>

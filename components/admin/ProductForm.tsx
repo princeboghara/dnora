@@ -2,12 +2,13 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import Image from "next/image";
-import { Upload, X, Loader2, Check, Sparkles, Flame } from "lucide-react";
+import { Upload, X, Loader2, Check, Sparkles, Flame, Crop as CropIcon } from "lucide-react";
 import { Product, ProductCategory, ProductImage } from "@/types";
 import { useToast } from "@/components/ui/Toast";
 import { slugify } from "@/lib/utils";
 import { CircularProgress } from "@/components/ui/CircularProgress";
 import { uploadFileWithProgress } from "@/lib/upload-utils";
+import { ImageCropperModal } from "./ImageCropperModal";
 
 interface ProductFormProps {
   initialData?: Product | null;
@@ -39,7 +40,10 @@ export function ProductForm({ initialData, onSuccess, onCancel }: ProductFormPro
   const [uploadProgress, setUploadProgress] = useState(0);
   const [submitting, setSubmitting] = useState(false);
 
-  // Load real categories from API
+  // Instagram-style cropper
+  const [cropperOpen, setCropperOpen] = useState(false);
+  const [cropperRawSrc, setCropperRawSrc] = useState<string | null>(null);
+
   useEffect(() => {
     fetch("/api/categories")
       .then((res) => res.json())
@@ -54,7 +58,6 @@ export function ProductForm({ initialData, onSuccess, onCancel }: ProductFormPro
       .catch((err) => console.error("Failed to load categories in ProductForm:", err));
   }, [categoryId]);
 
-  // Auto-slug when name changes (if not editing existing slug)
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     setName(val);
@@ -63,45 +66,52 @@ export function ProductForm({ initialData, onSuccess, onCancel }: ProductFormPro
     }
   };
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      error("Please choose a valid image file.");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      setCropperRawSrc(reader.result as string);
+      setCropperOpen(true);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    };
+    reader.readAsDataURL(file);
+  };
 
+  const handleCropComplete = async (croppedBlob: Blob) => {
     setUploading(true);
-    setUploadProgress(10);
+    setUploadProgress(20);
     try {
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("folder", "dnora/products");
-        formData.append("resource_type", "image");
+      const formData = new FormData();
+      formData.append("file", croppedBlob, `${slugify(name || "product")}-${Date.now()}.jpg`);
+      formData.append("folder", "dnora/products");
+      formData.append("resource_type", "image");
 
-        // Live upload tracking with progress
-        const data = await uploadFileWithProgress<{ success: boolean; media: { public_id: string; secure_url: string }; error?: string }>(
-          "/api/media/upload",
-          formData,
-          (percent) => {
-            const overall = Math.round(((i + percent / 100) / files.length) * 100);
-            setUploadProgress(overall);
-          }
-        );
+      const data = await uploadFileWithProgress<{
+        success: boolean;
+        media: { public_id: string; secure_url: string };
+        error?: string;
+      }>("/api/media/upload", formData, (pct) => {
+        setUploadProgress(Math.max(20, pct));
+      });
 
-        if (!data.success || !data.media) throw new Error(data.error || "Upload failed");
+      if (!data.success || !data.media) throw new Error(data.error || "Upload failed");
 
-        const newImg: ProductImage = {
-          id: `img-${Date.now()}-${i}`,
-          product_id: initialData?.id || "temp",
-          cloudinary_public_id: data.media.public_id,
-          secure_url: data.media.secure_url,
-          alt_text: `${name || "DNORA Handbag"} angle ${images.length + 1}`,
-          sort_order: images.length + 1,
-        };
+      const newImg: ProductImage = {
+        id: `img-${Date.now()}`,
+        product_id: initialData?.id || "temp",
+        cloudinary_public_id: data.media.public_id,
+        secure_url: data.media.secure_url,
+        alt_text: `${name || "DNORA Handbag"} angle ${images.length + 1}`,
+        sort_order: images.length + 1,
+      };
 
-        setImages((prev) => [...prev, newImg]);
-      }
-      setUploadProgress(100);
-      success("Product images uploaded successfully.");
+      setImages((prev) => [...prev, newImg]);
+      success("Product image cropped and added.");
     } catch (err: unknown) {
       error(err instanceof Error ? err.message : "Failed to upload product image");
     } finally {
@@ -118,16 +128,8 @@ export function ProductForm({ initialData, onSuccess, onCancel }: ProductFormPro
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (images.length === 0) {
-      error("Please upload at least one handbag product image.");
-      return;
-    }
-
-    if (!categoryId) {
-      error("Please select a valid category for this product.");
-      return;
-    }
+    if (!name.trim()) return error("Product name is required");
+    if (!categoryId) return error("Category is required");
 
     setSubmitting(true);
     try {
@@ -157,21 +159,12 @@ export function ProductForm({ initialData, onSuccess, onCancel }: ProductFormPro
       });
 
       const data = await res.json();
-      if (!res.ok) {
-        const detailMsg = Array.isArray(data.details)
-          ? data.details.map((d: { message: string }) => d.message).join(", ")
-          : null;
-        throw new Error(detailMsg || data.error || "Failed to save product");
-      }
+      if (!res.ok) throw new Error(data.error || "Failed to save product");
 
-      success(
-        initialData?.id
-          ? `"${name}" updated successfully.`
-          : `"${name}" added to catalog.`
-      );
+      success(initialData?.id ? "Product updated successfully" : "Product created successfully");
       onSuccess();
     } catch (err: unknown) {
-      error(err instanceof Error ? err.message : "An error occurred");
+      error(err instanceof Error ? err.message : "Operation failed");
     } finally {
       setSubmitting(false);
     }
@@ -179,24 +172,24 @@ export function ProductForm({ initialData, onSuccess, onCancel }: ProductFormPro
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Basic Details */}
+      {/* Title & Slug */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label className="block text-xs uppercase tracking-wider font-semibold text-[#0E0E0E] mb-1">
-            Handbag Name
+          <label className="block text-xs uppercase tracking-wider font-semibold text-slate-900 mb-1">
+            Product Name *
           </label>
           <input
             type="text"
             required
             value={name}
             onChange={handleNameChange}
-            placeholder="e.g. The Marais Structured Handbag"
-            className="w-full bg-white border border-[#E8E5DE] px-4 py-2 text-xs text-[#0E0E0E] rounded focus:outline-none focus:border-[#0E0E0E]"
+            placeholder="e.g. The Marais Top-Handle Structured Bag"
+            className="w-full bg-slate-50 border border-slate-200 px-4 py-2.5 text-xs text-slate-900 rounded-xl focus:outline-none focus:border-slate-900 focus:bg-white"
           />
         </div>
 
         <div>
-          <label className="block text-xs uppercase tracking-wider font-semibold text-[#0E0E0E] mb-1">
+          <label className="block text-xs uppercase tracking-wider font-semibold text-slate-900 mb-1">
             URL Slug
           </label>
           <input
@@ -205,7 +198,7 @@ export function ProductForm({ initialData, onSuccess, onCancel }: ProductFormPro
             value={slug}
             onChange={(e) => setSlug(e.target.value)}
             placeholder="the-marais-structured-handbag"
-            className="w-full bg-white border border-[#E8E5DE] px-4 py-2 text-xs font-mono text-[#0E0E0E] rounded focus:outline-none focus:border-[#0E0E0E]"
+            className="w-full bg-slate-50 border border-slate-200 px-4 py-2.5 text-xs font-mono text-slate-900 rounded-xl focus:outline-none focus:border-slate-900 focus:bg-white"
           />
         </div>
       </div>
@@ -213,13 +206,13 @@ export function ProductForm({ initialData, onSuccess, onCancel }: ProductFormPro
       {/* Category, SKU, Pricing */}
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
         <div>
-          <label className="block text-xs uppercase tracking-wider font-semibold text-[#0E0E0E] mb-1">
+          <label className="block text-xs uppercase tracking-wider font-semibold text-slate-900 mb-1">
             Category
           </label>
           <select
             value={categoryId}
             onChange={(e) => setCategoryId(e.target.value)}
-            className="w-full bg-white border border-[#E8E5DE] px-3 py-2 text-xs text-[#0E0E0E] rounded focus:outline-none focus:border-[#0E0E0E]"
+            className="w-full bg-slate-50 border border-slate-200 px-3 py-2 text-xs text-slate-900 rounded-xl focus:outline-none focus:border-slate-900"
           >
             <option value="">Select Category</option>
             {categories.map((c) => (
@@ -231,7 +224,7 @@ export function ProductForm({ initialData, onSuccess, onCancel }: ProductFormPro
         </div>
 
         <div>
-          <label className="block text-xs uppercase tracking-wider font-semibold text-[#0E0E0E] mb-1">
+          <label className="block text-xs uppercase tracking-wider font-semibold text-slate-900 mb-1">
             SKU Code
           </label>
           <input
@@ -240,12 +233,12 @@ export function ProductForm({ initialData, onSuccess, onCancel }: ProductFormPro
             value={sku}
             onChange={(e) => setSku(e.target.value)}
             placeholder="DNR-MAR-01-BLK"
-            className="w-full bg-white border border-[#E8E5DE] px-4 py-2 text-xs font-mono text-[#0E0E0E] rounded focus:outline-none focus:border-[#0E0E0E]"
+            className="w-full bg-slate-50 border border-slate-200 px-4 py-2 text-xs font-mono text-slate-900 rounded-xl focus:outline-none focus:border-slate-900"
           />
         </div>
 
         <div>
-          <label className="block text-xs uppercase tracking-wider font-semibold text-[#0E0E0E] mb-1">
+          <label className="block text-xs uppercase tracking-wider font-semibold text-slate-900 mb-1">
             Price (₹ INR)
           </label>
           <input
@@ -254,12 +247,12 @@ export function ProductForm({ initialData, onSuccess, onCancel }: ProductFormPro
             min={1}
             value={price}
             onChange={(e) => setPrice(Number(e.target.value))}
-            className="w-full bg-white border border-[#E8E5DE] px-4 py-2 text-xs text-[#0E0E0E] rounded focus:outline-none focus:border-[#0E0E0E]"
+            className="w-full bg-slate-50 border border-slate-200 px-4 py-2 text-xs text-slate-900 rounded-xl focus:outline-none focus:border-slate-900 font-mono"
           />
         </div>
 
         <div>
-          <label className="block text-xs uppercase tracking-wider font-semibold text-[#0E0E0E] mb-1">
+          <label className="block text-xs uppercase tracking-wider font-semibold text-slate-900 mb-1">
             Compare Price (₹)
           </label>
           <input
@@ -268,7 +261,7 @@ export function ProductForm({ initialData, onSuccess, onCancel }: ProductFormPro
             value={comparePrice}
             onChange={(e) => setComparePrice(e.target.value)}
             placeholder="Optional"
-            className="w-full bg-white border border-[#E8E5DE] px-4 py-2 text-xs text-[#0E0E0E] rounded focus:outline-none focus:border-[#0E0E0E]"
+            className="w-full bg-slate-50 border border-slate-200 px-4 py-2 text-xs text-slate-900 rounded-xl focus:outline-none focus:border-slate-900 font-mono"
           />
         </div>
       </div>
@@ -276,7 +269,7 @@ export function ProductForm({ initialData, onSuccess, onCancel }: ProductFormPro
       {/* Stock & Status */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label className="block text-xs uppercase tracking-wider font-semibold text-[#0E0E0E] mb-1">
+          <label className="block text-xs uppercase tracking-wider font-semibold text-slate-900 mb-1">
             Inventory Stock (Units)
           </label>
           <input
@@ -285,18 +278,18 @@ export function ProductForm({ initialData, onSuccess, onCancel }: ProductFormPro
             required
             value={stock}
             onChange={(e) => setStock(Number(e.target.value))}
-            className="w-full bg-white border border-[#E8E5DE] px-4 py-2 text-xs text-[#0E0E0E] rounded focus:outline-none focus:border-[#0E0E0E]"
+            className="w-full bg-slate-50 border border-slate-200 px-4 py-2 text-xs text-slate-900 rounded-xl focus:outline-none focus:border-slate-900 font-mono"
           />
         </div>
 
         <div>
-          <label className="block text-xs uppercase tracking-wider font-semibold text-[#0E0E0E] mb-1">
+          <label className="block text-xs uppercase tracking-wider font-semibold text-slate-900 mb-1">
             Product Status
           </label>
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value as "active" | "draft" | "archived")}
-            className="w-full bg-white border border-[#E8E5DE] px-3 py-2 text-xs text-[#0E0E0E] rounded focus:outline-none focus:border-[#0E0E0E]"
+            className="w-full bg-slate-50 border border-slate-200 px-3 py-2 text-xs text-slate-900 rounded-xl focus:outline-none focus:border-slate-900"
           >
             <option value="active">Active (Visible in Store)</option>
             <option value="draft">Draft (Hidden)</option>
@@ -305,17 +298,17 @@ export function ProductForm({ initialData, onSuccess, onCancel }: ProductFormPro
         </div>
       </div>
 
-      {/* Flag Toggles (Best Seller / New Arrival) */}
-      <div className="bg-[#FAF9F6] p-4 rounded-md border border-[#E8E5DE] flex flex-wrap gap-8">
+      {/* Flag Toggles */}
+      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-wrap gap-8">
         <label className="flex items-center gap-2 cursor-pointer select-none">
           <input
             type="checkbox"
             checked={isBestSeller}
             onChange={(e) => setIsBestSeller(e.target.checked)}
-            className="w-4 h-4 accent-[#0E0E0E] rounded"
+            className="w-4 h-4 accent-slate-900 rounded"
           />
-          <div className="flex items-center gap-1.5 text-xs font-bold text-[#0E0E0E]">
-            <Flame className="w-3.5 h-3.5 text-amber-600" />
+          <div className="flex items-center gap-1.5 text-xs font-bold text-slate-900">
+            <Flame className="w-3.5 h-3.5 text-amber-500" />
             <span>Mark as Best Seller</span>
           </div>
         </label>
@@ -325,10 +318,10 @@ export function ProductForm({ initialData, onSuccess, onCancel }: ProductFormPro
             type="checkbox"
             checked={isNewArrival}
             onChange={(e) => setIsNewArrival(e.target.checked)}
-            className="w-4 h-4 accent-[#0E0E0E] rounded"
+            className="w-4 h-4 accent-slate-900 rounded"
           />
-          <div className="flex items-center gap-1.5 text-xs font-bold text-[#0E0E0E]">
-            <Sparkles className="w-3.5 h-3.5 text-[#0E0E0E]" />
+          <div className="flex items-center gap-1.5 text-xs font-bold text-slate-900">
+            <Sparkles className="w-3.5 h-3.5 text-slate-900" />
             <span>Mark as New Arrival</span>
           </div>
         </label>
@@ -336,8 +329,8 @@ export function ProductForm({ initialData, onSuccess, onCancel }: ProductFormPro
 
       {/* Descriptions */}
       <div>
-        <label className="block text-xs uppercase tracking-wider font-semibold text-[#0E0E0E] mb-1">
-          Short Editorial Summary (Max 200 chars)
+        <label className="block text-xs uppercase tracking-wider font-semibold text-slate-900 mb-1">
+          Short Editorial Summary
         </label>
         <input
           type="text"
@@ -346,12 +339,12 @@ export function ProductForm({ initialData, onSuccess, onCancel }: ProductFormPro
           value={shortDescription}
           onChange={(e) => setShortDescription(e.target.value)}
           placeholder="e.g. Architectural top-handle handbag in pebbled Noir calfskin."
-          className="w-full bg-white border border-[#E8E5DE] px-4 py-2 text-xs text-[#0E0E0E] rounded focus:outline-none focus:border-[#0E0E0E]"
+          className="w-full bg-slate-50 border border-slate-200 px-4 py-2 text-xs text-slate-900 rounded-xl focus:outline-none focus:border-slate-900 focus:bg-white"
         />
       </div>
 
       <div>
-        <label className="block text-xs uppercase tracking-wider font-semibold text-[#0E0E0E] mb-1">
+        <label className="block text-xs uppercase tracking-wider font-semibold text-slate-900 mb-1">
           Detailed Artisan Description
         </label>
         <textarea
@@ -359,23 +352,23 @@ export function ProductForm({ initialData, onSuccess, onCancel }: ProductFormPro
           required
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          placeholder="Details on Italian leather origin, hardware plating, dimensions, and interior compartment architecture..."
-          className="w-full bg-white border border-[#E8E5DE] px-4 py-2 text-xs text-[#0E0E0E] rounded focus:outline-none focus:border-[#0E0E0E]"
+          placeholder="Details on leather origin, craftsmanship, dimensions..."
+          className="w-full bg-slate-50 border border-slate-200 px-4 py-2 text-xs text-slate-900 rounded-xl focus:outline-none focus:border-slate-900 focus:bg-white"
         />
       </div>
 
-      {/* Product Images (Cloudinary Multi-Upload) */}
+      {/* Product Images (Instagram Cropper) */}
       <div>
         <div className="flex items-center justify-between mb-2">
-          <label className="block text-xs uppercase tracking-wider font-semibold text-[#0E0E0E]">
-            Product Imagery (Cloudinary Media)
+          <label className="block text-xs uppercase tracking-wider font-semibold text-slate-900">
+            Product Imagery (Instagram-Style Crop)
           </label>
           <div className="flex items-center gap-3">
             {uploading && (
-              <div className="flex items-center gap-2 bg-white px-2.5 py-1 rounded border border-[#E8E5DE] shadow-xs">
-                <CircularProgress progress={uploadProgress} size={28} strokeWidth={3} />
-                <span className="text-[11px] font-semibold text-[#0E0E0E]">
-                  Uploading {uploadProgress}%
+              <div className="flex items-center gap-2 bg-white px-2.5 py-1 rounded-xl border border-slate-200">
+                <CircularProgress progress={uploadProgress} size={24} strokeWidth={2.5} />
+                <span className="text-[11px] font-semibold text-slate-900">
+                  {uploadProgress}%
                 </span>
               </div>
             )}
@@ -383,91 +376,89 @@ export function ProductForm({ initialData, onSuccess, onCancel }: ProductFormPro
               type="button"
               onClick={() => fileInputRef.current?.click()}
               disabled={uploading}
-              className="inline-flex items-center gap-1.5 text-xs text-[#0E0E0E] hover:text-[#73706A] font-semibold uppercase tracking-wider disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-slate-800 transition-colors disabled:opacity-50 cursor-pointer shadow-2xs"
             >
-              {uploading ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              ) : (
-                <Upload className="w-3.5 h-3.5 text-[#0E0E0E]" />
-              )}
-              <span>Upload Image</span>
+              <CropIcon className="w-3.5 h-3.5" />
+              <span>Crop &amp; Upload</span>
             </button>
           </div>
           <input
             ref={fileInputRef}
             type="file"
-            multiple
             accept="image/*"
-            onChange={handleImageUpload}
+            onChange={handleFileSelect}
             className="hidden"
           />
         </div>
 
-        {/* Images Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 bg-[#FAF9F6] border border-[#E8E5DE] rounded-md min-h-[120px]">
-          {uploading && images.length === 0 ? (
-            <div className="col-span-full flex flex-col items-center justify-center py-8">
-              <CircularProgress progress={uploadProgress} size={52} strokeWidth={4} label={`Uploading ${uploadProgress}%`} />
-            </div>
-          ) : images.length === 0 ? (
-            <div className="col-span-full flex flex-col items-center justify-center text-[#73706A] py-6">
-              <Upload className="w-6 h-6 mb-2 text-[#A8A49C]" />
-              <p className="text-xs">No images uploaded yet. Primary image will serve as card visual.</p>
-            </div>
-          ) : (
-            images.map((img, idx) => (
+        {images.length === 0 ? (
+          <div
+            onClick={() => fileInputRef.current?.click()}
+            className="border-2 border-dashed border-slate-200 rounded-2xl p-6 text-center cursor-pointer hover:border-slate-900 transition-colors bg-slate-50/50"
+          >
+            <Upload className="w-6 h-6 text-slate-400 mx-auto mb-1.5" />
+            <p className="text-xs font-semibold text-slate-900">Upload Handbag Photo</p>
+            <p className="text-[10px] text-slate-500">Instagram-style crop freely from whole image</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-4 sm:grid-cols-6 gap-3">
+            {images.map((img, idx) => (
               <div
                 key={img.id || idx}
-                className="group relative aspect-[4/5] bg-white rounded overflow-hidden border border-[#E8E5DE]"
+                className="relative aspect-[4/5] bg-slate-50 rounded-xl overflow-hidden border border-slate-200 group shadow-2xs"
               >
                 <Image
                   src={img.secure_url}
-                  alt={img.alt_text || "Product image"}
+                  alt={img.alt_text || "Image"}
                   fill
-                  sizes="160px"
                   className="object-cover"
                 />
                 <button
                   type="button"
                   onClick={() => removeImage(img.id || idx)}
-                  className="absolute top-1.5 right-1.5 p-1 rounded-full bg-black/60 text-white hover:bg-rose-600 transition-colors"
-                  aria-label="Remove image"
+                  className="absolute top-1 right-1 p-1 bg-black/70 text-white rounded-lg opacity-0 group-hover:opacity-100 hover:bg-rose-600 transition-all cursor-pointer"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
-                {idx === 0 && (
-                  <span className="absolute bottom-1.5 left-1.5 bg-[#0E0E0E] text-white text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded">
-                    Primary
-                  </span>
-                )}
               </div>
-            ))
-          )}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* Actions */}
-      <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#E8E5DE]">
+      {/* Action Buttons */}
+      <div className="pt-4 border-t border-slate-200 flex items-center justify-end gap-3">
         <button
           type="button"
           onClick={onCancel}
-          className="px-5 py-2.5 text-xs uppercase tracking-wider font-semibold text-[#73706A] hover:text-[#0E0E0E] transition-colors"
+          disabled={submitting}
+          className="px-4 py-2 border border-slate-200 text-slate-700 hover:text-slate-900 text-xs font-semibold uppercase tracking-wider rounded-xl hover:bg-slate-50 transition-colors cursor-pointer"
         >
           Cancel
         </button>
         <button
           type="submit"
           disabled={submitting}
-          className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#0E0E0E] hover:bg-[#2C2B29] text-[#FAF9F6] text-xs font-bold uppercase tracking-wider rounded transition-all shadow-md disabled:opacity-50"
+          className="inline-flex items-center gap-2 px-6 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-xs disabled:opacity-50 cursor-pointer"
         >
           {submitting ? (
             <Loader2 className="w-4 h-4 animate-spin" />
           ) : (
-            <Check className="w-4 h-4 text-[#0E0E0E]" />
+            <Check className="w-4 h-4" />
           )}
-          <span>{initialData?.id ? "Update Handbag" : "Create Handbag"}</span>
+          <span>{initialData?.id ? "Update Product" : "Create Product"}</span>
         </button>
       </div>
+
+      {/* Instagram-Style Image Cropper Modal */}
+      <ImageCropperModal
+        isOpen={cropperOpen}
+        imageSrc={cropperRawSrc}
+        onClose={() => setCropperOpen(false)}
+        onCropComplete={handleCropComplete}
+        initialAspectRatio="4:5"
+        title="Crop Product Photo"
+      />
     </form>
   );
 }

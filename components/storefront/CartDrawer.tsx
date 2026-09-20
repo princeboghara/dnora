@@ -60,26 +60,26 @@ export function CartDrawer() {
       />
 
       <div className="fixed inset-y-0 right-0 max-w-full flex pl-10">
-        <div className="w-screen max-w-md bg-[#FAF9F6] border-l border-[#E8E5DE] shadow-2xl flex flex-col">
+        <div className="w-screen max-w-md bg-white border-l border-slate-200 shadow-2xl flex flex-col">
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-[#E8E5DE] bg-white">
+          <div className="flex items-center justify-between p-6 border-b border-slate-200 bg-white">
             <div className="flex items-center gap-2">
-              <ShoppingBag className="w-5 h-5 text-[#0E0E0E]" />
-              <h2 className="text-lg font-heading font-semibold text-[#0E0E0E] tracking-tight uppercase">
+              <ShoppingBag className="w-5 h-5 text-slate-900" />
+              <h2 className="text-lg font-heading font-semibold text-slate-900 tracking-tight uppercase">
                 Shopping Bag ({itemCount})
               </h2>
             </div>
             <button
               onClick={closeCart}
               aria-label="Close cart"
-              className="p-1.5 rounded-lg text-[#73706A] hover:text-[#0E0E0E] hover:bg-[#F5F3EF] transition-colors"
+              className="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
 
           {/* Free Shipping Meter */}
-          <div className="bg-[#F5F3EF] px-6 py-3.5 border-b border-[#E8E5DE]">
+          <div className="bg-slate-50 px-6 py-3.5 border-b border-slate-200">
             {amountToFreeShipping === 0 ? (
               <p className="text-xs font-medium text-emerald-800 flex items-center gap-1.5">
                 <ShieldCheck className="w-4 h-4 text-emerald-600" />
@@ -87,12 +87,12 @@ export function CartDrawer() {
               </p>
             ) : (
               <div>
-                <p className="text-xs font-medium text-[#3A3835]">
-                  Add <span className="font-bold text-[#0E0E0E]">{formatPrice(amountToFreeShipping)}</span> more for Complimentary Shipping.
+                <p className="text-xs font-medium text-slate-700">
+                  Add <span className="font-bold text-slate-900">{formatPrice(amountToFreeShipping)}</span> more for Complimentary Shipping.
                 </p>
-                <div className="w-full bg-[#E8E5DE] h-1.5 rounded-full mt-2 overflow-hidden">
+                <div className="w-full bg-slate-200 h-1.5 rounded-full mt-2 overflow-hidden">
                   <div
-                    className="bg-[#0E0E0E] h-full transition-all duration-500 rounded-full"
+                    className="bg-slate-900 h-full transition-all duration-500 rounded-full"
                     style={{ width: `${freeShippingProgress}%` }}
                   />
                 </div>
@@ -104,26 +104,26 @@ export function CartDrawer() {
           <div className="flex-1 overflow-y-auto p-6 space-y-6">
             {items.length === 0 ? (
               <div className="text-center py-16">
-                <div className="w-16 h-16 rounded-full bg-[#F5F3EF] flex items-center justify-center mx-auto mb-4 text-[#A8A49C]">
+                <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4 text-slate-400">
                   <ShoppingBag className="w-8 h-8" />
                 </div>
-                <h3 className="text-lg font-heading font-medium text-[#0E0E0E] mb-2">
+                <h3 className="text-lg font-heading font-medium text-slate-900 mb-2">
                   Your bag is currently empty
                 </h3>
-                <p className="text-sm text-[#73706A] max-w-xs mx-auto mb-6">
+                <p className="text-sm text-slate-500 max-w-xs mx-auto mb-6">
                   Explore our modern architectural silhouettes and artisan leather collections.
                 </p>
                 <button
                   onClick={closeCart}
-                  className="inline-flex items-center justify-center px-6 py-3 bg-[#0E0E0E] text-[#FAF9F6] text-xs font-semibold uppercase tracking-widest hover:bg-[#2C2B29] transition-all"
+                  className="inline-flex items-center justify-center px-6 py-3 bg-slate-900 text-white text-xs font-semibold uppercase tracking-widest hover:bg-slate-800 rounded-xl transition-all cursor-pointer"
                 >
                   Discover Purses
                 </button>
               </div>
             ) : (
               items.map(({ product, quantity }) => (
-                <div key={product.id} className="flex gap-4 pb-6 border-b border-[#E8E5DE] last:border-0">
-                  <div className="relative w-24 h-28 bg-[#F5F3EF] rounded overflow-hidden shrink-0 border border-[#E8E5DE]">
+                <div key={product.id} className="flex gap-4 pb-6 border-b border-slate-100 last:border-0">
+                  <div className="relative w-24 h-28 bg-slate-50 rounded-lg overflow-hidden shrink-0 border border-slate-200">
                     {product.images[0] && (
                       <Image
                         src={product.images[0].secure_url}
@@ -140,42 +140,42 @@ export function CartDrawer() {
                         <Link
                           href={`/product/${product.slug}`}
                           onClick={closeCart}
-                          className="text-sm font-heading font-semibold text-[#0E0E0E] hover:underline leading-tight"
+                          className="text-sm font-heading font-semibold text-slate-900 hover:underline leading-tight"
                         >
                           {product.name}
                         </Link>
                         <button
                           onClick={() => removeItem(product.id)}
-                          className="text-[#A8A49C] hover:text-rose-600 transition-colors p-1"
+                          className="text-slate-400 hover:text-rose-600 transition-colors p-1 cursor-pointer"
                           aria-label="Remove item"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
-                      <p className="text-xs text-[#73706A] mt-1">{product.sku}</p>
+                      <p className="text-xs text-slate-500 mt-1">{product.sku}</p>
                     </div>
 
                     <div className="flex items-center justify-between mt-4">
-                      <div className="flex items-center border border-[#E8E5DE] bg-white rounded">
+                      <div className="flex items-center border border-slate-200 bg-white rounded-lg">
                         <button
                           onClick={() => updateQuantity(product.id, quantity - 1)}
-                          className="p-1.5 text-[#73706A] hover:text-[#0E0E0E]"
+                          className="p-1.5 text-slate-500 hover:text-slate-900 cursor-pointer"
                           aria-label="Decrease quantity"
                         >
                           <Minus className="w-3.5 h-3.5" />
                         </button>
-                        <span className="w-8 text-center text-xs font-semibold text-[#0E0E0E]">
+                        <span className="w-8 text-center text-xs font-semibold text-slate-900">
                           {quantity}
                         </span>
                         <button
                           onClick={() => updateQuantity(product.id, quantity + 1)}
-                          className="p-1.5 text-[#73706A] hover:text-[#0E0E0E]"
+                          className="p-1.5 text-slate-500 hover:text-slate-900 cursor-pointer"
                           aria-label="Increase quantity"
                         >
                           <Plus className="w-3.5 h-3.5" />
                         </button>
                       </div>
-                      <p className="text-sm font-semibold text-[#0E0E0E]">
+                      <p className="text-sm font-semibold text-slate-900">
                         {formatPrice(product.price * quantity)}
                       </p>
                     </div>
@@ -187,23 +187,30 @@ export function CartDrawer() {
 
           {/* Footer / Checkout */}
           {items.length > 0 && (
-            <div className="p-6 border-t border-[#E8E5DE] bg-white space-y-4">
+            <div className="p-6 border-t border-slate-200 bg-white space-y-4">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-[#73706A]">Subtotal</span>
-                <span className="font-heading font-semibold text-[#0E0E0E] text-base">
+                <span className="text-slate-500">Subtotal</span>
+                <span className="font-heading font-semibold text-slate-900 text-base">
                   {formatPrice(subtotal)}
                 </span>
               </div>
-              <p className="text-xs text-[#73706A] leading-relaxed">
+              <p className="text-xs text-slate-500 leading-relaxed">
                 Taxes and complimentary express duties calculated during checkout.
               </p>
               <button
                 onClick={handleProceedToCheckout}
-                className="w-full flex items-center justify-center gap-2 py-4 bg-[#0E0E0E] text-[#FAF9F6] text-xs font-semibold uppercase tracking-widest hover:bg-[#2C2B29] transition-all rounded shadow-md cursor-pointer active:scale-[0.99]"
+                className="w-full flex items-center justify-center gap-2 py-3.5 bg-slate-900 text-white text-xs font-semibold uppercase tracking-widest hover:bg-slate-800 transition-all rounded-xl shadow-md cursor-pointer active:scale-[0.99]"
               >
                 <span>Proceed to Checkout</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
+              <Link
+                href="/bag"
+                onClick={closeCart}
+                className="w-full block text-center py-2.5 text-xs font-semibold uppercase tracking-wider text-slate-700 hover:text-slate-900 transition-colors border border-slate-200 hover:bg-slate-50 rounded-xl"
+              >
+                View Full Bag Page
+              </Link>
             </div>
           )}
         </div>

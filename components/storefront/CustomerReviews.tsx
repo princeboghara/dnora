@@ -25,11 +25,11 @@ export function CustomerReviews({ reviews, title = "CUSTOMER REVIEWS" }: Custome
   if (!reviews || reviews.length === 0) return null;
 
   return (
-    <section id="reviews" className="py-10 sm:py-14 bg-white border-t border-[#E8E5DE]">
+    <section id="reviews" className="py-6 sm:py-8 bg-white border-t border-slate-200/80">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Centered Section Heading */}
-        <div className="text-center max-w-xl mx-auto mb-6 sm:mb-8">
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-heading font-extrabold text-[#0E0E0E] tracking-tight uppercase">
+        <div className="text-center max-w-xl mx-auto mb-3.5 sm:mb-5">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-heading font-extrabold text-slate-900 tracking-tight uppercase">
             {title}
           </h2>
         </div>
@@ -41,7 +41,7 @@ export function CustomerReviews({ reviews, title = "CUSTOMER REVIEWS" }: Custome
             type="button"
             onClick={() => handleScroll("left")}
             aria-label="Previous reviews"
-            className="hidden sm:flex absolute -left-4 lg:-left-5 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-white/95 border border-[#E8E5DE] shadow-sm items-center justify-center text-[#0E0E0E] hover:bg-[#F5F3EF] hover:scale-105 active:scale-95 transition-all cursor-pointer"
+            className="hidden sm:flex absolute -left-4 lg:-left-5 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-white border border-slate-200 shadow-sm items-center justify-center text-slate-800 hover:bg-slate-50 hover:scale-105 active:scale-95 transition-all cursor-pointer"
           >
             <ChevronLeft className="w-3.5 h-3.5" />
           </button>
@@ -50,7 +50,7 @@ export function CustomerReviews({ reviews, title = "CUSTOMER REVIEWS" }: Custome
             type="button"
             onClick={() => handleScroll("right")}
             aria-label="Next reviews"
-            className="hidden sm:flex absolute -right-4 lg:-right-5 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-white/95 border border-[#E8E5DE] shadow-sm items-center justify-center text-[#0E0E0E] hover:bg-[#F5F3EF] hover:scale-105 active:scale-95 transition-all cursor-pointer"
+            className="hidden sm:flex absolute -right-4 lg:-right-5 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-white border border-slate-200 shadow-sm items-center justify-center text-slate-800 hover:bg-slate-50 hover:scale-105 active:scale-95 transition-all cursor-pointer"
           >
             <ChevronRight className="w-3.5 h-3.5" />
           </button>
@@ -64,26 +64,26 @@ export function CustomerReviews({ reviews, title = "CUSTOMER REVIEWS" }: Custome
             {reviews.map((rev) => (
               <div
                 key={rev.id}
-                className="w-72 sm:w-80 md:w-88 shrink-0 snap-start flex flex-col justify-between p-5 sm:p-6 rounded-xs bg-[#FAF9F6] border border-[#E8E5DE] hover:border-[#0E0E0E] transition-all duration-300"
+                className="w-72 sm:w-80 md:w-88 shrink-0 snap-start flex flex-col justify-between p-5 sm:p-6 rounded-xl bg-[#F8FAFC] border border-slate-200/90 hover:border-slate-800 transition-all duration-300 shadow-xs"
               >
                 <div>
                   {/* Star Rating */}
-                  <div className="flex items-center gap-1 mb-3 text-[#0E0E0E]">
+                  <div className="flex items-center gap-1 mb-3 text-slate-900">
                     {Array.from({ length: rev.rating || 5 }).map((_, i) => (
-                      <Star key={i} className="w-3.5 h-3.5 fill-[#0E0E0E]" />
+                      <Star key={i} className="w-3.5 h-3.5 fill-slate-900" />
                     ))}
                   </div>
 
                   {/* Review Text */}
-                  <blockquote className="text-xs sm:text-sm text-[#1C1B1A] leading-relaxed italic mb-4 font-normal">
+                  <blockquote className="text-xs sm:text-sm text-slate-700 leading-relaxed italic mb-4 font-normal">
                     &ldquo;{rev.review}&rdquo;
                   </blockquote>
                 </div>
 
                 {/* Customer Info */}
-                <div className="flex items-center gap-3 pt-3 border-t border-[#E8E5DE]/80">
+                <div className="flex items-center gap-3 pt-3 border-t border-slate-200">
                   {rev.image_url ? (
-                    <div className="relative w-8 h-8 rounded-full overflow-hidden shrink-0 border border-[#E8E5DE]">
+                    <div className="relative w-8 h-8 rounded-full overflow-hidden shrink-0 border border-slate-200">
                       <Image
                         src={rev.image_url}
                         alt={rev.customer_name}
@@ -93,13 +93,13 @@ export function CustomerReviews({ reviews, title = "CUSTOMER REVIEWS" }: Custome
                       />
                     </div>
                   ) : (
-                    <div className="w-8 h-8 rounded-full bg-[#EAE6DF] text-[#0E0E0E] font-heading font-bold flex items-center justify-center text-[10px] shrink-0">
+                    <div className="w-8 h-8 rounded-full bg-slate-200 text-slate-900 font-heading font-bold flex items-center justify-center text-[10px] shrink-0">
                       {rev.customer_name.slice(0, 2).toUpperCase()}
                     </div>
                   )}
                   <div className="min-w-0">
                     <div className="flex items-center gap-1.5">
-                      <span className="text-xs font-heading font-semibold text-[#0E0E0E] truncate">
+                      <span className="text-xs font-heading font-semibold text-slate-900 truncate">
                         {rev.customer_name}
                       </span>
                       {rev.verified_purchase && (
@@ -110,7 +110,7 @@ export function CustomerReviews({ reviews, title = "CUSTOMER REVIEWS" }: Custome
                       )}
                     </div>
                     {rev.product_name && (
-                      <span className="text-[10px] text-[#73706A] block truncate">
+                      <span className="text-[10px] text-slate-500 block truncate">
                         {rev.product_name}
                       </span>
                     )}

@@ -123,7 +123,7 @@ export function MemberDrawer({ isOpen, onClose, user }: MemberDrawerProps) {
       >
         <div className="flex flex-col flex-1 min-h-0">
           {/* Drawer Header with Brand Logo & Close Button */}
-          <div className="p-5 sm:p-6 border-b border-[#E8E5DE] flex items-center justify-between shrink-0 bg-[#FAF9F6]">
+          <div className="p-5 sm:p-6 border-b border-slate-200 flex items-center justify-between shrink-0 bg-white">
             <div onClick={onClose} className="cursor-pointer">
               <BrandLogo size="sm" />
             </div>
@@ -131,7 +131,7 @@ export function MemberDrawer({ isOpen, onClose, user }: MemberDrawerProps) {
             <button
               type="button"
               onClick={onClose}
-              className="p-1.5 rounded-full text-[#73706A] hover:text-[#0E0E0E] hover:bg-[#E8E5DE] transition-colors"
+              className="p-1.5 rounded-full text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors"
               aria-label="Close navigation"
             >
               <X className="w-5 h-5" />
@@ -139,28 +139,28 @@ export function MemberDrawer({ isOpen, onClose, user }: MemberDrawerProps) {
           </div>
 
           {/* Member Profile Status Bar */}
-          <div className="p-4 sm:p-5 border-b border-[#E8E5DE] bg-white">
+          <div className="p-4 sm:p-5 border-b border-slate-200 bg-white">
             {user ? (
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-10 h-10 rounded-full bg-[#0E0E0E] text-[#FAF9F6] flex items-center justify-center font-serif text-sm font-bold shrink-0">
+                  <div className="w-10 h-10 rounded-full bg-slate-900 text-white flex items-center justify-center font-serif text-sm font-bold shrink-0">
                     {(user.full_name || user.email || "U")[0].toUpperCase()}
                   </div>
                   <div className="min-w-0">
                     <div className="flex items-center gap-1.5">
-                      <span className="text-xs font-bold text-[#0E0E0E] truncate">
+                      <span className="text-xs font-bold text-slate-900 truncate">
                         {user.full_name || user.email.split("@")[0]}
                       </span>
-                      <span className="px-1.5 py-0.2 bg-[#F5F3EF] text-[#8F7449] text-[9px] font-bold uppercase tracking-wider rounded-xs shrink-0">
+                      <span className="px-1.5 py-0.2 bg-slate-100 text-slate-800 text-[9px] font-bold uppercase tracking-wider rounded-xs shrink-0">
                         Member
                       </span>
                     </div>
                     <Link
                       href="/account"
                       onClick={onClose}
-                      className="text-[11px] text-[#73706A] hover:text-[#0E0E0E] font-medium flex items-center gap-1 mt-0.5"
+                      className="text-[11px] text-slate-500 hover:text-slate-900 font-medium flex items-center gap-1 mt-0.5"
                     >
-                      <Package className="w-3 h-3 text-[#0E0E0E]" />
+                      <Package className="w-3 h-3 text-slate-900" />
                       <span>My Account & Orders</span>
                     </Link>
                   </div>
@@ -170,7 +170,7 @@ export function MemberDrawer({ isOpen, onClose, user }: MemberDrawerProps) {
                   type="button"
                   onClick={handleSignOut}
                   title="Sign out"
-                  className="p-2 text-[#73706A] hover:text-rose-600 hover:bg-rose-50 rounded-sm transition-colors"
+                  className="p-2 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-sm transition-colors cursor-pointer"
                 >
                   <LogOut className="w-4 h-4" />
                 </button>
@@ -178,10 +178,10 @@ export function MemberDrawer({ isOpen, onClose, user }: MemberDrawerProps) {
             ) : (
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <span className="text-[10px] uppercase tracking-widest text-[#0E0E0E] font-bold block">
+                  <span className="text-[10px] uppercase tracking-widest text-slate-900 font-bold block">
                     Welcome to Maison DNORA
                   </span>
-                  <span className="text-xs font-medium text-[#73706A]">
+                  <span className="text-xs font-medium text-slate-500">
                     Access bespoke collections & tracking
                   </span>
                 </div>
@@ -189,7 +189,7 @@ export function MemberDrawer({ isOpen, onClose, user }: MemberDrawerProps) {
                 <Link
                   href="/login"
                   onClick={onClose}
-                  className="px-3.5 py-1.5 bg-[#0E0E0E] hover:bg-[#242321] text-white text-xs font-semibold uppercase tracking-wider rounded-sm transition-colors shrink-0"
+                  className="px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold uppercase tracking-wider rounded-xl transition-colors shrink-0 cursor-pointer"
                 >
                   Sign In
                 </Link>
@@ -200,10 +200,10 @@ export function MemberDrawer({ isOpen, onClose, user }: MemberDrawerProps) {
           {/* Navigation Links Scrollable List */}
           <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 custom-scrollbar">
             <div className="flex items-center justify-between px-2 mb-1">
-              <span className="text-[10px] uppercase tracking-[0.2em] font-semibold text-[#A8A49C]">
+              <span className="text-[10px] uppercase tracking-[0.2em] font-semibold text-slate-400">
                 Explore Maison
               </span>
-              {loading && <Loader2 className="w-3 h-3 text-[#73706A] animate-spin" />}
+              {loading && <Loader2 className="w-3 h-3 text-slate-500 animate-spin" />}
             </div>
 
             <nav className="space-y-1">
@@ -235,10 +235,10 @@ export function MemberDrawer({ isOpen, onClose, user }: MemberDrawerProps) {
                     {/* Main Menu Item Row */}
                     <div
                       className={cn(
-                        "group flex items-center justify-between px-3 py-2.5 rounded-sm transition-all duration-200",
+                        "group flex items-center justify-between px-3 py-2.5 rounded-lg transition-all duration-200",
                         isActive
-                          ? "bg-[#FAF9F6] text-[#0E0E0E] font-semibold"
-                          : "text-[#3A3835] hover:bg-[#FAF9F6] hover:text-[#0E0E0E]"
+                          ? "bg-slate-100 text-slate-900 font-semibold"
+                          : "text-slate-700 hover:bg-slate-50 hover:text-slate-900"
                       )}
                     >
                       {item.href && !hasSubmenus ? (
@@ -247,10 +247,10 @@ export function MemberDrawer({ isOpen, onClose, user }: MemberDrawerProps) {
                           onClick={onClose}
                           className="flex items-center gap-3 flex-1 min-w-0 text-xs uppercase tracking-wider font-semibold"
                         >
-                          <IconComp className="w-4 h-4 text-[#8F7449] shrink-0" />
+                          <IconComp className="w-4 h-4 text-slate-900 shrink-0" />
                           <span className="truncate">{item.label}</span>
                           {item.badge && (
-                            <span className="text-[9px] uppercase tracking-wider px-1.5 py-0.2 rounded font-bold bg-[#F5F3EF] text-[#8F7449] shrink-0">
+                            <span className="text-[9px] uppercase tracking-wider px-1.5 py-0.2 rounded font-bold bg-slate-100 text-slate-900 shrink-0">
                               {item.badge}
                             </span>
                           )}
@@ -261,10 +261,10 @@ export function MemberDrawer({ isOpen, onClose, user }: MemberDrawerProps) {
                           onClick={() => toggleSubmenu(item.id, isExpanded)}
                           className="flex items-center gap-3 flex-1 min-w-0 text-left text-xs uppercase tracking-wider font-semibold"
                         >
-                          <IconComp className="w-4 h-4 text-[#8F7449] shrink-0" />
+                          <IconComp className="w-4 h-4 text-slate-900 shrink-0" />
                           <span className="truncate">{item.label}</span>
                           {item.badge && (
-                            <span className="text-[9px] uppercase tracking-wider px-1.5 py-0.2 rounded font-bold bg-[#F5F3EF] text-[#8F7449] shrink-0">
+                            <span className="text-[9px] uppercase tracking-wider px-1.5 py-0.2 rounded font-bold bg-slate-100 text-slate-900 shrink-0">
                               {item.badge}
                             </span>
                           )}
@@ -280,7 +280,7 @@ export function MemberDrawer({ isOpen, onClose, user }: MemberDrawerProps) {
                             e.stopPropagation();
                             toggleSubmenu(item.id, isExpanded);
                           }}
-                          className="p-1 rounded-sm text-[#73706A] hover:text-[#0E0E0E] transition-colors ml-1"
+                          className="p-1 rounded-sm text-slate-500 hover:text-slate-900 transition-colors ml-1"
                           aria-label={
                             isExpanded ? "Collapse submenu" : "Expand submenu"
                           }
@@ -288,7 +288,7 @@ export function MemberDrawer({ isOpen, onClose, user }: MemberDrawerProps) {
                           <ChevronDown
                             className={cn(
                               "w-4 h-4 transition-transform duration-300 ease-in-out",
-                              isExpanded ? "rotate-180 text-[#0E0E0E]" : "rotate-0"
+                              isExpanded ? "rotate-180 text-slate-900" : "rotate-0"
                             )}
                           />
                         </button>
@@ -319,13 +319,13 @@ export function MemberDrawer({ isOpen, onClose, user }: MemberDrawerProps) {
                                 className={cn(
                                   "flex items-center justify-between px-3 py-1.5 rounded-sm text-[11px] font-medium transition-colors",
                                   isSubActive
-                                    ? "bg-[#F5F3EF] text-[#8F7449] font-bold"
-                                    : "text-[#73706A] hover:text-[#0E0E0E] hover:bg-[#FAF9F6]"
+                                    ? "bg-slate-100 text-slate-900 font-bold"
+                                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
                                 )}
                               >
                                 <span className="truncate">{sub.label}</span>
                                 {sub.badge && (
-                                  <span className="text-[9px] uppercase tracking-wider px-1.5 py-0.2 rounded font-bold bg-[#E8E5DE] text-[#0E0E0E]">
+                                  <span className="text-[9px] uppercase tracking-wider px-1.5 py-0.2 rounded font-bold bg-slate-200 text-slate-900">
                                     {sub.badge}
                                   </span>
                                 )}
@@ -343,12 +343,12 @@ export function MemberDrawer({ isOpen, onClose, user }: MemberDrawerProps) {
         </div>
 
         {/* Drawer Footer */}
-        <div className="p-4 sm:p-5 border-t border-[#E8E5DE] bg-[#FAF9F6] space-y-3 shrink-0">
+        <div className="p-4 sm:p-5 border-t border-slate-200 bg-white space-y-3 shrink-0">
           <div className="flex items-center justify-between text-xs">
             <Link
               href="/shop"
               onClick={onClose}
-              className="text-[#0E0E0E] hover:text-[#8F7449] font-semibold uppercase tracking-wider text-[11px] transition-colors"
+              className="text-slate-900 hover:text-slate-600 font-semibold uppercase tracking-wider text-[11px] transition-colors"
             >
               Explore Collection
             </Link>
@@ -356,13 +356,13 @@ export function MemberDrawer({ isOpen, onClose, user }: MemberDrawerProps) {
             <Link
               href="/account"
               onClick={onClose}
-              className="text-[#8F7449] hover:underline font-medium text-[11px]"
+              className="text-slate-900 hover:underline font-medium text-[11px]"
             >
               My Account
             </Link>
           </div>
 
-          <div className="pt-2 border-t border-[#E8E5DE]/80 text-[10px] text-[#A8A49C] flex items-center justify-between uppercase tracking-widest">
+          <div className="pt-2 border-t border-slate-100 text-[10px] text-slate-400 flex items-center justify-between uppercase tracking-widest">
             <span>Maison DNORA</span>
             <span>Florence • Milan</span>
           </div>

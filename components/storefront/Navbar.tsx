@@ -47,7 +47,7 @@ export function Navbar({ products = [], user = null }: NavbarProps) {
   return (
     <>
       <header
-        className={`sticky top-0 z-40 w-full transition-all duration-300 bg-white/95 backdrop-blur-md border-b border-[#E8E5DE] ${
+        className={`sticky top-0 z-40 w-full transition-all duration-300 bg-white/95 backdrop-blur-md border-b border-slate-200/80 ${
           isScrolled ? "shadow-xs py-3" : "py-3.5 sm:py-4"
         }`}
       >
@@ -77,8 +77,8 @@ export function Navbar({ products = [], user = null }: NavbarProps) {
                 </svg>
               </button>
 
-              {/* Store Brand Logo - Scaled to a clean refined size */}
-              <BrandLogo priority size="md" />
+              {/* Store Brand Logo - Scaled to a luxurious prominent size on laptops */}
+              <BrandLogo priority size="lg" imageClassName="h-6 sm:h-7 lg:h-9 xl:h-10 w-auto transition-all" />
             </div>
 
             {/* CENTER: Desktop / Laptop Horizontal Navigation Bar with Hover Submenus */}
@@ -105,37 +105,37 @@ export function Navbar({ products = [], user = null }: NavbarProps) {
                   <ChevronDown className="w-3 h-3 text-[#73706A] group-hover:rotate-180 transition-transform duration-200" />
                 </Link>
                 <div className="absolute top-full -left-4 pt-2 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 z-50">
-                  <div className="w-56 bg-white border border-[#E8E5DE] rounded-sm shadow-xl py-2">
-                    <div className="px-3.5 py-1.5 border-b border-[#E8E5DE]/70 text-[9px] uppercase tracking-widest text-[#0E0E0E] font-bold">
+                  <div className="w-56 bg-white border border-slate-200 rounded-xl shadow-xl py-2">
+                    <div className="px-3.5 py-1.5 border-b border-slate-100 text-[9px] uppercase tracking-widest text-slate-900 font-bold">
                       Collections
                     </div>
                     <Link
                       href="/shop"
-                      className="block px-3.5 py-2 text-xs text-[#0E0E0E] hover:bg-[#FAF9F6] hover:text-[#73706A] transition-colors"
+                      className="block px-3.5 py-2 text-xs text-slate-800 hover:bg-slate-50 hover:text-slate-950 transition-colors"
                     >
                       All Handbags & Purses
                     </Link>
                     <Link
                       href="/#best-sellers"
-                      className="flex items-center justify-between px-3.5 py-2 text-xs text-[#0E0E0E] hover:bg-[#FAF9F6] hover:text-[#73706A] transition-colors"
+                      className="flex items-center justify-between px-3.5 py-2 text-xs text-slate-800 hover:bg-slate-50 hover:text-slate-950 transition-colors"
                     >
                       <span>Best Sellers</span>
-                      <span className="text-[9px] px-1.5 py-0.5 bg-[#0E0E0E] text-[#FAF9F6] font-bold tracking-wider uppercase rounded-xs">
+                      <span className="text-[9px] px-1.5 py-0.5 bg-slate-900 text-white font-bold tracking-wider uppercase rounded-xs">
                         Hot
                       </span>
                     </Link>
                     <Link
                       href="/#new-arrivals"
-                      className="flex items-center justify-between px-3.5 py-2 text-xs text-[#0E0E0E] hover:bg-[#FAF9F6] hover:text-[#73706A] transition-colors"
+                      className="flex items-center justify-between px-3.5 py-2 text-xs text-slate-800 hover:bg-slate-50 hover:text-slate-950 transition-colors"
                     >
                       <span>New Arrivals</span>
-                      <span className="text-[9px] px-1.5 py-0.5 bg-[#0E0E0E] text-[#0E0E0E] font-bold tracking-wider uppercase rounded-xs">
+                      <span className="text-[9px] px-1.5 py-0.5 bg-slate-900 text-white font-bold tracking-wider uppercase rounded-xs">
                         New
                       </span>
                     </Link>
                     <Link
                       href="/#categories"
-                      className="block px-3.5 py-2 text-xs text-[#0E0E0E] hover:bg-[#FAF9F6] hover:text-[#73706A] transition-colors"
+                      className="block px-3.5 py-2 text-xs text-slate-800 hover:bg-slate-50 hover:text-slate-950 transition-colors"
                     >
                       Shop by Silhouette
                     </Link>
@@ -153,8 +153,8 @@ export function Navbar({ products = [], user = null }: NavbarProps) {
                   <ChevronDown className="w-3 h-3 text-[#73706A] group-hover:rotate-180 transition-transform duration-200" />
                 </Link>
                 <div className="absolute top-full -left-6 pt-2 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 z-50">
-                  <div className="w-56 bg-white border border-[#E8E5DE] rounded-sm shadow-xl py-2">
-                    <div className="px-3.5 py-1.5 border-b border-[#E8E5DE]/70 text-[9px] uppercase tracking-widest text-[#0E0E0E] font-bold">
+                  <div className="w-56 bg-white border border-slate-200 rounded-xl shadow-xl py-2">
+                    <div className="px-3.5 py-1.5 border-b border-slate-100 text-[9px] uppercase tracking-widest text-slate-900 font-bold">
                       All Categories
                     </div>
                     {categories.length > 0 ? (
@@ -162,7 +162,7 @@ export function Navbar({ products = [], user = null }: NavbarProps) {
                         <Link
                           key={cat.id}
                           href={`/category/${cat.slug}`}
-                          className="block px-3.5 py-2 text-xs text-[#0E0E0E] hover:bg-[#FAF9F6] hover:text-[#73706A] transition-colors"
+                          className="block px-3.5 py-2 text-xs text-slate-800 hover:bg-slate-50 hover:text-slate-950 transition-colors"
                         >
                           {cat.name}
                         </Link>
@@ -171,34 +171,34 @@ export function Navbar({ products = [], user = null }: NavbarProps) {
                       <>
                         <Link
                           href="/category/tote-bags"
-                          className="block px-3.5 py-2 text-xs text-[#0E0E0E] hover:bg-[#FAF9F6] hover:text-[#73706A] transition-colors"
+                          className="block px-3.5 py-2 text-xs text-slate-800 hover:bg-slate-50 hover:text-slate-950 transition-colors"
                         >
                           Tote Bags
                         </Link>
                         <Link
                           href="/category/shoulder-bags"
-                          className="block px-3.5 py-2 text-xs text-[#0E0E0E] hover:bg-[#FAF9F6] hover:text-[#73706A] transition-colors"
+                          className="block px-3.5 py-2 text-xs text-slate-800 hover:bg-slate-50 hover:text-slate-950 transition-colors"
                         >
                           Shoulder Bags
                         </Link>
                         <Link
                           href="/category/crossbody-bags"
-                          className="block px-3.5 py-2 text-xs text-[#0E0E0E] hover:bg-[#FAF9F6] hover:text-[#73706A] transition-colors"
+                          className="block px-3.5 py-2 text-xs text-slate-800 hover:bg-slate-50 hover:text-slate-950 transition-colors"
                         >
                           Crossbody Bags
                         </Link>
                         <Link
                           href="/category/handbags"
-                          className="block px-3.5 py-2 text-xs text-[#0E0E0E] hover:bg-[#FAF9F6] hover:text-[#73706A] transition-colors"
+                          className="block px-3.5 py-2 text-xs text-slate-800 hover:bg-slate-50 hover:text-slate-950 transition-colors"
                         >
                           Handbags
                         </Link>
                       </>
                     )}
-                    <div className="border-t border-[#E8E5DE]/70 mt-1 pt-1">
+                    <div className="border-t border-slate-100 mt-1 pt-1">
                       <Link
                         href="/#categories"
-                        className="block px-3.5 py-1.5 text-[11px] font-semibold text-[#8F7449] hover:underline"
+                        className="block px-3.5 py-1.5 text-[11px] font-semibold text-slate-900 hover:underline"
                       >
                         Explore All Categories →
                       </Link>
@@ -217,25 +217,25 @@ export function Navbar({ products = [], user = null }: NavbarProps) {
                   <ChevronDown className="w-3 h-3 text-[#73706A] group-hover:rotate-180 transition-transform duration-200" />
                 </Link>
                 <div className="absolute top-full -left-4 pt-2 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 z-50">
-                  <div className="w-52 bg-white border border-[#E8E5DE] rounded-sm shadow-xl py-2">
-                    <div className="px-3.5 py-1.5 border-b border-[#E8E5DE]/70 text-[9px] uppercase tracking-widest text-[#0E0E0E] font-bold">
+                  <div className="w-52 bg-white border border-slate-200 rounded-xl shadow-xl py-2">
+                    <div className="px-3.5 py-1.5 border-b border-slate-100 text-[9px] uppercase tracking-widest text-slate-900 font-bold">
                       Latest Edits
                     </div>
                     <Link
                       href="/shop?new_arrival=true"
-                      className="block px-3.5 py-2 text-xs text-[#0E0E0E] hover:bg-[#FAF9F6] hover:text-[#73706A] transition-colors"
+                      className="block px-3.5 py-2 text-xs text-slate-800 hover:bg-slate-50 hover:text-slate-950 transition-colors"
                     >
                       Spring / Summer 2026
                     </Link>
                     <Link
                       href="/#new-arrivals"
-                      className="block px-3.5 py-2 text-xs text-[#0E0E0E] hover:bg-[#FAF9F6] hover:text-[#73706A] transition-colors"
+                      className="block px-3.5 py-2 text-xs text-slate-800 hover:bg-slate-50 hover:text-slate-950 transition-colors"
                     >
                       Featured Releases
                     </Link>
                     <Link
                       href="/shop"
-                      className="block px-3.5 py-2 text-xs text-[#0E0E0E] hover:bg-[#FAF9F6] hover:text-[#73706A] transition-colors"
+                      className="block px-3.5 py-2 text-xs text-slate-800 hover:bg-slate-50 hover:text-slate-950 transition-colors"
                     >
                       Runway Atelier Pieces
                     </Link>
@@ -253,25 +253,25 @@ export function Navbar({ products = [], user = null }: NavbarProps) {
                   <ChevronDown className="w-3 h-3 text-[#73706A] group-hover:rotate-180 transition-transform duration-200" />
                 </Link>
                 <div className="absolute top-full -right-4 pt-2 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 z-50">
-                  <div className="w-52 bg-white border border-[#E8E5DE] rounded-sm shadow-xl py-2">
-                    <div className="px-3.5 py-1.5 border-b border-[#E8E5DE]/70 text-[9px] uppercase tracking-widest text-[#0E0E0E] font-bold">
+                  <div className="w-52 bg-white border border-slate-200 rounded-xl shadow-xl py-2">
+                    <div className="px-3.5 py-1.5 border-b border-slate-100 text-[9px] uppercase tracking-widest text-slate-900 font-bold">
                       Signature Icons
                     </div>
                     <Link
                       href="/#best-sellers"
-                      className="block px-3.5 py-2 text-xs text-[#0E0E0E] hover:bg-[#FAF9F6] hover:text-[#73706A] transition-colors"
+                      className="block px-3.5 py-2 text-xs text-slate-800 hover:bg-slate-50 hover:text-slate-950 transition-colors"
                     >
                       Top Rated Silhouettes
                     </Link>
                     <Link
                       href="/shop?best_seller=true"
-                      className="block px-3.5 py-2 text-xs text-[#0E0E0E] hover:bg-[#FAF9F6] hover:text-[#73706A] transition-colors"
+                      className="block px-3.5 py-2 text-xs text-slate-800 hover:bg-slate-50 hover:text-slate-950 transition-colors"
                     >
                       Iconic Italian Calfskin
                     </Link>
                     <Link
                       href="/shop"
-                      className="block px-3.5 py-2 text-xs text-[#0E0E0E] hover:bg-[#FAF9F6] hover:text-[#73706A] transition-colors"
+                      className="block px-3.5 py-2 text-xs text-slate-800 hover:bg-slate-50 hover:text-slate-950 transition-colors"
                     >
                       All Bestselling Bags
                     </Link>
@@ -311,16 +311,16 @@ export function Navbar({ products = [], user = null }: NavbarProps) {
                     {userDropdownOpen && (
                       <div
                         onMouseLeave={() => setUserDropdownOpen(false)}
-                        className="absolute right-0 mt-2 w-56 bg-white border border-[#E8E5DE] rounded-sm shadow-xl py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150"
+                        className="absolute right-0 mt-2 w-56 bg-white border border-slate-200 rounded-xl shadow-xl py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150"
                       >
-                        <div className="px-4 py-2 border-b border-[#E8E5DE]">
-                          <span className="text-[10px] uppercase tracking-widest text-[#0E0E0E] font-bold block">
+                        <div className="px-4 py-2 border-b border-slate-100">
+                          <span className="text-[10px] uppercase tracking-widest text-slate-900 font-bold block">
                             Client Account
                           </span>
-                          <span className="text-xs font-bold text-[#0E0E0E] truncate block mt-0.5">
+                          <span className="text-xs font-bold text-slate-900 truncate block mt-0.5">
                             {user.full_name || user.email.split("@")[0]}
                           </span>
-                          <span className="text-[11px] text-[#73706A] truncate block">
+                          <span className="text-[11px] text-slate-500 truncate block">
                             {user.email}
                           </span>
                         </div>
@@ -328,22 +328,22 @@ export function Navbar({ products = [], user = null }: NavbarProps) {
                         <Link
                           href="/account"
                           onClick={() => setUserDropdownOpen(false)}
-                          className="flex items-center gap-2.5 px-4 py-2.5 text-xs text-[#0E0E0E] hover:bg-[#FAF9F6] font-medium transition-colors"
+                          className="flex items-center gap-2.5 px-4 py-2.5 text-xs text-slate-800 hover:bg-slate-50 font-medium transition-colors"
                         >
-                          <Package className="w-3.5 h-3.5 text-[#0E0E0E]" />
+                          <Package className="w-3.5 h-3.5 text-slate-900" />
                           <span>My Orders & Tracking</span>
                         </Link>
 
                         <Link
                           href="/account"
                           onClick={() => setUserDropdownOpen(false)}
-                          className="flex items-center gap-2.5 px-4 py-2.5 text-xs text-[#0E0E0E] hover:bg-[#FAF9F6] font-medium transition-colors"
+                          className="flex items-center gap-2.5 px-4 py-2.5 text-xs text-slate-800 hover:bg-slate-50 font-medium transition-colors"
                         >
-                          <MapPin className="w-3.5 h-3.5 text-[#0E0E0E]" />
+                          <MapPin className="w-3.5 h-3.5 text-slate-900" />
                           <span>Saved Addresses</span>
                         </Link>
 
-                        <div className="pt-1 border-t border-[#E8E5DE]">
+                        <div className="pt-1 border-t border-slate-100">
                           <button
                             type="button"
                             onClick={async () => {
@@ -357,7 +357,7 @@ export function Navbar({ products = [], user = null }: NavbarProps) {
                                 router.refresh();
                               }
                             }}
-                            className="w-full flex items-center gap-2.5 px-4 py-2 text-xs text-[#C53030] hover:bg-[#FCF0F0] font-medium transition-colors"
+                            className="w-full flex items-center gap-2.5 px-4 py-2 text-xs text-rose-600 hover:bg-rose-50 font-medium transition-colors cursor-pointer"
                           >
                             <LogOut className="w-3.5 h-3.5" />
                             <span>Sign Out</span>

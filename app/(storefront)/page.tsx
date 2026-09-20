@@ -49,6 +49,8 @@ export default async function HomePage(props: HomePageProps) {
           headingFontFamily={homepageConfig?.categories?.heading_font_family}
           headingFontWeight={homepageConfig?.categories?.heading_font_weight}
           cardGap={homepageConfig?.categories?.card_gap}
+          cardSize={homepageConfig?.categories?.card_size}
+          cardWidth={homepageConfig?.categories?.card_width}
         />
       )}
 
@@ -63,6 +65,8 @@ export default async function HomePage(props: HomePageProps) {
           headingFontFamily={homepageConfig?.best_sellers?.heading_font_family}
           headingFontWeight={homepageConfig?.best_sellers?.heading_font_weight}
           cardGap={homepageConfig?.best_sellers?.card_gap}
+          cardSize={homepageConfig?.best_sellers?.card_size}
+          cardWidth={homepageConfig?.best_sellers?.card_width}
         />
       )}
 
@@ -77,6 +81,8 @@ export default async function HomePage(props: HomePageProps) {
           headingFontFamily={homepageConfig?.new_in?.heading_font_family}
           headingFontWeight={homepageConfig?.new_in?.heading_font_weight}
           cardGap={homepageConfig?.new_in?.card_gap}
+          cardSize={homepageConfig?.new_in?.card_size}
+          cardWidth={homepageConfig?.new_in?.card_width}
         />
       )}
 
@@ -105,6 +111,8 @@ export default async function HomePage(props: HomePageProps) {
           headingFontFamily={homepageConfig?.seen_on_you?.heading_font_family}
           headingFontWeight={homepageConfig?.seen_on_you?.heading_font_weight}
           cardGap={homepageConfig?.seen_on_you?.card_gap}
+          cardSize={homepageConfig?.seen_on_you?.card_size}
+          cardWidth={homepageConfig?.seen_on_you?.card_width}
         />
       )}
 
