@@ -71,6 +71,27 @@ export async function GET(req: NextRequest) {
       } catch (catErr) {
         console.error("Error populating dynamic categories for navigation:", catErr);
       }
+
+      // Synchronize Member Portal submenus
+      items = items.map((item) => {
+        if (
+          item.id === "sf-account" ||
+          item.label?.toLowerCase().includes("member") ||
+          item.label?.toLowerCase().includes("account")
+        ) {
+          return {
+            ...item,
+            label: "Member Portal",
+            submenus: [
+              { id: "sf-sub-track", label: "Track Your Order", href: "/account?tab=orders", badge: "Live" },
+              { id: "sf-sub-profile", label: "My Profile", href: "/account?tab=profile" },
+              { id: "sf-sub-orders", label: "Orders & Purchases", href: "/account?tab=orders" },
+              { id: "sf-sub-addresses", label: "Delivery Addresses", href: "/account?tab=addresses" },
+            ],
+          };
+        }
+        return item;
+      });
     }
 
     return NextResponse.json({ target, items });

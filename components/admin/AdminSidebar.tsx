@@ -199,8 +199,7 @@ export function AdminSidebar({
                         sub.href === pathname ||
                         pathname.startsWith(sub.href + "?") ||
                         (item.id === "nav-customization" &&
-                          (pathname.startsWith("/admin/customization") ||
-                            pathname.startsWith("/admin/custmoization")))
+                          pathname.startsWith("/admin/customization"))
                     );
 
                   const isActive = isDirectActive || isAnySubActive;
@@ -307,7 +306,7 @@ export function AdminSidebar({
                                 const isSubActive =
                                   pathname === sub.href ||
                                   (sub.href.startsWith("/admin/customization") &&
-                                    pathname.replace("/admin/custmoization", "/admin/customization") === sub.href);
+                                    pathname.startsWith(sub.href));
                                 return (
                                   <Link
                                     key={sub.id}
@@ -354,7 +353,7 @@ export function AdminSidebar({
                                 (sub.href !== "/admin" &&
                                   pathname.startsWith(sub.href + "?")) ||
                                 (sub.href.startsWith("/admin/customization") &&
-                                  pathname.replace("/admin/custmoization", "/admin/customization") === sub.href);
+                                  pathname.startsWith(sub.href));
 
                               return (
                                 <Link

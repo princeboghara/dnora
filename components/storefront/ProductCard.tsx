@@ -21,6 +21,7 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
   const { isInWishlist, toggleWishlist } = useWishlist();
   const isWishlisted = isInWishlist(product.id);
   const [isHovered, setIsHovered] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
   const [isBuying, setIsBuying] = useState(false);
   const [selectedVariant, setSelectedVariant] = useState<ProductColorVariant | null>(
     product.color_variants && product.color_variants.length > 0 ? product.color_variants[0] : null
@@ -105,7 +106,17 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
       onMouseLeave={() => setIsHovered(false)}
     >
       {/* 1. PRODUCT IMAGE FRAME (Controlled height & medium width) */}
-      <div className="relative w-full aspect-[4/5] bg-slate-50 overflow-hidden rounded-xl border border-slate-200 shadow-xs">
+      <div className="relative w-full aspect-[4/5] bg-slate-100 overflow-hidden rounded-xl border border-slate-200 shadow-xs">
+        {/* Low-Internet Shimmer Shine Skeleton Placeholder */}
+        {!imageLoaded && (
+          <div className="absolute inset-0 bg-slate-100 flex items-center justify-center pointer-events-none z-0">
+            <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/60 to-transparent animate-shimmer-shine" />
+            <div className="w-8 h-8 rounded-full border border-slate-200/80 bg-white/70 flex items-center justify-center">
+              <span className="text-[8px] font-bold text-slate-400 tracking-wider">DNORA</span>
+            </div>
+          </div>
+        )}
+
         <Link href={`/product/${product.slug}`} className="relative block w-full h-full">
           {/* Primary Image with subtle crossfade */}
           {primaryImage && (
@@ -115,9 +126,14 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
               alt={product.images[0]?.alt_text || product.name}
               fill
               priority={priority}
+              onLoad={() => setImageLoaded(true)}
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 380px, 420px"
               className={`object-cover object-center transition-all duration-700 ease-out ${
-                isHovered && secondaryImage !== primaryImage ? "opacity-0 scale-[1.03]" : "opacity-100 scale-100"
+                !imageLoaded
+                  ? "opacity-0"
+                  : isHovered && secondaryImage !== primaryImage
+                  ? "opacity-0 scale-[1.03]"
+                  : "opacity-100 scale-100"
               }`}
             />
           )}

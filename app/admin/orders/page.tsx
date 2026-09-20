@@ -25,6 +25,8 @@ import {
   Mail,
   X,
   User,
+  CreditCard,
+  Banknote,
 } from "lucide-react";
 import Image from "next/image";
 import { Order, OrderStatus } from "@/types";
@@ -214,10 +216,42 @@ function AdminOrdersContent() {
 
   // Calculate local stats
   const processingCount = orders.filter((o) => o.status === "processing").length;
+  const dispatchedCount = orders.filter((o) => o.status === "shipped").length;
   const deliveredCount = orders.filter((o) => o.status === "delivered").length;
   const totalRevenue = orders
     .filter((o) => o.status !== "cancelled")
     .reduce((sum, o) => sum + Number(o.total_amount || 0), 0);
+
+  // COD orders (cash on delivery pending / incoming payment)
+  const codOrders = orders.filter(
+    (o) =>
+      o.status !== "cancelled" &&
+      (o.payment_method?.toLowerCase().includes("cod") ||
+        o.payment_method?.toLowerCase().includes("cash") ||
+        (o.payment_status === "pending" &&
+          !o.payment_method?.toLowerCase().includes("card") &&
+          !o.payment_method?.toLowerCase().includes("gateway") &&
+          !o.payment_method?.toLowerCase().includes("online")))
+  );
+  const codAmount = codOrders.reduce((sum, o) => sum + Number(o.total_amount || 0), 0);
+  const codCount = codOrders.length;
+
+  // Payment Gateway Paid orders (prepaid via Razorpay/Stripe/Cards/Netbanking/UPI)
+  const gatewayPaidOrders = orders.filter(
+    (o) =>
+      o.status !== "cancelled" &&
+      (o.payment_status === "paid" ||
+        o.payment_method?.toLowerCase().includes("gateway") ||
+        o.payment_method?.toLowerCase().includes("online") ||
+        o.payment_method?.toLowerCase().includes("card") ||
+        o.payment_method?.toLowerCase().includes("razorpay") ||
+        o.payment_method?.toLowerCase().includes("stripe"))
+  );
+  const gatewayPaidAmount = gatewayPaidOrders.reduce(
+    (sum, o) => sum + Number(o.total_amount || 0),
+    0
+  );
+  const gatewayPaidCount = gatewayPaidOrders.length;
 
   return (
     <div className="space-y-6">
@@ -260,71 +294,135 @@ function AdminOrdersContent() {
         </div>
       </div>
 
-      {/* Metric Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white p-4 sm:p-5 rounded-sm border border-[#E8E5DE] shadow-xs">
+      {/* Metric Cards (7 Responsive Metric Cards including COD, Gateway & Dispatched) */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-3.5 sm:gap-4">
+        {/* 1. Total Orders */}
+        <div className="bg-white p-4 rounded-sm border border-[#E8E5DE] shadow-xs flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-[#73706A]">
+            <span className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-[#73706A]">
               Total Orders
             </span>
-            <div className="w-8 h-8 rounded-full bg-[#FAF9F6] border border-[#E8E5DE] flex items-center justify-center text-[#0E0E0E]">
-              <Package className="w-4 h-4 text-[#0E0E0E]" />
+            <div className="w-7 h-7 rounded-full bg-[#FAF9F6] border border-[#E8E5DE] flex items-center justify-center text-[#0E0E0E]">
+              <Package className="w-3.5 h-3.5" />
             </div>
           </div>
-          <div className="mt-3">
-            <span className="text-2xl sm:text-3xl font-heading font-extrabold text-[#0E0E0E]">
+          <div className="mt-2.5">
+            <span className="text-xl sm:text-2xl font-heading font-extrabold text-[#0E0E0E]">
               {total}
             </span>
+            <span className="text-[10px] text-[#73706A] block mt-0.5 font-medium">In Registry</span>
           </div>
         </div>
 
-        <div className="bg-white p-4 sm:p-5 rounded-sm border border-[#E8E5DE] shadow-xs">
+        {/* 2. Action Needed (Processing) */}
+        <div className="bg-white p-4 rounded-sm border border-[#E8E5DE] shadow-xs flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-[#B7791F]">
+            <span className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-[#B7791F]">
               Action Needed
             </span>
-            <div className="w-8 h-8 rounded-full bg-[#FFF9E6] border border-[#FBD38D] flex items-center justify-center text-[#B7791F]">
-              <Clock className="w-4 h-4" />
+            <div className="w-7 h-7 rounded-full bg-[#FFF9E6] border border-[#FBD38D] flex items-center justify-center text-[#B7791F]">
+              <Clock className="w-3.5 h-3.5" />
             </div>
           </div>
-          <div className="mt-3">
-            <span className="text-2xl sm:text-3xl font-heading font-extrabold text-[#B7791F]">
+          <div className="mt-2.5">
+            <span className="text-xl sm:text-2xl font-heading font-extrabold text-[#B7791F]">
               {processingCount}
             </span>
-            <span className="text-[11px] text-[#73706A] ml-2 font-medium">Processing</span>
+            <span className="text-[10px] text-[#B7791F] block mt-0.5 font-medium">Processing</span>
           </div>
         </div>
 
-        <div className="bg-white p-4 sm:p-5 rounded-sm border border-[#E8E5DE] shadow-xs">
+        {/* 3. Dispatched Orders (In Transit) */}
+        <div className="bg-white p-4 rounded-sm border border-[#E8E5DE] shadow-xs flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-[#2F855A]">
+            <span className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-[#6B46C1]">
+              Dispatched
+            </span>
+            <div className="w-7 h-7 rounded-full bg-[#F3E8FF] border border-[#D6BCFA] flex items-center justify-center text-[#6B46C1]">
+              <Truck className="w-3.5 h-3.5" />
+            </div>
+          </div>
+          <div className="mt-2.5">
+            <span className="text-xl sm:text-2xl font-heading font-extrabold text-[#6B46C1]">
+              {dispatchedCount}
+            </span>
+            <span className="text-[10px] text-[#6B46C1] block mt-0.5 font-medium">In Transit</span>
+          </div>
+        </div>
+
+        {/* 4. Delivered Orders (Fulfilled) */}
+        <div className="bg-white p-4 rounded-sm border border-[#E8E5DE] shadow-xs flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-[#2F855A]">
               Delivered
             </span>
-            <div className="w-8 h-8 rounded-full bg-[#F0FFF4] border border-[#9AE6B4] flex items-center justify-center text-[#2F855A]">
-              <CheckCircle2 className="w-4 h-4" />
+            <div className="w-7 h-7 rounded-full bg-[#F0FFF4] border border-[#9AE6B4] flex items-center justify-center text-[#2F855A]">
+              <CheckCircle2 className="w-3.5 h-3.5" />
             </div>
           </div>
-          <div className="mt-3">
-            <span className="text-2xl sm:text-3xl font-heading font-extrabold text-[#2F855A]">
+          <div className="mt-2.5">
+            <span className="text-xl sm:text-2xl font-heading font-extrabold text-[#2F855A]">
               {deliveredCount}
             </span>
-            <span className="text-[11px] text-[#73706A] ml-2 font-medium">Fulfilled</span>
+            <span className="text-[10px] text-[#2F855A] block mt-0.5 font-medium">Fulfilled</span>
           </div>
         </div>
 
-        <div className="bg-white p-4 sm:p-5 rounded-sm border border-[#E8E5DE] shadow-xs">
+        {/* 5. Payment Gateway Paid Payment */}
+        <div className="bg-white p-4 rounded-sm border border-[#E8E5DE] shadow-xs flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-[#0E0E0E]">
-              Total Volume
+            <span className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-[#059669]">
+              Gateway Paid
             </span>
-            <div className="w-8 h-8 rounded-full bg-[#FAF9F6] border border-[#E8E5DE] flex items-center justify-center text-[#0E0E0E]">
-              <TrendingUp className="w-4 h-4 text-[#0E0E0E]" />
+            <div className="w-7 h-7 rounded-full bg-[#ECFDF5] border border-[#A7F3D0] flex items-center justify-center text-[#059669]">
+              <CreditCard className="w-3.5 h-3.5" />
             </div>
           </div>
-          <div className="mt-3">
-            <span className="text-xl sm:text-2xl font-heading font-extrabold text-[#0E0E0E]">
+          <div className="mt-2.5">
+            <span className="text-lg sm:text-xl font-heading font-extrabold text-[#059669]">
+              {formatPrice(gatewayPaidAmount)}
+            </span>
+            <span className="text-[10px] text-[#059669] block mt-0.5 font-medium">
+              {gatewayPaidCount} Settled
+            </span>
+          </div>
+        </div>
+
+        {/* 6. COD Pending Payment (Cash on Delivery) */}
+        <div className="bg-white p-4 rounded-sm border border-[#E8E5DE] shadow-xs flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-[#D97706]">
+              COD Pending
+            </span>
+            <div className="w-7 h-7 rounded-full bg-[#FFFBEB] border border-[#FDE68A] flex items-center justify-center text-[#D97706]">
+              <Banknote className="w-3.5 h-3.5" />
+            </div>
+          </div>
+          <div className="mt-2.5">
+            <span className="text-lg sm:text-xl font-heading font-extrabold text-[#D97706]">
+              {formatPrice(codAmount)}
+            </span>
+            <span className="text-[10px] text-[#D97706] block mt-0.5 font-medium">
+              {codCount} Orders COD
+            </span>
+          </div>
+        </div>
+
+        {/* 7. Total Volume */}
+        <div className="bg-white p-4 rounded-sm border border-[#E8E5DE] shadow-xs flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-[#0E0E0E]">
+              Total Volume
+            </span>
+            <div className="w-7 h-7 rounded-full bg-[#FAF9F6] border border-[#E8E5DE] flex items-center justify-center text-[#0E0E0E]">
+              <TrendingUp className="w-3.5 h-3.5" />
+            </div>
+          </div>
+          <div className="mt-2.5">
+            <span className="text-lg sm:text-xl font-heading font-extrabold text-[#0E0E0E]">
               {formatPrice(totalRevenue)}
             </span>
+            <span className="text-[10px] text-[#73706A] block mt-0.5 font-medium">Gross Total</span>
           </div>
         </div>
       </div>

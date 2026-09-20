@@ -43,7 +43,7 @@ export function Footer({ config }: FooterProps) {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Brand Logo - Centered, Compact & Elegant */}
         <div className="flex flex-col items-center justify-center text-center mb-3.5 sm:mb-4">
-          <BrandLogo size="md" />
+          <BrandLogo size="md" imageClassName="brightness-0 invert" />
           <p className="mt-1.5 text-[11px] text-slate-400 uppercase tracking-[0.2em]">
             {brandSubtitle}
           </p>

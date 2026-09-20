@@ -7,3 +7,5 @@ export { PageLinkSelect } from "@/components/admin/PageLinkSelect";
 export { ProductEditor } from "@/components/admin/ProductEditor";
 export { ProductForm } from "@/components/admin/ProductForm";
 export { SidebarCustomizerModal } from "@/components/admin/SidebarCustomizerModal";
+export { CustomizationManager } from "@/components/admin/CustomizationManager";
+

@@ -143,6 +143,9 @@ export function CategoriesSection({
                         </div>
                       )}
 
+                      {/* Low internet shimmer shine placeholder */}
+                      <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/50 to-transparent animate-shimmer-shine pointer-events-none" />
+
                       {/* Subtle Inner Ring */}
                       <div className="absolute inset-0 rounded-full border border-black/5 pointer-events-none group-hover:border-black/20 transition-colors" />
                     </div>

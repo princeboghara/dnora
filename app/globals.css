@@ -124,3 +124,105 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   scrollbar-width: none;
 }
 
+/* DNORA Signature Calligraphic Stroke Drawing Animations - Hardware Accelerated */
+@keyframes dnoraDrawDown {
+  0% {
+    clip-path: inset(0 0 100% 0);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  100% {
+    clip-path: inset(0 0 0% 0);
+    opacity: 1;
+  }
+}
+
+@keyframes dnoraDrawCurve {
+  0% {
+    clip-path: inset(0 100% 0 0);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  100% {
+    clip-path: inset(0 0 0% 0);
+    opacity: 1;
+  }
+}
+
+@keyframes dnoraDrawSoft {
+  0% {
+    clip-path: inset(0 0 100% 0);
+    opacity: 0;
+    filter: blur(2px);
+  }
+  30% {
+    opacity: 1;
+    filter: blur(0.5px);
+  }
+  100% {
+    clip-path: inset(0 0 0% 0);
+    opacity: 1;
+    filter: blur(0px);
+  }
+}
+
+@keyframes dnoraSoftBreathe {
+  0%, 100% {
+    opacity: 0.94;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.01);
+  }
+}
+
+@keyframes dnoraGleamSweep {
+  0% {
+    transform: translateX(-150%) skewX(-20deg);
+  }
+  100% {
+    transform: translateX(250%) skewX(-20deg);
+  }
+}
+
+.animate-dnora-gleam {
+  animation: dnoraGleamSweep 2.4s cubic-bezier(0.4, 0, 0.2, 1) infinite 1.4s;
+}
+
+
+@keyframes dnoraProgress {
+  0% {
+    width: 0%;
+    transform: translateX(-100%);
+  }
+  50% {
+    width: 75%;
+    transform: translateX(0%);
+  }
+  100% {
+    width: 100%;
+    transform: translateX(100%);
+  }
+}
+
+/* Low-Internet Shimmer Shine Animation for Cards and Placeholders */
+@keyframes shimmerShine {
+  0% {
+    transform: translateX(-100%) skewX(-15deg);
+  }
+  100% {
+    transform: translateX(200%) skewX(-15deg);
+  }
+}
+
+.animate-shimmer-shine {
+  animation: shimmerShine 1.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+
+

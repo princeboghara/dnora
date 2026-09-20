@@ -11,6 +11,12 @@ import {
   AlertTriangle,
   Users,
   Package,
+  Megaphone,
+  Layers,
+  Video,
+  Sliders,
+  Star,
+  Info,
 } from "lucide-react";
 import { redirect } from "next/navigation";
 import { store } from "@/lib/data/store";
@@ -100,6 +106,72 @@ export default async function AdminDashboardPage() {
     },
   ];
 
+  const customizationCards = [
+    {
+      title: "Announcement Bar",
+      slug: "announcementbar",
+      badge: "Header Ticker",
+      description: "Topbar promotional messages, auto-swipe rotation & links",
+      icon: Megaphone,
+    },
+    {
+      title: "Hero Banner",
+      slug: "herobanner",
+      badge: "Cinematic Slides",
+      description: "Full-bleed campaign slides, desktop/mobile imagery & CTAs",
+      icon: Layers,
+    },
+    {
+      title: "Best Sellers",
+      slug: "bestsellers",
+      badge: "Top Curation",
+      description: "Trending silhouettes carousel, order priority & typography",
+      icon: Flame,
+    },
+    {
+      title: "New In",
+      slug: "newin",
+      badge: "Fresh Arrivals",
+      description: "Latest boutique additions, seasonal launches & tags",
+      icon: Sparkles,
+    },
+    {
+      title: "Seen On You",
+      slug: "seenonyou",
+      badge: "9:16 Video Reels",
+      description: "Vertical video styling, client reviews & tagged products",
+      icon: Video,
+    },
+    {
+      title: "Middle Banner",
+      slug: "middlebanner",
+      badge: "Editorial Spotlight",
+      description: "Atelier craftsmanship campaign, high-resolution media & CTA",
+      icon: Sliders,
+    },
+    {
+      title: "Customer Review",
+      slug: "customerreview",
+      badge: "Client Feedback",
+      description: "Verified testimonials, 5-star ratings & client locations",
+      icon: Star,
+    },
+    {
+      title: "Footer",
+      slug: "footer",
+      badge: "Maison Footer",
+      description: "Brand narrative, boutique addresses, policies & social channels",
+      icon: Info,
+    },
+    {
+      title: "Categories",
+      slug: "category",
+      badge: "Silhouettes",
+      description: "Circular category carousel, taxonomy & collection covers",
+      icon: ShoppingBag,
+    },
+  ];
+
   return (
     <div className="space-y-8">
       {/* Page Title & Quick Actions */}
@@ -161,6 +233,62 @@ export default async function AdminDashboardPage() {
             </Link>
           );
         })}
+      </div>
+
+      {/* CUSTOMIZATION SECTION (Quick Access to All Landing Page Modules) */}
+      <div className="pt-2 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-[#E8E5DE]">
+          <div>
+            <span className="text-xs uppercase tracking-[0.2em] text-[#0E0E0E] font-semibold block mb-0.5">
+              Storefront CMS
+            </span>
+            <h2 className="text-xl sm:text-2xl font-heading font-extrabold text-[#0E0E0E] tracking-tight">
+              Customization
+            </h2>
+          </div>
+          <Link
+            href="/admin/customization/announcementbar"
+            className="text-xs font-semibold text-[#0E0E0E] hover:text-[#73706A] inline-flex items-center gap-1.5 uppercase tracking-wider transition-colors"
+          >
+            <span>Open Customizer Studio</span>
+            <ArrowUpRight className="w-3.5 h-3.5" />
+          </Link>
+        </div>
+
+        {/* Small Cards Grid (nanacard) */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 gap-3.5 sm:gap-4">
+          {customizationCards.map((card) => {
+            const Icon = card.icon;
+            return (
+              <Link
+                key={card.slug}
+                href={`/admin/customization/${card.slug}`}
+                className="group relative p-4 bg-white border border-[#E8E5DE] hover:border-[#0E0E0E] rounded-lg shadow-xs hover:shadow-md transition-all flex flex-col justify-between"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="p-2 rounded-md bg-[#F5F3EF] text-[#0E0E0E] group-hover:bg-[#0E0E0E] group-hover:text-white transition-colors">
+                    <Icon className="w-4 h-4" />
+                  </div>
+                  <span className="text-[10px] uppercase font-bold tracking-wider text-[#8C8983] bg-[#FAF9F6] px-2 py-0.5 rounded border border-[#E8E5DE]">
+                    {card.badge}
+                  </span>
+                </div>
+
+                <div className="mt-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-heading font-bold text-sm text-[#0E0E0E] group-hover:underline">
+                      {card.title}
+                    </h3>
+                    <ArrowUpRight className="w-3.5 h-3.5 text-[#8C8983] group-hover:text-[#0E0E0E] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
+                  </div>
+                  <p className="text-[11px] text-[#73706A] mt-1 line-clamp-1 leading-snug">
+                    {card.description}
+                  </p>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
       </div>
 
 

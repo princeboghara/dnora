@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans, Inter } from "next/font/google";
 import "./globals.css";
+import { NavigationLoadingProvider } from "@/components/ui/NavigationLoadingProvider";
 
 const plusJakarta = Plus_Jakarta_Sans({
   variable: "--font-jakarta",
@@ -103,7 +104,9 @@ export default function RootLayout({
         />
       </head>
       <body suppressHydrationWarning className="min-h-full flex flex-col font-sans bg-white text-[#0E0E0E] antialiased selection:bg-[#0E0E0E] selection:text-white">
-        {children}
+        <NavigationLoadingProvider>
+          {children}
+        </NavigationLoadingProvider>
       </body>
     </html>
   );

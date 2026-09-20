@@ -37,15 +37,16 @@ export const DEFAULT_STOREFRONT_NAVIGATION: SidebarMenuItem[] = [
   },
   {
     id: "sf-account",
-    label: "Member Account Portal",
+    label: "Member Portal",
     href: "/account",
     icon: "User",
-    badge: "Member",
+    badge: "VIP",
     is_active: true,
     submenus: [
-      { id: "sf-sub-orders", label: "Orders & Tracking", href: "/account" },
-      { id: "sf-sub-addresses", label: "Delivery Addresses", href: "/account" },
-      { id: "sf-sub-profile", label: "Client Profile", href: "/account" },
+      { id: "sf-sub-track", label: "Track Your Order", href: "/account?tab=orders", badge: "Live" },
+      { id: "sf-sub-profile", label: "My Profile", href: "/account?tab=profile" },
+      { id: "sf-sub-orders", label: "Orders & Purchases", href: "/account?tab=orders" },
+      { id: "sf-sub-addresses", label: "Delivery Addresses", href: "/account?tab=addresses" },
     ],
   },
   {

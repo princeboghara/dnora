@@ -49,80 +49,69 @@ graph TD
 
 ```
 dnoralifestyle/
-├── app/
+├── admin/                           # Admin Domain Module
+│   ├── components/index.ts          # Barrel Exports for Admin Components
+│   └── services/                    # Admin Catalog, Customers, Orders Services
+├── storefront/                      # Storefront Domain Module
+│   ├── components/index.ts          # Barrel Exports for Storefront Touchpoints
+│   └── services/                    # Storefront Catalog & Homepage Data Services
+├── member/                          # Member Domain Module
+│   ├── components/index.ts          # Member Drawer & Account Client Barrels
+│   └── services/                    # Customer Authentication & Profile Services
+├── shared/                          # Cross-Cutting Core Module
+│   ├── components/index.ts          # Shared UI: BrandLogo, LuxuryPageLoader, Toast, Modal, Skeleton
+│   ├── config/                      # Global Site & Asset Configurations
+│   ├── utils/                       # Shared Formatting & Classnames
+│   └── validators/                  # Shared Input & Form Validators
+├── app/                             # Next.js App Router
 │   ├── (storefront)/
-│   │   ├── layout.tsx                # Storefront Layout (TopBar, Navbar, CartDrawer, Footer)
-│   │   ├── page.tsx                  # Luxury Homepage (9 Sections)
-│   │   ├── shop/page.tsx             # Handbag Catalog with Category Tabs & Sorting
+│   │   ├── layout.tsx               # Storefront Layout (TopBar, Navbar, CartDrawer, Footer)
+│   │   ├── loading.tsx              # Storefront Streaming Fallback (LuxuryPageLoader)
+│   │   ├── page.tsx                 # Luxury Homepage Flow
+│   │   ├── shop/page.tsx            # Handbag Catalog with Category Tabs & Sorting
+│   │   ├── category/[slug]/page.tsx # Category Silhouette Catalog
+│   │   ├── account/page.tsx         # Patron Account Suite
 │   │   └── product/[slug]/
-│   │       ├── page.tsx              # PDP Server Component (SEO metadata, specifications)
+│   │       ├── page.tsx             # PDP Server Component (SEO metadata, specifications)
 │   │       └── ProductDetailClient.tsx # PDP Client Component (Gallery, Cart Controls)
 │   ├── admin/
-│   │   ├── layout.tsx                # Admin Layout (Sidebar, Header, ToastProvider)
-│   │   ├── page.tsx                  # Executive Dashboard Overview
-│   │   ├── login/page.tsx            # Admin Authentication View
-│   │   ├── heroes/page.tsx           # Hero Banner Manager with Table & Modals
-│   │   └── products/page.tsx         # Product Manager with Table & Toggles
-│   ├── api/
-│   │   ├── auth/login/route.ts       # Admin Session Initialization
-│   │   ├── auth/logout/route.ts      # Admin Session Destruction
-│   │   ├── heroes/route.ts           # Hero Banner CRUD
-│   │   ├── heroes/[id]/route.ts      # Hero Banner Item Manipulation
-│   │   ├── heroes/[id]/publish/route.ts # Instant Publish Toggle & Revalidation
-│   │   ├── products/route.ts         # Product CRUD & Filtering
-│   │   ├── products/[id]/route.ts    # Product Item Manipulation
-│   │   ├── products/[id]/toggle/route.ts # Best Seller & New Arrival Flags
-│   │   └── media/upload/route.ts     # Cloudinary Upload with MIME & Size Inspection
-│   ├── globals.css                   # Tailwind v4 Theme Tokens & Micro-interactions
-│   ├── layout.tsx                    # Root Layout (Google Fonts: Plus Jakarta Sans & Inter)
-│   ├── robots.ts                     # Search Engine Crawling Rules
-│   └── sitemap.ts                    # Dynamic XML Sitemap Generator
-├── components/
-│   ├── admin/                        # Admin Dashboard & Form Primitives
-│   │   ├── AdminHeader.tsx
-│   │   ├── AdminSidebar.tsx
-│   │   ├── HeroBannerForm.tsx
-│   │   ├── HeroPreviewModal.tsx
-│   │   └── ProductForm.tsx
-│   ├── hero/                         # Cinematic Slider Components
-│   │   └── HeroSlider.tsx
-│   ├── seo/                          # Structured Data Markup
-│   │   └── StructuredData.tsx
-│   ├── storefront/                   # Public E-Commerce Touchpoints
-│   │   ├── BestSellersSection.tsx
-│   │   ├── CartDrawer.tsx
-│   │   ├── CategoriesSection.tsx
-│   │   ├── CustomerReviews.tsx
-│   │   ├── EditorialSection.tsx
-│   │   ├── Footer.tsx
-│   │   ├── Navbar.tsx
-│   │   ├── NewArrivalsSection.tsx
-│   │   ├── ProductCard.tsx
-│   │   ├── SearchModal.tsx
-│   │   ├── SeenOnYouSection.tsx
-│   │   └── TopBar.tsx
-│   └── ui/                           # Reusable UI Primitives
-│       ├── Badge.tsx
-│       ├── Modal.tsx
-│       └── Toast.tsx
-├── lib/
-│   ├── auth/session.ts               # Server-Side Admin Session Verification
-│   ├── cloudinary/
-│   │   ├── index.ts                  # Cloudinary Client Configuration & Uploader
-│   │   └── transformations.ts        # Dynamic Image/Video Optimization URL Builders
-│   ├── data/
-│   │   ├── seed-data.ts              # Pre-seeded Handbags, Banners, and Reviews
-│   │   └── store.ts                  # Unified Data Access Layer (Supabase + In-Memory Fallback)
-│   ├── store/cart-store.tsx          # Client Shopping Bag State & LocalStorage Persistence
-│   ├── supabase/
-│   │   ├── admin.ts                  # Service-Role Client
-│   │   ├── client.ts                 # Browser Client
-│   │   ├── schema.sql                # Complete PostgreSQL Tables, Indexes & RLS
-│   │   └── server.ts                 # SSR Cookie Client
-│   ├── validation/
-│   │   ├── hero.ts                   # Zod Schema for Hero Banners
-│   │   └── product.ts                # Zod Schema for Products
-│   └── utils.ts                      # Formatting & Class Utility Helpers
+│   │   ├── layout.tsx               # Admin Layout (Sidebar, Header, ToastProvider)
+│   │   ├── loading.tsx              # Admin Streaming Fallback (LuxuryPageLoader)
+│   │   ├── page.tsx                 # Executive Dashboard with Customization Hub Cards
+│   │   ├── login/page.tsx           # Admin Authentication View
+│   │   ├── customization/[section]/ # Customizer Studio (Announcement, Hero, Categories, Bestsellers, etc.)
+│   │   ├── heroes/page.tsx          # Hero Banner Manager
+│   │   ├── products/page.tsx        # Product Manager with Table & Toggles
+│   │   ├── orders/page.tsx          # Orders & Fulfillment Manager
+│   │   └── customers/page.tsx       # Customer CRM Directory
+│   ├── api/                         # Backend Route Handlers
+│   │   ├── auth/                    # Session Login/Logout & User Auth
+│   │   ├── heroes/                  # Hero Banner CRUD & Revalidation
+│   │   ├── products/                # Product CRUD & Filtering
+│   │   ├── orders/                  # Order Processing & Tracking
+│   │   ├── media/upload/            # Cloudinary Upload with MIME/Size Inspection
+│   │   └── homepage-config/         # Landing Page Customization State Persister
+│   ├── globals.css                  # Theme Tokens, Signature Stroke Keyframes & Shimmer
+│   ├── layout.tsx                   # Root Layout with NavigationLoadingProvider
+│   ├── loading.tsx                  # Global LuxuryPageLoader Transition Fallback
+│   ├── robots.ts                    # Search Engine Crawling Rules
+│   └── sitemap.ts                   # Dynamic XML Sitemap Generator
+├── components/                      # Component Implementations
+│   ├── account/                     # AccountClient
+│   ├── admin/                       # AdminHeader, AdminSidebar, CustomizationManager, ProductEditor
+│   │   └── customization/           # Section Managers (Announcement, Hero, Category, Reviews, etc.)
+│   ├── hero/                        # Cinematic HeroSlider
+│   ├── seo/                         # StructuredData JSON-LD
+│   ├── storefront/                  # Navbar, Footer, ProductCard, CartDrawer, MemberDrawer, etc.
+│   └── ui/                          # BrandLogo, LuxuryPageLoader, NavigationLoadingProvider, ProductCardSkeleton, Toast
+└── lib/                             # Backend Logic & Core Infrastructure
+    ├── auth/                        # Server Sessions & Token Verification
+    ├── cloudinary/                  # Cloudinary SDK & Transformations
+    ├── data/                        # store.ts (Unified DAL) & seed-data.ts
+    ├── db/                          # PostgreSQL Connection Pool (db.ts)
+    ├── email/                       # Transactional Email Notifiers
+    ├── store/                       # Cart & Wishlist Client Stores
+    └── supabase/                    # Supabase Client & PostgreSQL Schema
 ```
 
 ---
