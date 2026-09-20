@@ -11,7 +11,7 @@ interface CartContextType {
   addItem: (
     product: Product,
     quantity?: number,
-    selectedColorOrVariant?: string | { name: string; color_hex?: string; hex?: string; images?: any }
+    selectedColorOrVariant?: string | CartItem["selectedVariant"]
   ) => void;
   removeItem: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
@@ -81,7 +81,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const addItem = (
     product: Product,
     quantity: number = 1,
-    selectedColorOrVariant?: string | { name: string; color_hex?: string; hex?: string; images?: any }
+    selectedColorOrVariant?: string | CartItem["selectedVariant"]
   ) => {
     const variantObj = typeof selectedColorOrVariant === "object" ? selectedColorOrVariant : undefined;
     const colorStr = typeof selectedColorOrVariant === "string" ? selectedColorOrVariant : variantObj?.name;

@@ -21,6 +21,7 @@ import { AnnouncementItem, AnnouncementConfig } from "@/types";
 import { DEFAULT_ANNOUNCEMENT_CONFIG } from "@/lib/data/default-announcements";
 import { useToast } from "@/components/ui/Toast";
 import { Modal } from "@/components/ui/Modal";
+import { PageLinkSelect } from "@/components/admin/PageLinkSelect";
 
 export default function AdminAnnouncementsPage() {
   const { showToast } = useToast();
@@ -625,22 +626,11 @@ export default function AdminAnnouncementsPage() {
             />
           </div>
 
-          {/* Target Link */}
-          <div>
-            <label className="block text-[11px] uppercase tracking-widest font-semibold text-[#0E0E0E] mb-1.5">
-              Destination Link (Optional)
-            </label>
-            <input
-              type="text"
-              value={formLink}
-              onChange={(e) => setFormLink(e.target.value)}
-              placeholder="e.g. /shop or /#new-arrivals"
-              className="w-full px-3 py-2 bg-white border border-[#D5D2CA] rounded-sm text-xs text-[#0E0E0E] focus:outline-none focus:border-[#0E0E0E] focus:ring-1 focus:ring-[#0E0E0E] transition-all"
-            />
-            <span className="text-[10px] text-[#73706A] mt-1 block">
-              Clients clicking the announcement will be navigated to this route.
-            </span>
-          </div>
+          <PageLinkSelect
+            label="Destination Link (Optional)"
+            value={formLink}
+            onChange={(val) => setFormLink(val)}
+          />
 
           {/* Badge Tag */}
           <div>

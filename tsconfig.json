@@ -19,7 +19,11 @@
       }
     ],
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "@/admin/*": ["./admin/*"],
+      "@/storefront/*": ["./storefront/*"],
+      "@/member/*": ["./member/*"],
+      "@/shared/*": ["./shared/*"]
     }
   },
   "include": [

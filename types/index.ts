@@ -29,6 +29,7 @@ export interface ProductCategory {
   slug: string;
   image_url?: string;
   description?: string;
+  product_count?: number;
   created_at?: string;
 }
 
@@ -266,5 +267,86 @@ export interface AnnouncementConfig {
   items: AnnouncementItem[];
   updated_at?: string;
 }
-
-
+export interface HomepageConfig {
+  topbar?: {
+    enabled: boolean;
+    text: string;
+    link?: string;
+  };
+  hero?: {
+    enabled: boolean;
+    height?: string;
+    auto_swipe?: boolean;
+    interval_seconds?: number;
+  };
+  categories?: {
+    enabled: boolean;
+    title: string;
+    heading_color?: string;
+    heading_font_size?: string;
+    heading_font_family?: string;
+    heading_font_weight?: string;
+    card_gap?: number;
+  };
+  best_sellers?: {
+    enabled: boolean;
+    title: string;
+    view_all_link?: string;
+    view_all_text?: string;
+    heading_color?: string;
+    heading_font_size?: string;
+    heading_font_family?: string;
+    heading_font_weight?: string;
+    card_gap?: number;
+    product_ids?: string[];
+  };
+  new_in?: {
+    enabled: boolean;
+    title: string;
+    view_all_link?: string;
+    view_all_text?: string;
+    heading_color?: string;
+    heading_font_size?: string;
+    heading_font_family?: string;
+    heading_font_weight?: string;
+    card_gap?: number;
+    product_ids?: string[];
+  };
+  middle_banner?: {
+    enabled: boolean;
+    eyebrow?: string;
+    title: string;
+    description: string;
+    button_text: string;
+    button_link: string;
+    image_url?: string;
+    media_type?: "image" | "video";
+    media_url?: string;
+    height?: string;
+    duration_seconds?: number;
+    auto_swipe?: boolean;
+  };
+  seen_on_you?: {
+    enabled: boolean;
+    title: string;
+    heading_color?: string;
+    heading_font_size?: string;
+    heading_font_family?: string;
+    heading_font_weight?: string;
+    card_gap?: number;
+  };
+  customer_reviews?: {
+    enabled: boolean;
+    title: string;
+  };
+  footer?: {
+    enabled?: boolean;
+    brand_subtitle?: string;
+    subtitle?: string;
+    story_text?: string;
+    headquarters?: string;
+    instagram_url?: string;
+    facebook_url?: string;
+    pinterest_url?: string;
+  };
+}

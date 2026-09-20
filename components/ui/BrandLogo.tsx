@@ -9,7 +9,6 @@ interface BrandLogoProps {
   href?: string;
   priority?: boolean;
   size?: "sm" | "md" | "lg" | "xl" | "2xl";
-  showSubtitle?: boolean;
 }
 
 export function BrandLogo({
@@ -18,7 +17,6 @@ export function BrandLogo({
   href = "/",
   priority = false,
   size = "xl",
-  showSubtitle = false,
 }: BrandLogoProps) {
   const sizeMap = {
     sm: { width: 95, height: 22, class: "h-4 sm:h-4.5 w-auto", textClass: "text-base tracking-[0.25em]" },

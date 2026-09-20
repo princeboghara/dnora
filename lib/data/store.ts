@@ -7,8 +7,7 @@ import {
   AdminDashboardStats,
   Order,
   OrderItem,
-  OrderStatus,
-  PaymentStatus,
+  HomepageConfig,
 } from "@/types";
 import { db } from "@/lib/db";
 import { slugify } from "../utils";
@@ -131,10 +130,10 @@ class DataStore {
       const params: (string | number | boolean)[] = [];
       let idx = 1;
 
-      if (filter?.status) {
+      if (filter?.status && filter.status !== "all") {
         conditions.push(`p.status = $${idx++}`);
         params.push(filter.status);
-      } else {
+      } else if (!filter?.status) {
         conditions.push(`p.status = 'active'`);
       }
 
@@ -730,7 +729,7 @@ class DataStore {
   async getOrderById(id: string): Promise<Order | null> {
     try {
       const orderRes = await db.query(
-        `SELECT * FROM public.orders WHERE id = $1 OR order_number = $1 LIMIT 1`,
+        `SELECT * FROM public.orders WHERE id::text = $1 OR order_number = $1 LIMIT 1`,
         [id]
       );
       if (orderRes.rows.length === 0) return null;
@@ -772,6 +771,40 @@ class DataStore {
       data.order_number ||
       `DN-${Date.now().toString().slice(-6)}-${Math.floor(100 + Math.random() * 900)}`;
 
+    const isValidUUID = (id?: string | null) =>
+      Boolean(id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id));
+    const passedUserId = isValidUUID(data.user_id) ? data.user_id : null;
+
+    let finalUserId: string | null = null;
+    if (passedUserId) {
+      try {
+        const userCheck = await db.query(
+          `SELECT id FROM public.users WHERE id = $1 LIMIT 1`,
+          [passedUserId]
+        );
+        if (userCheck.rows && userCheck.rows.length > 0) {
+          finalUserId = userCheck.rows[0].id;
+        }
+      } catch (err) {
+        console.warn("Could not verify user_id in public.users:", err);
+      }
+    }
+
+    // Fallback: If user_id wasn't in public.users, check if customer_email matches a registered user
+    if (!finalUserId && data.customer_email) {
+      try {
+        const emailCheck = await db.query(
+          `SELECT id FROM public.users WHERE LOWER(email) = LOWER($1) LIMIT 1`,
+          [data.customer_email.trim()]
+        );
+        if (emailCheck.rows && emailCheck.rows.length > 0) {
+          finalUserId = emailCheck.rows[0].id;
+        }
+      } catch {
+        // Safe fallback to null for guest checkout
+      }
+    }
+
     const res = await db.query(
       `INSERT INTO public.orders 
         (order_number, user_id, customer_email, customer_name, customer_phone, total_amount, status, payment_status, payment_method, shipping_address, tracking_number, carrier, estimated_delivery, notes)
@@ -779,7 +812,7 @@ class DataStore {
        RETURNING *`,
       [
         orderNumber,
-        data.user_id || null,
+        finalUserId,
         data.customer_email,
         data.customer_name,
         data.customer_phone || null,
@@ -869,13 +902,116 @@ class DataStore {
   async deleteOrder(id: string): Promise<boolean> {
     try {
       const res = await db.query(
-        `DELETE FROM public.orders WHERE id = $1 OR order_number = $1 RETURNING id`,
+        `DELETE FROM public.orders WHERE id::text = $1 OR order_number = $1 RETURNING id`,
         [id]
       );
       return (res.rowCount ?? 0) > 0;
     } catch (err) {
       console.error("Error deleting order:", err);
       return false;
+    }
+  }
+
+  // ==========================================
+  // HOMEPAGE CONFIGURATION
+  // ==========================================
+  async getHomepageConfig(): Promise<HomepageConfig> {
+    const fallback: HomepageConfig = {
+      topbar: {
+        enabled: true,
+        text: "COMPLIMENTARY WHITE-GLOVE EXPRESS DELIVERY ON ALL LUXURY ORDERS",
+        link: "/shop",
+      },
+      hero: {
+        enabled: true,
+      },
+      categories: {
+        enabled: true,
+        title: "CATEGORIES",
+        heading_color: "#0E0E0E",
+        heading_font_size: "32px",
+        heading_font_family: "arial-rounded",
+        heading_font_weight: "800",
+        card_gap: 24,
+      },
+      best_sellers: {
+        enabled: true,
+        title: "BEST SELLERS",
+        view_all_link: "/shop?best_seller=true",
+        view_all_text: "VIEW ALL",
+        heading_color: "#0E0E0E",
+        heading_font_size: "32px",
+        heading_font_family: "arial-rounded",
+        heading_font_weight: "800",
+        card_gap: 20,
+      },
+      new_in: {
+        enabled: true,
+        title: "NEW IN",
+        view_all_link: "/shop?new_arrival=true",
+        view_all_text: "VIEW ALL",
+        heading_color: "#0E0E0E",
+        heading_font_size: "32px",
+        heading_font_family: "arial-rounded",
+        heading_font_weight: "800",
+        card_gap: 20,
+      },
+      middle_banner: {
+        enabled: true,
+        eyebrow: "Atelier Edition • Florence",
+        title: "ARCHITECTURAL LEATHER",
+        description: "Sculpted with uncompromising discipline. Cut from certified full-grain Tuscan calfskin and finished with bespoke satin metal hardware.",
+        button_text: "DISCOVER THE ATELIER",
+        button_link: "/shop",
+        image_url: "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=1800&q=85",
+      },
+      seen_on_you: {
+        enabled: true,
+        title: "SEEN ON YOU",
+        heading_color: "#0E0E0E",
+        heading_font_size: "32px",
+        heading_font_family: "arial-rounded",
+        heading_font_weight: "800",
+        card_gap: 12,
+      },
+      customer_reviews: {
+        enabled: true,
+        title: "CUSTOMER REVIEWS",
+      },
+      footer: {
+        subtitle: "Artisan Handbags • Florence • New York",
+        story_text: "Architectural silhouettes, meticulous artisan leatherwork, and timeless aesthetics designed for the modern woman. Handcrafted with bespoke calfskin and precision hardware.",
+        instagram_url: "https://instagram.com/dnoralifestyle",
+        facebook_url: "https://facebook.com/dnoralifestyle",
+        pinterest_url: "https://pinterest.com/dnoralifestyle",
+      },
+    };
+
+    try {
+      const res = await db.query(`SELECT config FROM public.homepage_config WHERE id = 'default' LIMIT 1`);
+      if (res.rows.length === 0) return fallback;
+      const raw = res.rows[0].config;
+      return typeof raw === "string" ? JSON.parse(raw) : (raw || fallback);
+    } catch (err) {
+      console.error("Error fetching homepage config:", err);
+      return fallback;
+    }
+  }
+
+  async updateHomepageConfig(config: HomepageConfig): Promise<HomepageConfig> {
+    try {
+      await db.query(
+        `INSERT INTO public.homepage_config (id, config, updated_at)
+         VALUES ('default', $1, timezone('utc'::text, now()))
+         ON CONFLICT (id) DO UPDATE SET
+           config = EXCLUDED.config,
+           updated_at = timezone('utc'::text, now())`,
+        [JSON.stringify(config)]
+      );
+      return config;
+    } catch (err) {
+      console.error("Error updating homepage config:", err);
+      throw err;
     }
   }
 }

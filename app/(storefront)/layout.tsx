@@ -15,9 +15,10 @@ export default async function StorefrontLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const [products, session] = await Promise.all([
+  const [products, session, homepageConfig] = await Promise.all([
     store.getProducts({ status: "active" }),
     getUserSession(),
+    store.getHomepageConfig(),
   ]);
 
   return (
@@ -25,11 +26,11 @@ export default async function StorefrontLayout({
       <CartProvider>
         <OrganizationJsonLd />
         <div className="flex flex-col min-h-screen">
-          <TopBar />
+          <TopBar topbarConfig={homepageConfig?.topbar} />
           <Navbar products={products} user={session} />
           <CartDrawer />
           <main className="flex-1">{children}</main>
-          <Footer />
+          <Footer config={homepageConfig?.footer} />
         </div>
       </CartProvider>
     </ToastProvider>

@@ -3,8 +3,10 @@
 import React, { useRef } from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, ArrowRight } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Product } from "@/types";
 import { ProductCard } from "./ProductCard";
+import { getResolvedFontFamily } from "@/lib/font-constants";
 
 interface HorizontalProductCarouselProps {
   title: string;
@@ -12,6 +14,11 @@ interface HorizontalProductCarouselProps {
   products: Product[];
   viewAllLink: string;
   viewAllText?: string;
+  headingColor?: string;
+  headingFontSize?: string;
+  headingFontFamily?: string;
+  headingFontWeight?: string;
+  cardGap?: number;
 }
 
 export function HorizontalProductCarousel({
@@ -19,6 +26,11 @@ export function HorizontalProductCarousel({
   products,
   viewAllLink,
   viewAllText = "VIEW ALL",
+  headingColor,
+  headingFontSize,
+  headingFontFamily,
+  headingFontWeight,
+  cardGap,
 }: HorizontalProductCarouselProps) {
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
 
@@ -37,11 +49,25 @@ export function HorizontalProductCarousel({
     });
   };
 
+  const resolvedFont = getResolvedFontFamily(headingFontFamily);
+
   return (
     <div className="w-full">
       {/* Centered Section Heading (Clean luxury typography, no extra subtitle text) */}
       <div className="text-center max-w-xl mx-auto mb-6 sm:mb-8">
-        <h2 className="text-2xl sm:text-3xl lg:text-4xl font-heading font-extrabold text-[#0E0E0E] tracking-tight uppercase">
+        <h2
+          className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#0E0E0E] tracking-tight uppercase font-arial-rounded"
+          style={{
+            fontFamily: resolvedFont,
+            color: headingColor || undefined,
+            fontSize: headingFontSize
+              ? headingFontSize.includes("px")
+                ? headingFontSize
+                : `${headingFontSize}px`
+              : undefined,
+            fontWeight: headingFontWeight || undefined,
+          }}
+        >
           {title}
         </h2>
       </div>
@@ -73,8 +99,14 @@ export function HorizontalProductCarousel({
         */}
         <div
           ref={scrollContainerRef}
-          className="flex items-stretch overflow-x-auto snap-x snap-mandatory scrollbar-none gap-3 sm:gap-5 lg:gap-6 pb-4 pt-1 px-1 -mx-1"
-          style={{ scrollBehavior: "smooth" }}
+          className={cn(
+            "flex items-stretch overflow-x-auto snap-x snap-mandatory scrollbar-none pb-4 pt-1 px-1 -mx-1",
+            cardGap === undefined && "gap-3 sm:gap-5 lg:gap-6"
+          )}
+          style={{
+            scrollBehavior: "smooth",
+            gap: cardGap !== undefined ? `${cardGap}px` : undefined,
+          }}
         >
           {displayProducts.map((product, idx) => (
             <div

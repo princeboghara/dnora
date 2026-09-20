@@ -7,9 +7,10 @@ import { CustomerReview } from "@/types";
 
 interface CustomerReviewsProps {
   reviews: CustomerReview[];
+  title?: string;
 }
 
-export function CustomerReviews({ reviews }: CustomerReviewsProps) {
+export function CustomerReviews({ reviews, title = "CUSTOMER REVIEWS" }: CustomerReviewsProps) {
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
   const handleScroll = (direction: "left" | "right") => {
@@ -29,7 +30,7 @@ export function CustomerReviews({ reviews }: CustomerReviewsProps) {
         {/* Centered Section Heading */}
         <div className="text-center max-w-xl mx-auto mb-6 sm:mb-8">
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-heading font-extrabold text-[#0E0E0E] tracking-tight uppercase">
-            CUSTOMER REVIEWS
+            {title}
           </h2>
         </div>
 

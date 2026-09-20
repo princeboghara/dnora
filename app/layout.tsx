@@ -93,8 +93,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${plusJakarta.variable} ${inter.variable} h-full`}>
-      <body className="min-h-full flex flex-col font-sans bg-white text-[#0E0E0E] antialiased selection:bg-[#0E0E0E] selection:text-white">
+    <html lang="en" suppressHydrationWarning className={`${plusJakarta.variable} ${inter.variable} h-full`}>
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=Cinzel:wght@400..900&family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:ital,wght@0,400..900;1,400..900&family=Italiana&family=Lora:ital,wght@0,400..700;1,400..700&family=Marcellus&family=Montserrat:wght@400;600;700;800&family=Oswald:wght@500;600;700&family=Outfit:wght@400;600;700;800&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Prata&family=Space+Grotesk:wght@400..700&family=Syne:wght@500;700;800&family=Tenor+Sans&family=Urbanist:ital,wght@0,400..900;1,400..900&display=swap"
+          rel="stylesheet"
+        />
+      </head>
+      <body suppressHydrationWarning className="min-h-full flex flex-col font-sans bg-white text-[#0E0E0E] antialiased selection:bg-[#0E0E0E] selection:text-white">
         {children}
       </body>
     </html>

@@ -6,7 +6,15 @@ import Link from "next/link";
 import { AnnouncementConfig, AnnouncementItem } from "@/types";
 import { DEFAULT_ANNOUNCEMENT_CONFIG } from "@/lib/data/default-announcements";
 
-export function TopBar() {
+interface TopBarProps {
+  topbarConfig?: {
+    enabled: boolean;
+    text?: string;
+    link?: string;
+  };
+}
+
+export function TopBar({ topbarConfig }: TopBarProps) {
   const [config, setConfig] = useState<AnnouncementConfig>(DEFAULT_ANNOUNCEMENT_CONFIG);
   const [index, setIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
@@ -36,7 +44,21 @@ export function TopBar() {
     };
   }, []);
 
-  const activeItems: AnnouncementItem[] = config.items.filter((i) => i.is_active);
+  // If topbarConfig provides custom text, prepend/use it
+  const baseItems: AnnouncementItem[] = config.items.filter((i) => i.is_active);
+  const activeItems: AnnouncementItem[] = topbarConfig?.text
+    ? [
+        {
+          id: "custom-topbar",
+          text: topbarConfig.text,
+          link: topbarConfig.link || "",
+          badge: "Featured",
+          is_active: true,
+          sort_order: 0,
+        },
+        ...baseItems.filter((it) => it.text !== topbarConfig.text),
+      ]
+    : baseItems;
 
   const goToNext = useCallback(() => {
     if (activeItems.length <= 1) return;
@@ -71,7 +93,7 @@ export function TopBar() {
     };
   }, [config.interval_seconds, config.is_active, activeItems.length, isHovered, goToNext]);
 
-  if (!config.is_active || activeItems.length === 0) {
+  if ((topbarConfig && topbarConfig.enabled === false) || !config.is_active || activeItems.length === 0) {
     return null;
   }
 

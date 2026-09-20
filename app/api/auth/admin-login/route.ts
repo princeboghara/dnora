@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
       await Promise.all([
         createAdminSession(adminEmail),
         createUserSession({
-          id: "admin-master",
+          id: "a0000000-0000-0000-0000-000000000001",
           email: adminEmail,
           full_name: "Administrator",
           role: "admin",

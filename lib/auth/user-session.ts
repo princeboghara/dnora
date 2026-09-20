@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { createClient } from "../supabase/server";
-import { signSessionToken, verifySessionToken, ADMIN_COOKIE_NAME } from "./session";
+import { signSessionToken, verifySessionToken } from "./session";
 
 const USER_COOKIE_NAME = "dnora_user_session";
 
@@ -21,12 +21,6 @@ interface UserCookiePayload {
   phone?: string;
   avatar_url?: string;
   role?: "customer" | "admin";
-  expiresAt: number;
-}
-
-interface AdminCookiePayload {
-  email: string;
-  role: "admin";
   expiresAt: number;
 }
 

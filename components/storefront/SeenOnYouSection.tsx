@@ -4,18 +4,34 @@ import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowUpRight, Volume2, VolumeX, ChevronLeft, ChevronRight } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { SeenOnYouVideo } from "@/types";
+import { getResolvedFontFamily } from "@/lib/font-constants";
 
 interface SeenOnYouSectionProps {
   videos: SeenOnYouVideo[];
+  title?: string;
+  headingColor?: string;
+  headingFontSize?: string;
+  headingFontFamily?: string;
+  headingFontWeight?: string;
+  cardGap?: number;
 }
 
-export function SeenOnYouSection({ videos }: SeenOnYouSectionProps) {
+export function SeenOnYouSection({
+  videos,
+  title = "SEEN ON YOU",
+  headingColor,
+  headingFontSize,
+  headingFontFamily,
+  headingFontWeight,
+  cardGap,
+}: SeenOnYouSectionProps) {
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
   const handleScroll = (direction: "left" | "right") => {
     if (!scrollRef.current) return;
-    const scrollAmount = 320;
+    const scrollAmount = 300;
     scrollRef.current.scrollBy({
       left: direction === "right" ? scrollAmount : -scrollAmount,
       behavior: "smooth",
@@ -24,13 +40,27 @@ export function SeenOnYouSection({ videos }: SeenOnYouSectionProps) {
 
   if (!videos || videos.length === 0) return null;
 
+  const resolvedFont = getResolvedFontFamily(headingFontFamily);
+
   return (
     <section id="seen-on-you" className="py-10 sm:py-14 bg-[#FAF9F6] border-t border-[#E8E5DE]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Centered Section Heading */}
         <div className="text-center max-w-xl mx-auto mb-6 sm:mb-8">
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-heading font-extrabold text-[#0E0E0E] tracking-tight uppercase">
-            SEEN ON YOU
+          <h2
+            className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#0E0E0E] tracking-tight uppercase font-arial-rounded"
+            style={{
+              fontFamily: resolvedFont,
+              color: headingColor || undefined,
+              fontSize: headingFontSize
+                ? headingFontSize.includes("px")
+                  ? headingFontSize
+                  : `${headingFontSize}px`
+                : undefined,
+              fontWeight: headingFontWeight || undefined,
+            }}
+          >
+            {title}
           </h2>
         </div>
 
@@ -57,8 +87,14 @@ export function SeenOnYouSection({ videos }: SeenOnYouSectionProps) {
           {/* Horizontal Scrolling Video & Editorial Card Carousel */}
           <div
             ref={scrollRef}
-            className="flex items-center overflow-x-auto snap-x snap-mandatory scrollbar-none gap-4 sm:gap-6 pb-4 pt-1 px-2"
-            style={{ scrollBehavior: "smooth" }}
+            className={cn(
+              "flex items-center overflow-x-auto snap-x snap-mandatory scrollbar-none pb-4 pt-1 px-2",
+              cardGap === undefined && "gap-2 sm:gap-3"
+            )}
+            style={{
+              scrollBehavior: "smooth",
+              gap: cardGap !== undefined ? `${cardGap}px` : undefined,
+            }}
           >
             {videos.map((item, idx) => (
               <AutoplayVideoCard key={item.id} item={item} index={idx + 1} />

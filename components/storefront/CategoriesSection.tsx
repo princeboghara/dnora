@@ -4,13 +4,29 @@ import React, { useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, ArrowRight } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { ProductCategory } from "@/types";
+import { getResolvedFontFamily } from "@/lib/font-constants";
 
 interface CategoriesSectionProps {
   categories: ProductCategory[];
+  title?: string;
+  headingColor?: string;
+  headingFontSize?: string;
+  headingFontFamily?: string;
+  headingFontWeight?: string;
+  cardGap?: number;
 }
 
-export function CategoriesSection({ categories }: CategoriesSectionProps) {
+export function CategoriesSection({
+  categories,
+  title = "CATEGORIES",
+  headingColor,
+  headingFontSize,
+  headingFontFamily,
+  headingFontWeight,
+  cardGap,
+}: CategoriesSectionProps) {
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
   const handleScroll = (direction: "left" | "right") => {
@@ -24,13 +40,27 @@ export function CategoriesSection({ categories }: CategoriesSectionProps) {
 
   if (!categories || categories.length === 0) return null;
 
+  const resolvedFont = getResolvedFontFamily(headingFontFamily);
+
   return (
     <section id="categories" className="py-10 sm:py-14 bg-white border-t border-[#E8E5DE]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Centered Section Header */}
         <div className="text-center max-w-xl mx-auto mb-6 sm:mb-8">
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-heading font-extrabold text-[#0E0E0E] tracking-tight uppercase">
-            CATEGORIES
+          <h2
+            className="tracking-tight uppercase font-arial-rounded text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#0E0E0E]"
+            style={{
+              fontFamily: resolvedFont,
+              color: headingColor || undefined,
+              fontSize: headingFontSize
+                ? headingFontSize.includes("px")
+                  ? headingFontSize
+                  : `${headingFontSize}px`
+                : undefined,
+              fontWeight: headingFontWeight || undefined,
+            }}
+          >
+            {title}
           </h2>
         </div>
 
@@ -57,8 +87,14 @@ export function CategoriesSection({ categories }: CategoriesSectionProps) {
           {/* Horizontal Scrolling Medium Circular Cards Carousel */}
           <div
             ref={scrollRef}
-            className="flex items-start justify-start sm:justify-center overflow-x-auto snap-x snap-mandatory scrollbar-none gap-5 sm:gap-7 md:gap-8 pb-3 pt-1 px-2"
-            style={{ scrollBehavior: "smooth" }}
+            className={cn(
+              "flex items-start justify-start sm:justify-center overflow-x-auto snap-x snap-mandatory scrollbar-none pb-3 pt-1 px-2",
+              cardGap === undefined && "gap-5 sm:gap-7 md:gap-8"
+            )}
+            style={{
+              scrollBehavior: "smooth",
+              gap: cardGap !== undefined ? `${cardGap}px` : undefined,
+            }}
           >
             {categories.map((category) => (
               <Link

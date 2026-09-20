@@ -14,15 +14,13 @@ import {
   Sparkles,
   Flame,
   Palette,
-  Eye,
   RefreshCw,
   X,
-  Layers,
   Image as ImageIcon,
 } from "lucide-react";
-import { Product, ProductCategory, ProductImage, ProductColorVariant } from "@/types";
+import { Product, ProductCategory, ProductImage, ProductColorVariant, ProductStatus } from "@/types";
 import { useToast } from "@/components/ui/Toast";
-import { slugify, formatPrice } from "@/lib/utils";
+import { slugify } from "@/lib/utils";
 import { CircularProgress } from "@/components/ui/CircularProgress";
 import { uploadFileWithProgress } from "@/lib/upload-utils";
 
@@ -60,7 +58,13 @@ export function ProductEditor({ initialProduct = null, mode = "create" }: Produc
   const [description, setDescription] = useState(initialProduct?.description || "");
   const [price, setPrice] = useState<number | string>(initialProduct?.price || 490);
   const [comparePrice, setComparePrice] = useState<number | string>(initialProduct?.compare_at_price || "");
-  const [sku, setSku] = useState(initialProduct?.sku || "");
+  const [sku, setSku] = useState(() => {
+    if (initialProduct?.sku) return initialProduct.sku;
+    if (mode === "create") {
+      return `DNR-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+    }
+    return "";
+  });
   const [stock, setStock] = useState<number>(initialProduct?.stock ?? 15);
   const [categoryId, setCategoryId] = useState(initialProduct?.categories?.[0]?.id || "");
   const [isBestSeller, setIsBestSeller] = useState(initialProduct?.is_best_seller || false);
@@ -86,6 +90,11 @@ export function ProductEditor({ initialProduct = null, mode = "create" }: Produc
 
   const [submitting, setSubmitting] = useState(false);
 
+  const generateSku = () => {
+    const randomCode = Math.random().toString(36).substring(2, 6).toUpperCase();
+    setSku(`DNR-${randomCode}`);
+  };
+
   // Fetch Categories
   useEffect(() => {
     fetch("/api/categories?t=" + Date.now())
@@ -101,18 +110,6 @@ export function ProductEditor({ initialProduct = null, mode = "create" }: Produc
       .catch((err) => console.error("Error fetching categories:", err))
       .finally(() => setLoadingCategories(false));
   }, [categoryId]);
-
-  // Generate SKU if empty
-  useEffect(() => {
-    if (!sku && mode === "create") {
-      generateSku();
-    }
-  }, [sku, mode]);
-
-  const generateSku = () => {
-    const randomCode = Math.random().toString(36).substring(2, 6).toUpperCase();
-    setSku(`DNR-${randomCode}`);
-  };
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
@@ -1012,7 +1009,7 @@ export function ProductEditor({ initialProduct = null, mode = "create" }: Produc
                     name="product_status"
                     value={opt.val}
                     checked={status === opt.val}
-                    onChange={() => setStatus(opt.val as any)}
+                    onChange={() => setStatus(opt.val as ProductStatus)}
                     className="accent-[#0E0E0E]"
                   />
                   <span>{opt.label}</span>

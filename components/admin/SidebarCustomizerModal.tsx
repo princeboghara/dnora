@@ -32,10 +32,12 @@ import {
   Package,
   MapPin,
   Megaphone,
+  ExternalLink,
 } from "lucide-react";
 import { SidebarMenuItem, SidebarSubmenuItem } from "@/types";
 import { Modal } from "@/components/ui/Modal";
 import { useToast } from "@/components/ui/Toast";
+import { PageLinkSelect } from "@/components/admin/PageLinkSelect";
 
 export const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   Globe,
@@ -60,6 +62,7 @@ export const ICON_MAP: Record<string, React.ComponentType<{ className?: string }
   Settings,
   Shield,
   Sliders,
+  ExternalLink,
 };
 
 export type NavigationTarget = "storefront" | "account" | "admin";
@@ -75,7 +78,6 @@ interface SidebarCustomizerModalProps {
 export function SidebarCustomizerModal({
   isOpen,
   onClose,
-  items: initialAdminItems,
   initialTarget = "storefront",
   onSaveSuccess,
 }: SidebarCustomizerModalProps) {
@@ -364,19 +366,6 @@ export function SidebarCustomizerModal({
             >
               <User className="w-3.5 h-3.5 text-[#8F7449]" />
               <span>Member Account Portal</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTarget("admin")}
-              className={`flex items-center gap-2 px-4 py-2.5 text-xs font-semibold uppercase tracking-wider border-b-2 transition-all shrink-0 ${
-                activeTarget === "admin"
-                  ? "border-[#0E0E0E] text-[#0E0E0E] bg-[#FAF9F6]"
-                  : "border-transparent text-[#73706A] hover:text-[#0E0E0E]"
-              }`}
-            >
-              <Shield className="w-3.5 h-3.5 text-[#8F7449]" />
-              <span>Admin Sidebar</span>
             </button>
           </div>
 
@@ -683,23 +672,16 @@ export function SidebarCustomizerModal({
               />
             </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-[#0E0E0E] mb-1.5">
-                Route Link (URL)
-              </label>
-              <input
-                type="text"
-                placeholder="e.g. /shop or /#categories or /account?tab=orders"
-                value={editingItem.data.href || ""}
-                onChange={(e) =>
-                  setEditingItem({
-                    ...editingItem,
-                    data: { ...editingItem.data, href: e.target.value },
-                  })
-                }
-                className="w-full px-3 py-2 text-xs bg-[#FAF9F6] border border-[#E8E5DE] rounded-sm focus:outline-none focus:border-[#0E0E0E]"
-              />
-            </div>
+            <PageLinkSelect
+              label="Route Link (URL)"
+              value={editingItem.data.href || ""}
+              onChange={(val) =>
+                setEditingItem({
+                  ...editingItem,
+                  data: { ...editingItem.data, href: val },
+                })
+              }
+            />
 
             <div className="grid grid-cols-2 gap-3">
               <div>
@@ -790,24 +772,16 @@ export function SidebarCustomizerModal({
               />
             </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-[#0E0E0E] mb-1.5">
-                Route Link (URL) *
-              </label>
-              <input
-                type="text"
-                required
-                placeholder="e.g. /shop?category=Tote"
-                value={editingSubmenu.data.href}
-                onChange={(e) =>
-                  setEditingSubmenu({
-                    ...editingSubmenu,
-                    data: { ...editingSubmenu.data, href: e.target.value },
-                  })
-                }
-                className="w-full px-3 py-2 text-xs bg-[#FAF9F6] border border-[#E8E5DE] rounded-sm focus:outline-none focus:border-[#0E0E0E]"
-              />
-            </div>
+            <PageLinkSelect
+              label="Route Link (URL) *"
+              value={editingSubmenu.data.href}
+              onChange={(val) =>
+                setEditingSubmenu({
+                  ...editingSubmenu,
+                  data: { ...editingSubmenu.data, href: val },
+                })
+              }
+            />
 
             <div>
               <label className="block text-xs font-semibold text-[#0E0E0E] mb-1.5">

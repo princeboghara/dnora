@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
       if (password === adminPassword) {
         await createAdminSession(normalizedEmail);
         await createUserSession({
-          id: "admin-master",
+          id: "a0000000-0000-0000-0000-000000000001",
           email: normalizedEmail,
           full_name: "Administrator",
           role: "admin",

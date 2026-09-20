@@ -42,9 +42,10 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json({ success: true, data: category });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error creating category:", error);
-    const message = error.message?.includes("unique")
+    const errMessage = error instanceof Error ? error.message : "";
+    const message = errMessage.includes("unique")
       ? "Category name or slug already exists"
       : "Failed to create category";
     return NextResponse.json({ success: false, error: message }, { status: 400 });

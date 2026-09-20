@@ -10,9 +10,6 @@ import {
   Trash2,
   Package,
   Truck,
-  CheckCircle2,
-  Clock,
-  XCircle,
   MapPin,
   Mail,
   Phone,
@@ -23,7 +20,6 @@ import {
   Loader2,
   ExternalLink,
   AlertCircle,
-  ShieldCheck,
 } from "lucide-react";
 import { Order, OrderStatus, PaymentStatus } from "@/types";
 import { formatPrice, cn } from "@/lib/utils";
@@ -52,37 +48,41 @@ export default function OrderDetailPage({ params }: PageProps) {
   const [estimatedDelivery, setEstimatedDelivery] = useState("");
   const [notes, setNotes] = useState("");
 
-  const fetchOrder = React.useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await fetch(`/api/admin/orders/${resolvedParams.id}`);
-      const data = await res.json();
-      if (res.ok && data.success && data.order) {
-        setOrder(data.order);
-        setStatus(data.order.status || "processing");
-        setPaymentStatus(data.order.payment_status || "paid");
-        setCarrier(data.order.carrier || "");
-        setTrackingNumber(data.order.tracking_number || "");
-        setEstimatedDelivery(
-          data.order.estimated_delivery
-            ? new Date(data.order.estimated_delivery).toISOString().split("T")[0]
-            : ""
-        );
-        setNotes(data.order.notes || "");
-      } else {
-        showToast(data.error || "Order not found", "error");
-      }
-    } catch (err) {
-      console.error("Error loading order:", err);
-      showToast("Network error while loading order", "error");
-    } finally {
-      setLoading(false);
-    }
-  }, [resolvedParams.id, showToast]);
-
   useEffect(() => {
-    fetchOrder();
-  }, [fetchOrder]);
+    let ignore = false;
+    async function loadData() {
+      try {
+        const res = await fetch(`/api/admin/orders/${resolvedParams.id}`);
+        const data = await res.json();
+        if (!ignore) {
+          if (res.ok && data.success && data.order) {
+            setOrder(data.order);
+            setStatus(data.order.status || "processing");
+            setPaymentStatus(data.order.payment_status || "paid");
+            setCarrier(data.order.carrier || "");
+            setTrackingNumber(data.order.tracking_number || "");
+            setEstimatedDelivery(
+              data.order.estimated_delivery
+                ? new Date(data.order.estimated_delivery).toISOString().split("T")[0]
+                : ""
+            );
+            setNotes(data.order.notes || "");
+          } else {
+            showToast(data.error || "Order not found", "error");
+          }
+        }
+      } catch (err) {
+        console.error("Error loading order:", err);
+        if (!ignore) showToast("Network error while loading order", "error");
+      } finally {
+        if (!ignore) setLoading(false);
+      }
+    }
+    loadData();
+    return () => {
+      ignore = true;
+    };
+  }, [resolvedParams.id, showToast]);
 
   const handleSaveFulfillment = async (e: React.FormEvent) => {
     e.preventDefault();

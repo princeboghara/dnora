@@ -40,7 +40,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
     : product.images;
 
   const currentGalleryImages: ProductImage[] = (rawVariantImages || [])
-    .map((img: any, idx: number): ProductImage => ({
+    .map((img: string | Partial<ProductImage>, idx: number): ProductImage => ({
       id: typeof img === "object" && img?.id ? img.id : `img-${idx}`,
       cloudinary_public_id:
         typeof img === "object" && img?.cloudinary_public_id ? img.cloudinary_public_id : `var-img-${idx}`,

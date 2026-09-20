@@ -3,14 +3,15 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ChevronLeft, ChevronRight, ArrowRight, Volume2, VolumeX } from "lucide-react";
+import { ArrowRight, Volume2, VolumeX } from "lucide-react";
 import { HeroBanner } from "@/types";
 
 interface HeroSliderProps {
   banners: HeroBanner[];
+  height?: string;
 }
 
-export function HeroSlider({ banners }: HeroSliderProps) {
+export function HeroSlider({ banners, height }: HeroSliderProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isMuted, setIsMuted] = useState(true);
   const [isPaused, setIsPaused] = useState(false);
@@ -114,7 +115,8 @@ export function HeroSlider({ banners }: HeroSliderProps) {
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
-      className="relative w-full h-[82vh] min-h-[580px] max-h-[920px] bg-[#0E0E0E] overflow-hidden select-none"
+      style={height ? { height } : undefined}
+      className={`relative w-full ${!height ? "h-[82vh]" : ""} min-h-[480px] max-h-[960px] bg-[#0E0E0E] overflow-hidden select-none`}
       aria-label="Hero Showcase Carousel"
     >
       {/* Background Media Layer */}

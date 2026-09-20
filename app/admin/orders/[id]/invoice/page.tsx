@@ -5,10 +5,7 @@ import Link from "next/link";
 import {
   ArrowLeft,
   Printer,
-  Download,
   ShieldCheck,
-  CheckCircle2,
-  Package,
   AlertCircle,
   Loader2,
 } from "lucide-react";

@@ -1,4 +1,4 @@
-export function uploadFileWithProgress<T = any>(
+export function uploadFileWithProgress<T = unknown>(
   url: string,
   formData: FormData,
   onProgress: (percent: number) => void

@@ -20,7 +20,13 @@ import {
   RefreshCw,
   XCircle,
   TrendingUp,
+  Phone,
+  MapPin,
+  Mail,
+  X,
+  User,
 } from "lucide-react";
+import Image from "next/image";
 import { Order, OrderStatus } from "@/types";
 import { formatPrice, cn } from "@/lib/utils";
 import { useToast } from "@/components/ui/Toast";
@@ -54,9 +60,12 @@ function AdminOrdersContent() {
   const [deleteModalOrder, setDeleteModalOrder] = useState<Order | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // Quick Details Preview modal state
+  const [previewOrder, setPreviewOrder] = useState<Order | null>(null);
+
   const fetchOrders = useCallback(async () => {
-    setLoading(true);
     try {
+      setLoading(true);
       const params = new URLSearchParams();
       if (activeTab !== "all") params.set("status", activeTab);
       if (appliedSearch.trim()) params.set("search", appliedSearch.trim());
@@ -79,8 +88,36 @@ function AdminOrdersContent() {
   }, [activeTab, appliedSearch, showToast]);
 
   useEffect(() => {
-    fetchOrders();
-  }, [fetchOrders]);
+    let ignore = false;
+    async function loadData() {
+      try {
+        const params = new URLSearchParams();
+        if (activeTab !== "all") params.set("status", activeTab);
+        if (appliedSearch.trim()) params.set("search", appliedSearch.trim());
+        params.set("limit", "50");
+
+        const res = await fetch(`/api/admin/orders?${params.toString()}`);
+        const data = await res.json();
+        if (!ignore) {
+          if (res.ok && data.success) {
+            setOrders(data.orders || []);
+            setTotal(data.total || 0);
+          } else {
+            showToast(data.error || "Failed to load orders", "error");
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching orders:", err);
+        if (!ignore) showToast("Network error while fetching orders", "error");
+      } finally {
+        if (!ignore) setLoading(false);
+      }
+    }
+    loadData();
+    return () => {
+      ignore = true;
+    };
+  }, [activeTab, appliedSearch, showToast]);
 
   const handleTabChange = (val: string) => {
     setActiveTab(val);
@@ -391,18 +428,33 @@ function AdminOrdersContent() {
                     <tr key={order.id} className="hover:bg-[#FCFBF9] transition-colors">
                       {/* Order Number */}
                       <td className="py-3.5 px-4 whitespace-nowrap">
-                        <Link
-                          href={`/admin/orders/${order.id}`}
-                          className="font-mono font-bold text-[#0E0E0E] hover:text-[#73706A] transition-colors"
+                        <button
+                          type="button"
+                          onClick={() => setPreviewOrder(order)}
+                          className="font-mono font-bold text-[#0E0E0E] hover:text-[#73706A] hover:underline transition-colors text-left"
                         >
                           {order.order_number}
-                        </Link>
+                        </button>
                       </td>
 
-                      {/* Customer */}
-                      <td className="py-3.5 px-4">
+                      {/* Customer Details */}
+                      <td className="py-3.5 px-4 min-w-[200px]">
                         <div className="font-semibold text-[#0E0E0E]">{order.customer_name}</div>
                         <div className="text-[11px] text-[#73706A]">{order.customer_email}</div>
+                        {(order.customer_phone || order.shipping_address?.phone) && (
+                          <div className="text-[11px] text-[#4A4742] font-mono mt-0.5 flex items-center gap-1">
+                            <Phone className="w-2.5 h-2.5 text-[#73706A]" />
+                            <span>{order.customer_phone || order.shipping_address?.phone}</span>
+                          </div>
+                        )}
+                        {order.shipping_address?.city && (
+                          <div className="text-[10px] text-[#73706A] mt-0.5 flex items-center gap-1">
+                            <MapPin className="w-2.5 h-2.5 text-[#73706A] shrink-0" />
+                            <span className="truncate max-w-[220px]">
+                              {order.shipping_address.city}, {order.shipping_address.state || "India"}
+                            </span>
+                          </div>
+                        )}
                       </td>
 
                       {/* Date */}
@@ -410,11 +462,22 @@ function AdminOrdersContent() {
                         {orderDate}
                       </td>
 
-                      {/* Items */}
-                      <td className="py-3.5 px-4 whitespace-nowrap">
-                        <span className="font-medium text-[#0E0E0E]">
+                      {/* Items & Products */}
+                      <td className="py-3.5 px-4 min-w-[170px]">
+                        <span className="font-semibold text-[#0E0E0E]">
                           {itemsCount} {itemsCount === 1 ? "item" : "items"}
                         </span>
+                        {order.items && order.items.length > 0 && (
+                          <div
+                            className="text-[11px] text-[#73706A] truncate max-w-[190px] mt-0.5"
+                            title={order.items.map((it) => it.product_name).join(", ")}
+                          >
+                            {order.items[0]?.product_name}
+                            {order.items.length > 1 && (
+                              <span className="font-medium text-[#0E0E0E]"> +{order.items.length - 1} more</span>
+                            )}
+                          </div>
+                        )}
                       </td>
 
                       {/* Amount */}
@@ -432,6 +495,11 @@ function AdminOrdersContent() {
                         >
                           {order.payment_status}
                         </span>
+                        {order.payment_method && (
+                          <div className="text-[10px] text-[#73706A] mt-0.5">
+                            {order.payment_method}
+                          </div>
+                        )}
                       </td>
 
                       {/* Fulfillment Status */}
@@ -449,6 +517,16 @@ function AdminOrdersContent() {
                       {/* Actions */}
                       <td className="py-3.5 px-4 whitespace-nowrap text-right">
                         <div className="flex items-center justify-end gap-1.5">
+                          {/* Quick View Details Button */}
+                          <button
+                            type="button"
+                            onClick={() => setPreviewOrder(order)}
+                            className="p-1.5 text-[#0E0E0E] hover:bg-[#FAF9F6] border border-[#E8E5DE] rounded-sm transition-colors"
+                            title="Quick Order & Customer Details"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                          </button>
+
                           {/* Invoice Button */}
                           <Link
                             href={`/admin/orders/${order.id}/invoice`}
@@ -458,13 +536,13 @@ function AdminOrdersContent() {
                             <Printer className="w-3.5 h-3.5" />
                           </Link>
 
-                          {/* View Button */}
+                          {/* Full Manage Button */}
                           <Link
                             href={`/admin/orders/${order.id}`}
                             className="p-1.5 text-[#73706A] hover:text-[#0E0E0E] hover:bg-[#FAF9F6] border border-transparent hover:border-[#E8E5DE] rounded-sm transition-colors"
-                            title="View Order Details"
+                            title="Full Management Page"
                           >
-                            <Eye className="w-3.5 h-3.5" />
+                            <ExternalLink className="w-3.5 h-3.5" />
                           </Link>
 
                           {/* Delete Button */}
@@ -524,6 +602,237 @@ function AdminOrdersContent() {
                 {isDeleting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                 <span>Delete Order</span>
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Quick Order & Customer Details Modal */}
+      {previewOrder && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs overflow-y-auto">
+          <div className="bg-white rounded-sm border border-[#E8E5DE] max-w-3xl w-full shadow-2xl overflow-hidden my-8 animate-in fade-in zoom-in-95 duration-200">
+            {/* Modal Header */}
+            <div className="bg-[#FAF9F6] border-b border-[#E8E5DE] px-6 py-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-full bg-white border border-[#E8E5DE] flex items-center justify-center text-[#0E0E0E]">
+                  <Package className="w-4 h-4" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-mono font-bold text-base text-[#0E0E0E]">
+                      {previewOrder.order_number}
+                    </h3>
+                    <span
+                      className={cn(
+                        "px-2 py-0.5 border rounded-full text-[10px] font-semibold uppercase tracking-wider",
+                        getPaymentBadge(previewOrder.payment_status)
+                      )}
+                    >
+                      {previewOrder.payment_status}
+                    </span>
+                    <span
+                      className={cn(
+                        "px-2.5 py-0.5 border rounded-full text-[10px] font-semibold uppercase tracking-wider",
+                        getStatusBadge(previewOrder.status)
+                      )}
+                    >
+                      {previewOrder.status}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-[#73706A]">
+                    Placed on {new Date(previewOrder.created_at).toLocaleString("en-IN", {
+                      dateStyle: "medium",
+                      timeStyle: "short",
+                    })}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setPreviewOrder(null)}
+                className="w-8 h-8 rounded-full hover:bg-[#E8E5DE]/60 flex items-center justify-center text-[#73706A] hover:text-[#0E0E0E] transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6 space-y-6 max-h-[75vh] overflow-y-auto">
+              {/* Customer & Payment Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Customer Details */}
+                <div className="bg-[#FAF9F6] border border-[#E8E5DE] rounded-sm p-4 space-y-3">
+                  <div className="flex items-center gap-2 text-xs font-heading font-bold text-[#0E0E0E] uppercase tracking-wider border-b border-[#E8E5DE] pb-2">
+                    <User className="w-3.5 h-3.5" />
+                    <span>Customer Details</span>
+                  </div>
+                  <div className="space-y-2 text-xs">
+                    <div>
+                      <span className="text-[#73706A] block text-[10px] uppercase font-semibold">Full Name</span>
+                      <span className="font-semibold text-[#0E0E0E]">{previewOrder.customer_name}</span>
+                    </div>
+                    <div>
+                      <span className="text-[#73706A] block text-[10px] uppercase font-semibold">Email</span>
+                      <a
+                        href={`mailto:${previewOrder.customer_email}`}
+                        className="text-[#0E0E0E] hover:underline flex items-center gap-1"
+                      >
+                        <Mail className="w-3 h-3 text-[#73706A]" />
+                        <span>{previewOrder.customer_email}</span>
+                      </a>
+                    </div>
+                    <div>
+                      <span className="text-[#73706A] block text-[10px] uppercase font-semibold">Phone</span>
+                      {previewOrder.customer_phone || previewOrder.shipping_address?.phone ? (
+                        <a
+                          href={`tel:${previewOrder.customer_phone || previewOrder.shipping_address?.phone}`}
+                          className="font-mono text-[#0E0E0E] hover:underline flex items-center gap-1"
+                        >
+                          <Phone className="w-3 h-3 text-[#73706A]" />
+                          <span>{previewOrder.customer_phone || previewOrder.shipping_address?.phone}</span>
+                        </a>
+                      ) : (
+                        <span className="text-[#73706A]">Not provided</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Shipping Destination */}
+                <div className="bg-[#FAF9F6] border border-[#E8E5DE] rounded-sm p-4 space-y-3">
+                  <div className="flex items-center gap-2 text-xs font-heading font-bold text-[#0E0E0E] uppercase tracking-wider border-b border-[#E8E5DE] pb-2">
+                    <MapPin className="w-3.5 h-3.5" />
+                    <span>Shipping Destination</span>
+                  </div>
+                  <div className="space-y-1 text-xs text-[#0E0E0E]">
+                    <div className="font-semibold">
+                      {previewOrder.shipping_address?.full_name || previewOrder.customer_name}
+                    </div>
+                    {previewOrder.shipping_address?.address_line1 && (
+                      <p className="text-[#4A4742] leading-relaxed">
+                        {previewOrder.shipping_address.address_line1}
+                        {previewOrder.shipping_address.address_line2 && `, ${previewOrder.shipping_address.address_line2}`}
+                      </p>
+                    )}
+                    {(previewOrder.shipping_address?.city || previewOrder.shipping_address?.state) && (
+                      <p className="text-[#4A4742]">
+                        {previewOrder.shipping_address.city}, {previewOrder.shipping_address.state}{" "}
+                        {previewOrder.shipping_address.postal_code && `- ${previewOrder.shipping_address.postal_code}`}
+                      </p>
+                    )}
+                    <p className="text-[11px] text-[#73706A]">
+                      Country: {previewOrder.shipping_address?.country || "India"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Order Items List */}
+              <div className="border border-[#E8E5DE] rounded-sm overflow-hidden">
+                <div className="bg-[#FAF9F6] border-b border-[#E8E5DE] px-4 py-2.5 flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-xs font-heading font-bold text-[#0E0E0E] uppercase tracking-wider">
+                    <ShoppingBag className="w-3.5 h-3.5" />
+                    <span>Acquired Items ({(previewOrder.items || []).length})</span>
+                  </div>
+                  <span className="text-[11px] text-[#73706A] font-medium">
+                    Total Qty: {(previewOrder.items || []).reduce((acc, it) => acc + (it.quantity || 1), 0)}
+                  </span>
+                </div>
+
+                <div className="divide-y divide-[#E8E5DE]">
+                  {(previewOrder.items || []).map((item, idx) => (
+                    <div key={item.id || idx} className="p-4 flex items-center justify-between gap-4">
+                      <div className="flex items-center gap-3">
+                        <div className="relative w-12 h-12 rounded-sm overflow-hidden bg-[#FAF9F6] border border-[#E8E5DE] shrink-0">
+                          {item.image_url ? (
+                            <Image
+                              src={item.image_url}
+                              alt={item.product_name}
+                              fill
+                              className="object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-[#73706A] text-xs font-bold">
+                              DN
+                            </div>
+                          )}
+                        </div>
+                        <div>
+                          <h4 className="text-xs font-bold text-[#0E0E0E]">{item.product_name}</h4>
+                          {Boolean(item.attributes?.variant) && (
+                            <div className="text-[10px] text-[#73706A]">
+                              Variant: <span className="text-[#0E0E0E] font-medium">{String(item.attributes?.variant)}</span>
+                            </div>
+                          )}
+                          <div className="text-[11px] text-[#73706A] mt-0.5">
+                            {formatPrice(item.price)} &times; {item.quantity || 1}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="text-right">
+                        <span className="text-xs font-bold text-[#0E0E0E]">
+                          {formatPrice((item.price || 0) * (item.quantity || 1))}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Subtotal & Total Footer */}
+                <div className="bg-[#FAF9F6] border-t border-[#E8E5DE] p-4 space-y-1.5 text-xs">
+                  <div className="flex justify-between text-[#73706A]">
+                    <span>Payment Method:</span>
+                    <span className="font-medium text-[#0E0E0E]">{previewOrder.payment_method || "Online"}</span>
+                  </div>
+                  <div className="flex justify-between text-[#73706A]">
+                    <span>Delivery Courier:</span>
+                    <span className="font-medium text-[#2F855A]">Complimentary (Free)</span>
+                  </div>
+                  {previewOrder.notes && (
+                    <div className="flex justify-between text-[#73706A] pt-1">
+                      <span>Order Notes:</span>
+                      <span className="font-medium text-[#0E0E0E] italic max-w-xs text-right">
+                        {previewOrder.notes}
+                      </span>
+                    </div>
+                  )}
+                  <div className="flex justify-between text-sm font-heading font-extrabold text-[#0E0E0E] pt-2 border-t border-[#E8E5DE]">
+                    <span>Grand Total:</span>
+                    <span>{formatPrice(previewOrder.total_amount)}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer Actions */}
+            <div className="bg-[#FAF9F6] border-t border-[#E8E5DE] px-6 py-3.5 flex items-center justify-between">
+              <button
+                type="button"
+                onClick={() => setPreviewOrder(null)}
+                className="px-4 py-2 border border-[#E8E5DE] text-xs font-semibold text-[#73706A] hover:bg-white rounded-sm transition-colors cursor-pointer"
+              >
+                Close
+              </button>
+
+              <div className="flex items-center gap-2">
+                <Link
+                  href={`/admin/orders/${previewOrder.id}/invoice`}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-white border border-[#0E0E0E] text-[#0E0E0E] hover:bg-[#FAF9F6] text-xs font-semibold uppercase tracking-wider rounded-sm transition-colors"
+                >
+                  <Printer className="w-3.5 h-3.5" />
+                  <span>Print Invoice (PDF)</span>
+                </Link>
+
+                <Link
+                  href={`/admin/orders/${previewOrder.id}`}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#0E0E0E] text-[#FAF9F6] hover:bg-[#262626] text-xs font-semibold uppercase tracking-wider rounded-sm transition-colors"
+                >
+                  <span>Full Order Page</span>
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </Link>
+              </div>
             </div>
           </div>
         </div>

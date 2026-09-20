@@ -6,6 +6,7 @@ import { HeroBanner } from "@/types";
 import { useToast } from "@/components/ui/Toast";
 import { CircularProgress } from "@/components/ui/CircularProgress";
 import { uploadFileWithProgress } from "@/lib/upload-utils";
+import { PageLinkSelect } from "@/components/admin/PageLinkSelect";
 
 interface HeroBannerFormProps {
   initialData?: HeroBanner | null;
@@ -29,7 +30,6 @@ export function HeroBannerForm({ initialData, onSuccess, onCancel }: HeroBannerF
   const [textAlignment, setTextAlignment] = useState<"left" | "center" | "right">(
     initialData?.text_alignment || "left"
   );
-  const [isActive, setIsActive] = useState(initialData ? initialData.is_active : true);
   const [status, setStatus] = useState<"draft" | "published" | "archived">(
     initialData?.status || "published"
   );
@@ -264,16 +264,10 @@ export function HeroBannerForm({ initialData, onSuccess, onCancel }: HeroBannerF
           />
         </div>
         <div>
-          <label className="block text-xs uppercase tracking-wider font-semibold text-[#0E0E0E] mb-1">
-            Button Destination Link
-          </label>
-          <input
-            type="text"
-            required
+          <PageLinkSelect
+            label="Button Destination Link"
             value={buttonLink}
-            onChange={(e) => setButtonLink(e.target.value)}
-            placeholder="/shop"
-            className="w-full bg-white border border-[#E8E5DE] px-4 py-2 text-xs text-[#0E0E0E] rounded focus:outline-none focus:border-[#0E0E0E]"
+            onChange={(val) => setButtonLink(val)}
           />
         </div>
       </div>

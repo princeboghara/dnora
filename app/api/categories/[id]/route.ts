@@ -42,9 +42,10 @@ export async function PUT(
     revalidatePath("/admin/categories");
 
     return NextResponse.json({ success: true, data: updated });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error updating category:", error);
-    const message = error.message?.includes("unique")
+    const errMessage = error instanceof Error ? error.message : "";
+    const message = errMessage.includes("unique")
       ? "Category name or slug already exists"
       : "Failed to update category";
     return NextResponse.json({ success: false, error: message }, { status: 400 });
@@ -80,7 +81,7 @@ export async function DELETE(
     revalidatePath("/admin/categories");
 
     return NextResponse.json({ success: true, message: "Category deleted successfully" });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error deleting category:", error);
     return NextResponse.json({ success: false, error: "Failed to delete category" }, { status: 500 });
   }

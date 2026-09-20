@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -19,7 +19,6 @@ import {
   RotateCcw,
   Crop,
   Check,
-  X,
 } from "lucide-react";
 import { ProductCategory } from "@/types";
 import { useToast } from "@/components/ui/Toast";
@@ -63,7 +62,6 @@ export default function AdminCategoriesPage() {
 
   const fetchCategories = async () => {
     try {
-      setLoading(true);
       const res = await fetch(`/api/categories?t=${Date.now()}`, {
         cache: "no-store",
         headers: { "Cache-Control": "no-cache" },
@@ -77,14 +75,37 @@ export default function AdminCategoriesPage() {
     } catch (err) {
       console.error("Failed to load categories:", err);
       showToast("Network error while loading categories", "error");
-    } finally {
-      setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchCategories();
-  }, []);
+    let ignore = false;
+    async function loadData() {
+      try {
+        const res = await fetch(`/api/categories?t=${Date.now()}`, {
+          cache: "no-store",
+          headers: { "Cache-Control": "no-cache" },
+        });
+        const json = await res.json();
+        if (!ignore) {
+          if (json.success) {
+            setCategories(json.data || []);
+          } else {
+            showToast(json.error || "Failed to load categories", "error");
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load categories:", err);
+        if (!ignore) showToast("Network error while loading categories", "error");
+      } finally {
+        if (!ignore) setLoading(false);
+      }
+    }
+    loadData();
+    return () => {
+      ignore = true;
+    };
+  }, [showToast]);
 
   const handleOpenAddModal = () => {
     setEditingCategory(null);
@@ -262,9 +283,10 @@ export default function AdminCategoriesPage() {
       } else {
         throw new Error(res.error || "Upload failed");
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Upload error:", err);
-      showToast(err.message || "Failed to upload image. Please try again.", "error");
+      const errMsg = err instanceof Error ? err.message : "Failed to upload image. Please try again.";
+      showToast(errMsg, "error");
     } finally {
       setUploadingImage(false);
       setUploadProgress(0);

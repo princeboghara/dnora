@@ -3,7 +3,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ShieldCheck, Truck, RotateCcw, ArrowLeft } from "lucide-react";
 import { store } from "@/lib/data/store";
-import { ProductCard } from "@/components/storefront/ProductCard";
 import { YouMayAlsoLikeCarousel } from "@/components/storefront/YouMayAlsoLikeCarousel";
 // Client-side interactive handbag detail component (gallery, quantity, wishlist, bag)
 import { ProductDetailClient } from "@/components/storefront/ProductDetailClient";

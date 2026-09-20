@@ -243,24 +243,24 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
           </div>
         )}
 
-        {/* 5. MOBILE ACTIONS */}
-        <div className="mt-2.5 sm:hidden flex items-center gap-2 pt-0.5">
+        {/* 5. PRODUCT ACTIONS (Visible on mobile, tablet, and laptop/desktop) */}
+        <div className="mt-3 flex items-center gap-2 pt-1">
           <button
             type="button"
             onClick={handleQuickAdd}
-            className="flex-1 flex items-center justify-center gap-1 py-2 px-2 bg-white hover:bg-[#F5F3EF] text-[#0E0E0E] text-[10px] font-medium uppercase tracking-[0.14em] rounded-xs border border-[#0E0E0E] transition-colors active:scale-[0.98]"
+            className="flex-1 flex items-center justify-center gap-1.5 py-2 sm:py-2.5 px-2 sm:px-3 bg-white hover:bg-[#F5F3EF] text-[#0E0E0E] text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.14em] rounded-sm border border-[#0E0E0E] transition-all duration-200 active:scale-[0.98] hover:shadow-xs cursor-pointer"
           >
-            <ShoppingBag className="w-3 h-3 text-[#0E0E0E]" />
-            <span>Add</span>
+            <ShoppingBag className="w-3.5 h-3.5 text-[#0E0E0E]" />
+            <span>Add to Cart</span>
           </button>
           <button
             type="button"
             onClick={handleBuyNow}
             disabled={isBuying}
-            className="flex-1 flex items-center justify-center gap-1 py-2 px-2 bg-[#0E0E0E] text-[#FAF9F6] border border-[#0E0E0E] text-[10px] font-semibold uppercase tracking-[0.14em] rounded-xs transition-colors active:scale-[0.98] disabled:opacity-60"
+            className="flex-1 flex items-center justify-center gap-1.5 py-2 sm:py-2.5 px-2 sm:px-3 bg-[#0E0E0E] hover:bg-[#2A2A2A] text-[#FAF9F6] border border-[#0E0E0E] text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.14em] rounded-sm transition-all duration-200 active:scale-[0.98] hover:shadow-xs disabled:opacity-60 cursor-pointer"
           >
             {isBuying ? (
-              <Loader2 className="w-3 h-3 animate-spin text-[#FAF9F6]" />
+              <Loader2 className="w-3.5 h-3.5 animate-spin text-[#FAF9F6]" />
             ) : (
               <span>Buy Now</span>
             )}
