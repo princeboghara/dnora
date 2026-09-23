@@ -4,8 +4,27 @@ import { db } from "@/lib/db";
 import { createUserSession } from "@/lib/auth/user-session";
 import { sendWelcomeEmail } from "@/lib/email";
 
+async function ensureVerificationTable() {
+  try {
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS public.email_verifications (
+        email TEXT PRIMARY KEY,
+        otp_hash TEXT NOT NULL,
+        full_name TEXT,
+        phone TEXT,
+        password_hash TEXT,
+        expires_at TIMESTAMPTZ NOT NULL,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+      );
+    `);
+  } catch (err) {
+    // Non-blocking
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
+    await ensureVerificationTable();
     const { email, otp } = await req.json();
 
     if (!email || !otp) {

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { AdminCustomer, CustomerAddress } from "@/types";
 import { verifyAdminSession } from "@/lib/auth/session";
+import { ensureAccountTables } from "@/lib/data/account";
 
 export const dynamic = "force-dynamic";
 
@@ -27,6 +28,7 @@ export async function GET() {
   }
 
   try {
+    await ensureAccountTables();
     const query = `
       SELECT 
         u.id,

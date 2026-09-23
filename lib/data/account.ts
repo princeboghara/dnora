@@ -4,6 +4,79 @@ import { UserAddress, Order, OrderItem } from "@/types";
 const isValidUUID = (str?: string | null): boolean =>
   Boolean(str && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str));
 
+let accountTablesEnsured = false;
+export async function ensureAccountTables(): Promise<void> {
+  if (accountTablesEnsured) return;
+  try {
+    await db.query(`
+      CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+      CREATE TABLE IF NOT EXISTS public.users (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        email TEXT NOT NULL UNIQUE,
+        full_name TEXT,
+        phone TEXT,
+        avatar_url TEXT,
+        role TEXT NOT NULL DEFAULT 'customer',
+        password_hash TEXT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+      );
+
+      CREATE TABLE IF NOT EXISTS public.user_addresses (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id UUID,
+        full_name TEXT NOT NULL,
+        phone TEXT NOT NULL,
+        address_line1 TEXT NOT NULL,
+        address_line2 TEXT,
+        city TEXT NOT NULL,
+        state TEXT NOT NULL,
+        postal_code TEXT NOT NULL,
+        country TEXT NOT NULL DEFAULT 'India',
+        is_default BOOLEAN NOT NULL DEFAULT false,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+      );
+
+      CREATE TABLE IF NOT EXISTS public.orders (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        order_number TEXT NOT NULL UNIQUE,
+        user_id UUID,
+        customer_email TEXT NOT NULL,
+        customer_name TEXT NOT NULL,
+        customer_phone TEXT,
+        total_amount DECIMAL(10, 2) NOT NULL DEFAULT 0,
+        status TEXT NOT NULL DEFAULT 'processing',
+        payment_status TEXT NOT NULL DEFAULT 'paid',
+        payment_method TEXT NOT NULL DEFAULT 'card',
+        shipping_address JSONB,
+        tracking_number TEXT,
+        carrier TEXT,
+        estimated_delivery TIMESTAMPTZ,
+        notes TEXT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+      );
+
+      CREATE TABLE IF NOT EXISTS public.order_items (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        order_id UUID,
+        product_id UUID,
+        product_name TEXT NOT NULL,
+        product_slug TEXT,
+        price DECIMAL(10, 2) NOT NULL DEFAULT 0,
+        quantity INTEGER NOT NULL DEFAULT 1,
+        image_url TEXT,
+        attributes JSONB,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+      );
+    `);
+    accountTablesEnsured = true;
+  } catch (err) {
+    // Non-blocking warning
+  }
+}
+
 interface DbOrderItemRow {
   id: string;
   order_id: string;
@@ -20,6 +93,7 @@ interface DbOrderItemRow {
 // USER ORDERS
 export async function getUserOrders(userId: string, email?: string): Promise<Order[]> {
   try {
+    await ensureAccountTables();
     const hasValidUuid = isValidUUID(userId);
     let query = "";
     let params: string[] = [];
@@ -102,6 +176,7 @@ export async function getOrderById(orderId: string): Promise<Order | null> {
 // USER ADDRESSES
 export async function getUserAddresses(userId: string): Promise<UserAddress[]> {
   try {
+    await ensureAccountTables();
     if (!isValidUUID(userId)) return [];
 
     const res = await db.query(
@@ -119,6 +194,7 @@ export async function createUserAddress(
   userId: string,
   data: Omit<UserAddress, "id" | "user_id" | "created_at">
 ): Promise<UserAddress> {
+  await ensureAccountTables();
   const validUserId = isValidUUID(userId) ? userId : null;
 
   if (validUserId && data.is_default) {

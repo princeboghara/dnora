@@ -17,6 +17,9 @@ import {
   Sparkles,
   Layers,
   Tag,
+  Video,
+  ShoppingBag,
+  Users,
 } from "lucide-react";
 
 interface AdminSidebarProps {
@@ -49,6 +52,24 @@ const NAV_ITEMS = [
     href: "/admin/categories",
     icon: Tag,
     badge: "Store",
+  },
+  {
+    label: "All Items",
+    href: "/admin/items",
+    icon: ShoppingBag,
+    badge: "Catalog",
+  },
+  {
+    label: "Customers",
+    href: "/admin/customers",
+    icon: Users,
+    badge: "CRM",
+  },
+  {
+    label: "Seen On You (Videos)",
+    href: "/admin/seen-on-you",
+    icon: Video,
+    badge: "Reels",
   },
   {
     label: "Navigation Bar",

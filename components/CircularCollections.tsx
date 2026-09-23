@@ -131,7 +131,7 @@ export function CircularCollections({
       aria-label="Our Collections" 
       className="w-full bg-white border-b border-neutral-100/90 pt-3 pb-4 sm:pt-4 sm:pb-5 md:pt-5 md:pb-6 relative group/section select-none transition-colors"
     >
-      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-[1820px] 2xl:max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12">
         
         {/* Aesthetic Stylish Heading with Montserrat Font */}
         <div className="text-center mb-4 sm:mb-5">
@@ -152,7 +152,7 @@ export function CircularCollections({
               type="button"
               onClick={() => handleScroll("left")}
               aria-label="Scroll collections left"
-              className="hidden md:flex absolute -left-3 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white/95 border border-neutral-200/90 shadow-md items-center justify-center text-neutral-700 hover:text-black hover:border-black hover:scale-105 active:scale-95 transition-all duration-200"
+              className="hidden md:flex absolute left-1 sm:left-2 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white/95 border border-neutral-200/90 shadow-md items-center justify-center text-neutral-700 hover:text-black hover:border-black hover:scale-105 active:scale-95 transition-all duration-200"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
@@ -164,7 +164,7 @@ export function CircularCollections({
               type="button"
               onClick={() => handleScroll("right")}
               aria-label="Scroll collections right"
-              className="hidden md:flex absolute -right-3 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white/95 border border-neutral-200/90 shadow-md items-center justify-center text-neutral-700 hover:text-black hover:border-black hover:scale-105 active:scale-95 transition-all duration-200"
+              className="hidden md:flex absolute right-1 sm:right-2 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white/95 border border-neutral-200/90 shadow-md items-center justify-center text-neutral-700 hover:text-black hover:border-black hover:scale-105 active:scale-95 transition-all duration-200"
             >
               <ChevronRight className="w-4 h-4" />
             </button>

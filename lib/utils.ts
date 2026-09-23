@@ -33,17 +33,20 @@ export function getRequestOrigin(req?: {
   headers?: { get: (name: string) => string | null };
   nextUrl?: { origin: string };
 }): string {
-  // 1. Explicit site URL from environment (e.g. https://dnora.onrender.com)
+  // 1. Explicit site URL from environment in production
   if (process.env.NEXT_PUBLIC_SITE_URL && !process.env.NEXT_PUBLIC_SITE_URL.includes("localhost")) {
     return process.env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, "");
   }
 
-  // 2. Reverse proxy headers (Render, Cloudflare, Vercel)
+  // 2. Request headers (Host / X-Forwarded-Host)
   if (req?.headers) {
-    const forwardedHost = req.headers.get("x-forwarded-host") || req.headers.get("host");
-    const forwardedProto = req.headers.get("x-forwarded-proto") || "https";
-    if (forwardedHost) {
-      return `${forwardedProto}://${forwardedHost}`;
+    const host = req.headers.get("x-forwarded-host") || req.headers.get("host");
+    if (host) {
+      const isLocal = host.includes("localhost") || host.includes("127.0.0.1");
+      const proto = isLocal
+        ? "http"
+        : (req.headers.get("x-forwarded-proto") || "https");
+      return `${proto}://${host}`;
     }
   }
 

@@ -4,6 +4,7 @@ import "./globals.css";
 import { AnnouncementBar } from "@/components/AnnouncementBar";
 import { TopBar, NavCategory } from "@/components/TopBar";
 import { CartDrawer } from "@/components/CartDrawer";
+import { Footer } from "@/components/Footer";
 import { CartProvider } from "@/lib/store/cart-store";
 import { WishlistProvider } from "@/lib/store/wishlist-store";
 import { store } from "@/lib/data/store";
@@ -158,6 +159,7 @@ export default async function RootLayout({
             <AnnouncementBar initialConfig={announcementConfig} />
             <TopBar initialNavCategories={initialNavCategories} />
             <div className="flex-1 flex flex-col">{children}</div>
+            <Footer />
             <CartDrawer />
           </CartProvider>
         </WishlistProvider>

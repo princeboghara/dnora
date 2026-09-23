@@ -178,8 +178,11 @@ const SEARCH_SUGGESTIONS = [
 
 export function TopBar({ initialNavCategories }: { initialNavCategories?: NavCategory[] } = {}) {
   const router = useRouter();
+  const pathname = usePathname();
   const { itemCount, openCart } = useCart();
   const { itemCount: wishlistCount } = useWishlist();
+
+  if (pathname?.startsWith("/admin")) return null;
 
   // Navigation states
   const [activeMegaMenu, setActiveMegaMenu] = useState<string | null>(null);
@@ -279,8 +282,6 @@ export function TopBar({ initialNavCategories }: { initialNavCategories?: NavCat
       setActiveMegaMenu(null);
     }, 180);
   };
-
-  const pathname = usePathname();
 
   // TopBar dynamic settings
   const [topbarConfig, setTopbarConfig] = useState({
@@ -382,16 +383,16 @@ export function TopBar({ initialNavCategories }: { initialNavCategories?: NavCat
             : "bg-white border-b border-neutral-200/60"
         }`}
       >
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-8">
+        <div className="max-w-[1820px] 2xl:max-w-[1920px] mx-auto px-4 sm:px-8 xl:px-12">
           {/* UPPER TIER: Menu / Search Trigger | Centered Brand Logo | Currency / Wishlist / Account / Bag */}
           <div className="relative flex items-center justify-between h-14 sm:h-16 md:h-[72px]">
             {/* LEFT: Menu Trigger & Search (Versace / Chanel Style) */}
             <div className="flex items-center gap-2 sm:gap-6">
-              {/* Menu Hamburger */}
+              {/* Menu Hamburger (Visible only on mobile where desktop category nav is hidden) */}
               <button
                 type="button"
                 onClick={() => setMobileDrawerOpen(true)}
-                className="group inline-flex items-center gap-2 py-2 text-neutral-900 hover:text-black transition-colors cursor-pointer"
+                className="group md:hidden inline-flex items-center gap-2 py-2 text-neutral-900 hover:text-black transition-colors cursor-pointer"
                 aria-label="Open Maison Navigation Menu"
               >
                 <div className="flex flex-col gap-1 w-5 sm:w-6 justify-center">
@@ -625,7 +626,7 @@ export function TopBar({ initialNavCategories }: { initialNavCategories?: NavCat
             onMouseLeave={handleMegaMenuLeave}
             className="hidden md:block absolute top-full left-0 w-full bg-white/98 backdrop-blur-xl border-b border-neutral-200 shadow-2xl transition-all duration-300 ease-out z-50 animate-in fade-in slide-in-from-top-1"
           >
-            <div className="max-w-[1536px] mx-auto px-8 py-10">
+            <div className="max-w-[1820px] 2xl:max-w-[1920px] mx-auto px-8 xl:px-12 py-10">
               <div className="grid grid-cols-12 gap-10">
                 {/* Columns for subcategories */}
                 <div className="col-span-8 grid grid-cols-2 lg:grid-cols-3 gap-8">

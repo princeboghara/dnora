@@ -14,6 +14,8 @@ import {
 } from "@/types";
 import { db } from "@/lib/db";
 import { slugify } from "../utils";
+import { SEED_PRODUCTS } from "./seed-data";
+
 
 class DataStore {
   // HERO BANNERS
@@ -346,15 +348,38 @@ class DataStore {
       `;
 
       const res = await db.query(sql, params);
-      return res.rows.map((row) => ({
+      const rows = res.rows.map((row) => ({
         ...row,
         price: Number(row.price),
         compare_at_price: row.compare_at_price ? Number(row.compare_at_price) : null,
         stock: Number(row.stock),
       }));
+
+      if (rows.length === 0) {
+        let seed = [...SEED_PRODUCTS];
+        if (filter?.is_best_seller !== undefined) {
+          seed = seed.filter((p) => !!p.is_best_seller === filter.is_best_seller);
+        }
+        if (filter?.is_new_arrival !== undefined) {
+          seed = seed.filter((p) => !!p.is_new_arrival === filter.is_new_arrival);
+        }
+        if (filter?.category_slug) {
+          seed = seed.filter((p) => p.categories?.some((c: { slug?: string }) => c.slug === filter.category_slug));
+        }
+        return seed;
+      }
+
+      return rows;
     } catch (err) {
       console.error("Error fetching products from database:", err);
-      return [];
+      let seed = [...SEED_PRODUCTS];
+      if (filter?.is_best_seller !== undefined) {
+        seed = seed.filter((p) => !!p.is_best_seller === filter.is_best_seller);
+      }
+      if (filter?.is_new_arrival !== undefined) {
+        seed = seed.filter((p) => !!p.is_new_arrival === filter.is_new_arrival);
+      }
+      return seed;
     }
   }
 
@@ -706,10 +731,29 @@ class DataStore {
   // REVIEWS
   async getReviews(activeOnly = true): Promise<CustomerReview[]> {
     try {
+      await db
+        .query(
+          `CREATE TABLE IF NOT EXISTS public.customer_reviews (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            customer_name TEXT NOT NULL,
+            rating INTEGER NOT NULL DEFAULT 5,
+            review TEXT NOT NULL,
+            image_url TEXT,
+            verified_purchase BOOLEAN DEFAULT true,
+            product_name TEXT,
+            status TEXT NOT NULL DEFAULT 'active',
+            created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+          );`
+        )
+        .catch(() => {});
+
       const where = activeOnly ? "WHERE status = 'active'" : "";
       const res = await db.query(
         `SELECT * FROM public.customer_reviews ${where} ORDER BY created_at DESC`
       );
+      if (res.rows.length === 0) {
+        return [];
+      }
       return res.rows;
     } catch (err) {
       console.error("Error fetching reviews from database:", err);
@@ -916,9 +960,32 @@ class DataStore {
   // SEEN ON YOU
   async getSeenOnYou(): Promise<SeenOnYouVideo[]> {
     try {
+      await db
+        .query(
+          `CREATE TABLE IF NOT EXISTS public.customer_videos (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            customer_name TEXT NOT NULL,
+            video_url TEXT NOT NULL,
+            thumbnail_url TEXT,
+            cloudinary_public_id TEXT,
+            caption TEXT,
+            product_name TEXT,
+            product_slug TEXT,
+            status TEXT NOT NULL DEFAULT 'active',
+            sort_order INTEGER NOT NULL DEFAULT 0,
+            created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+          );`
+        )
+        .catch(() => {});
+
+      await db.query(`ALTER TABLE public.customer_videos ALTER COLUMN caption DROP NOT NULL;`).catch(() => {});
+
       const res = await db.query(
         `SELECT * FROM public.customer_videos WHERE status = 'active' ORDER BY sort_order ASC, created_at DESC`
       );
+      if (res.rows.length === 0) {
+        return [];
+      }
       return res.rows;
     } catch (err) {
       console.error("Error fetching videos from database:", err);

@@ -114,7 +114,7 @@ export function AnnouncementBar({ initialConfig }: { initialConfig?: Announcemen
       className="bg-[#e5e5e8] text-neutral-950 border-b border-black/10 select-none relative z-50 transition-colors duration-200"
       aria-label="Store Announcements"
     >
-      <div className="max-w-[1536px] mx-auto px-3 sm:px-6 py-1 sm:py-1.5 flex items-center justify-between min-h-[30px] sm:min-h-[32px]">
+      <div className="max-w-[1820px] 2xl:max-w-[1920px] mx-auto px-4 sm:px-8 xl:px-12 py-1 sm:py-1.5 flex items-center justify-between min-h-[30px] sm:min-h-[32px]">
         {/* Left Arrow */}
         {items.length > 1 ? (
           <button

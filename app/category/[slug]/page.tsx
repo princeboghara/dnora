@@ -75,7 +75,7 @@ export default async function CategoryPage({
     <div className="min-h-screen bg-white text-neutral-900 pb-24">
       {/* Editorial Header Banner */}
       <section className="relative w-full bg-[#FAF8F5] border-b border-neutral-200/80 pt-10 pb-12 sm:pt-14 sm:pb-16 md:pt-18 md:pb-20">
-        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-[1820px] 2xl:max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12">
           
           {/* Breadcrumb Trail */}
           <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs text-neutral-500 mb-6">
@@ -136,7 +136,7 @@ export default async function CategoryPage({
       </section>
 
       {/* Main Grid & Content */}
-      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 mt-8 sm:mt-10">
+      <div className="max-w-[1820px] 2xl:max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 mt-8 sm:mt-10">
         
         {/* Results Bar & Sorting */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-neutral-200">

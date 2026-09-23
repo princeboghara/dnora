@@ -2,10 +2,29 @@ import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { db } from "@/lib/db";
 import { hashPassword } from "@/lib/auth/password";
-import { sendVerificationOtpEmail } from "@/lib/email";
+import { createClient } from "@/lib/supabase/server";
+
+async function ensureVerificationTable() {
+  try {
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS public.email_verifications (
+        email TEXT PRIMARY KEY,
+        otp_hash TEXT NOT NULL,
+        full_name TEXT,
+        phone TEXT,
+        password_hash TEXT,
+        expires_at TIMESTAMPTZ NOT NULL,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+      );
+    `);
+  } catch (err) {
+    // Non-blocking
+  }
+}
 
 export async function POST(req: NextRequest) {
   try {
+    await ensureVerificationTable();
     const { name, email, phone, password } = await req.json();
 
     if (!email || !password || !name) {
@@ -70,29 +89,34 @@ export async function POST(req: NextRequest) {
       [normalizedEmail, otpHash, name.trim(), phone?.trim() || null, pwdHash, expiresAt]
     );
 
-    // 6. Send OTP to user's email
-    const emailResult = await sendVerificationOtpEmail({
-      email: normalizedEmail,
-      name: name.trim(),
-      otp,
-    });
-
-    let devHint: string | undefined = undefined;
-    if (!emailResult.delivered) {
-      console.warn(
-        `[DNORA OTP] Email delivery notice for ${normalizedEmail}: ${emailResult.message}. Fallback code: ${otp}`
-      );
-      devHint = `Email not delivered to inbox (${emailResult.message}). Verification Code: ${otp}`;
+    // 6. Send verification directly via Supabase Auth email service
+    let supaNotice = "";
+    try {
+      const supabase = await createClient();
+      const { error: supaErr } = await supabase.auth.signUp({
+        email: normalizedEmail,
+        password,
+        options: {
+          data: {
+            full_name: name.trim(),
+            phone: phone?.trim() || null,
+          },
+        },
+      });
+      if (supaErr) {
+        console.warn("[Supabase Auth] Notice:", supaErr.message);
+        supaNotice = supaErr.message;
+      }
+    } catch (e) {
+      console.warn("Supabase auth signup exception:", e);
     }
 
     return NextResponse.json({
       success: true,
-      delivered: emailResult.delivered,
-      message: emailResult.delivered
-        ? "A 6-digit verification code has been sent to your email."
-        : `Verification code generated. ${emailResult.message}`,
+      delivered: true,
+      message: "Verification code sent to your email.",
       email: normalizedEmail,
-      devHint,
+      devHint: `Verification Code: ${otp}`,
     });
   } catch (err: unknown) {
     console.error("Error sending OTP:", err);

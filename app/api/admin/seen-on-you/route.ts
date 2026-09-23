@@ -7,6 +7,26 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
+    await db
+      .query(
+        `CREATE TABLE IF NOT EXISTS public.customer_videos (
+          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          customer_name TEXT NOT NULL,
+          video_url TEXT NOT NULL,
+          thumbnail_url TEXT,
+          cloudinary_public_id TEXT,
+          caption TEXT,
+          product_name TEXT,
+          product_slug TEXT,
+          status TEXT NOT NULL DEFAULT 'active',
+          sort_order INTEGER NOT NULL DEFAULT 0,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+        );`
+      )
+      .catch(() => {});
+
+    await db.query(`ALTER TABLE public.customer_videos ALTER COLUMN caption DROP NOT NULL;`).catch(() => {});
+
     const res = await db.query(
       `SELECT * FROM public.customer_videos ORDER BY sort_order ASC, created_at DESC`
     );
@@ -26,7 +46,7 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const {
-      customer_name = "Patron of Florence",
+      customer_name = "DNORA Patron",
       video_url,
       thumbnail_url,
       caption = "",

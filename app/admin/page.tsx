@@ -15,6 +15,8 @@ import {
   Eye,
   Layers,
   Tag,
+  ShoppingBag,
+  Users,
 } from "lucide-react";
 
 export default function AdminDashboardPage() {
@@ -23,16 +25,20 @@ export default function AdminDashboardPage() {
   const [collectionsCount, setCollectionsCount] = useState<number | null>(null);
   const [categoriesCount, setCategoriesCount] = useState<number | null>(null);
   const [navItemsCount, setNavItemsCount] = useState<number | null>(null);
+  const [itemsCount, setItemsCount] = useState<number | null>(null);
+  const [customersCount, setCustomersCount] = useState<number | null>(null);
 
   useEffect(() => {
     async function loadStats() {
       try {
-        const [annRes, heroRes, collRes, catRes, navRes] = await Promise.allSettled([
+        const [annRes, heroRes, collRes, catRes, navRes, prodRes, custRes] = await Promise.allSettled([
           fetch("/api/announcements").then((r) => r.json()),
           fetch("/api/heroes").then((r) => r.json()),
           fetch("/api/collections?all=true").then((r) => r.json()),
           fetch("/api/categories").then((r) => r.json()),
           fetch("/api/navigation?target=storefront").then((r) => r.json()),
+          fetch("/api/products").then((r) => r.json()),
+          fetch("/api/admin/customers").then((r) => r.json()),
         ]);
 
         if (annRes.status === "fulfilled" && annRes.value?.items) {
@@ -50,6 +56,12 @@ export default function AdminDashboardPage() {
         if (navRes.status === "fulfilled" && navRes.value?.items) {
           setNavItemsCount(navRes.value.items.length);
         }
+        if (prodRes.status === "fulfilled" && prodRes.value?.products) {
+          setItemsCount(prodRes.value.products.length);
+        }
+        if (custRes.status === "fulfilled" && custRes.value?.customers) {
+          setCustomersCount(custRes.value.customers.length);
+        }
       } catch {
         // ignore
       }
@@ -59,6 +71,26 @@ export default function AdminDashboardPage() {
   }, []);
 
   const SECTIONS = [
+    {
+      id: "items",
+      title: "All Items & Products",
+      subtitle: "Catalog & Merchandising",
+      description: "Add new products, delete items, toggle Best Sellers and New In statuses.",
+      icon: ShoppingBag,
+      href: "/admin/items",
+      stat: itemsCount !== null ? `${itemsCount} Products` : "Catalog Active",
+      color: "bg-amber-500/10 text-amber-700 border-amber-200",
+    },
+    {
+      id: "customers",
+      title: "Customers & CRM",
+      subtitle: "Client Directory & Accounts",
+      description: "View all authenticated customers, registered dates, total orders, and order histories.",
+      icon: Users,
+      href: "/admin/customers",
+      stat: customersCount !== null ? `${customersCount} Registered Clients` : "CRM Active",
+      color: "bg-purple-500/10 text-purple-700 border-purple-200",
+    },
     {
       id: "announcements",
       title: "Announcement Bar",
