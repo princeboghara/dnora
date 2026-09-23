@@ -13,19 +13,25 @@ import {
   CheckCircle2,
   Clock,
   Eye,
+  Layers,
+  Tag,
 } from "lucide-react";
 
 export default function AdminDashboardPage() {
   const [announcementsCount, setAnnouncementsCount] = useState<number | null>(null);
   const [heroesCount, setHeroesCount] = useState<number | null>(null);
+  const [collectionsCount, setCollectionsCount] = useState<number | null>(null);
+  const [categoriesCount, setCategoriesCount] = useState<number | null>(null);
   const [navItemsCount, setNavItemsCount] = useState<number | null>(null);
 
   useEffect(() => {
     async function loadStats() {
       try {
-        const [annRes, heroRes, navRes] = await Promise.allSettled([
+        const [annRes, heroRes, collRes, catRes, navRes] = await Promise.allSettled([
           fetch("/api/announcements").then((r) => r.json()),
           fetch("/api/heroes").then((r) => r.json()),
+          fetch("/api/collections?all=true").then((r) => r.json()),
+          fetch("/api/categories").then((r) => r.json()),
           fetch("/api/navigation?target=storefront").then((r) => r.json()),
         ]);
 
@@ -34,6 +40,12 @@ export default function AdminDashboardPage() {
         }
         if (heroRes.status === "fulfilled" && heroRes.value?.banners) {
           setHeroesCount(heroRes.value.banners.length);
+        }
+        if (collRes.status === "fulfilled" && collRes.value?.items) {
+          setCollectionsCount(collRes.value.items.length);
+        }
+        if (catRes.status === "fulfilled" && catRes.value?.data) {
+          setCategoriesCount(catRes.value.data.length);
         }
         if (navRes.status === "fulfilled" && navRes.value?.items) {
           setNavItemsCount(navRes.value.items.length);
@@ -66,6 +78,16 @@ export default function AdminDashboardPage() {
       href: "/admin/heroes",
       stat: heroesCount !== null ? `${heroesCount} Published Slides` : "3 Loaded Slides",
       color: "bg-emerald-500/10 text-emerald-600 border-emerald-200",
+    },
+    {
+      id: "categories",
+      title: "Categories & Our Collections",
+      subtitle: "Powers storefront round circles & pages",
+      description: "Manage categories displayed in Our Collections on storefront. Each category automatically has its own live page.",
+      icon: Tag,
+      href: "/admin/categories",
+      stat: categoriesCount !== null ? `${categoriesCount} Categories` : "Live Categories",
+      color: "bg-pink-500/10 text-pink-600 border-pink-200",
     },
     {
       id: "navigation",

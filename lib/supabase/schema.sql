@@ -319,4 +319,23 @@ CREATE TABLE IF NOT EXISTS public.site_navigation_config (
 CREATE POLICY "Public users can view site_navigation_config" ON public.site_navigation_config FOR SELECT USING (true);
 CREATE POLICY "Admin full access site_navigation_config" ON public.site_navigation_config FOR ALL USING (public.is_admin());
 
+-- 15. HOMEPAGE CIRCULAR COLLECTIONS ("Our Collections")
+CREATE TABLE IF NOT EXISTS public.circular_collections (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  label TEXT NOT NULL,
+  href TEXT NOT NULL DEFAULT '/shop',
+  image TEXT NOT NULL,
+  badge TEXT,
+  alt TEXT,
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  is_active BOOLEAN NOT NULL DEFAULT true,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+ALTER TABLE public.circular_collections ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Public users can view active circular collections" ON public.circular_collections FOR SELECT USING (is_active = true OR public.is_admin());
+CREATE POLICY "Admin full access circular_collections" ON public.circular_collections FOR ALL USING (public.is_admin());
+CREATE INDEX IF NOT EXISTS idx_circular_collections_sort ON public.circular_collections(sort_order ASC, created_at DESC);
+
 

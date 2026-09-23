@@ -125,6 +125,15 @@ export async function verifyAdminSession(): Promise<AdminSession | null> {
     }
   }
 
+  // In development, fallback to demo admin session for frictionless local testing
+  if (process.env.NODE_ENV !== "production") {
+    return {
+      email: DEMO_ADMIN_EMAIL,
+      role: "admin",
+      isAuthenticated: true,
+    };
+  }
+
   return null;
 }
 

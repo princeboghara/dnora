@@ -49,6 +49,10 @@ export async function GET(req: NextRequest) {
               item.label?.toLowerCase() === "categories"
             ) {
               found = true;
+              // If the user already saved submenus, preserve them!
+              if (item.submenus && item.submenus.length > 0) {
+                return item;
+              }
               return {
                 ...item,
                 submenus: categorySubmenus,
@@ -72,13 +76,16 @@ export async function GET(req: NextRequest) {
         console.error("Error populating dynamic categories for navigation:", catErr);
       }
 
-      // Synchronize Member Portal submenus
+      // Synchronize Member Portal submenus only if user hasn't configured custom submenus
       items = items.map((item) => {
         if (
           item.id === "sf-account" ||
           item.label?.toLowerCase().includes("member") ||
           item.label?.toLowerCase().includes("account")
         ) {
+          if (item.submenus && item.submenus.length > 0) {
+            return item;
+          }
           return {
             ...item,
             label: "Member Portal",

@@ -4,8 +4,6 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
-  ChevronLeft,
-  ChevronRight,
   Volume2,
   VolumeX,
 } from "lucide-react";
@@ -299,34 +297,7 @@ export function HeroBanner({
         </button>
       )}
 
-      {/* Floating Side Arrow Controls (< and >) */}
-      {liveSlides.length > 1 && (
-        <>
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              goToPrev();
-            }}
-            aria-label="Previous banner"
-            className="absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 z-20 p-2 sm:p-2.5 rounded-full bg-black/40 hover:bg-black/75 text-white backdrop-blur-xs transition-all border border-white/15 opacity-0 group-hover:opacity-100 cursor-pointer active:scale-95 shadow-md"
-          >
-            <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
-          </button>
 
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              goToNext();
-            }}
-            aria-label="Next banner"
-            className="absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 z-20 p-2 sm:p-2.5 rounded-full bg-black/40 hover:bg-black/75 text-white backdrop-blur-xs transition-all border border-white/15 opacity-0 group-hover:opacity-100 cursor-pointer active:scale-95 shadow-md"
-          >
-            <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
-          </button>
-        </>
-      )}
 
       {/* Minimalist Bottom Indicator Bars */}
       {liveSlides.length > 1 && (

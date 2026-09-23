@@ -362,3 +362,16 @@ export interface HomepageConfig {
     pinterest_url?: string;
   };
 }
+
+export interface CircularCollectionItem {
+  id: string;
+  label: string;
+  href: string;
+  image: string;
+  badge?: string;
+  alt?: string;
+  sort_order?: number;
+  is_active?: boolean;
+  created_at?: string;
+  updated_at?: string;
+}

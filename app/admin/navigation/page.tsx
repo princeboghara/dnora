@@ -49,6 +49,22 @@ export default function AdminNavigationPage() {
     setTimeout(() => setStatusMsg(null), 4000);
   };
 
+  const [categories, setCategories] = useState<{ id: string; name: string; slug: string }[]>([]);
+
+  const fetchCategories = async () => {
+    try {
+      const res = await fetch("/api/categories");
+      if (res.ok) {
+        const json = await res.json();
+        if (json.data && Array.isArray(json.data)) {
+          setCategories(json.data);
+        }
+      }
+    } catch {
+      // ignore
+    }
+  };
+
   const fetchNavigation = async () => {
     try {
       setLoading(true);
@@ -68,9 +84,10 @@ export default function AdminNavigationPage() {
 
   useEffect(() => {
     fetchNavigation();
+    fetchCategories();
   }, []);
 
-  // Dynamically compute all active system URLs from existing navigation items + standard luxury routes
+  // Dynamically compute all active system URLs from existing navigation items + standard luxury routes + live categories
   const activeUrlOptions = React.useMemo(() => {
     const defaultRoutes = [
       { label: "Home (Maison) — /", value: "/" },
@@ -92,6 +109,11 @@ export default function AdminNavigationPage() {
       { label: "Craftsmanship Editorial — /#editorial", value: "/#editorial" },
     ];
 
+    const dynamicFromCats: { label: string; value: string }[] = categories.map((cat) => ({
+      label: `${cat.name} — /category/${cat.slug}`,
+      value: `/category/${cat.slug}`,
+    }));
+
     const dynamicFromNav: { label: string; value: string }[] = [];
     items.forEach((item) => {
       if (item.href && !defaultRoutes.some((r) => r.value === item.href) && !dynamicFromNav.some((d) => d.value === item.href)) {
@@ -104,8 +126,16 @@ export default function AdminNavigationPage() {
       });
     });
 
-    return [...defaultRoutes, ...dynamicFromNav];
-  }, [items]);
+    // Merge uniquely by value
+    const all = [...defaultRoutes];
+    [...dynamicFromCats, ...dynamicFromNav].forEach((entry) => {
+      if (!all.some((existing) => existing.value === entry.value)) {
+        all.push(entry);
+      }
+    });
+
+    return all;
+  }, [items, categories]);
 
   const saveNavigationToServer = async (newItems: SidebarMenuItem[]) => {
     setSaving(true);
@@ -246,8 +276,21 @@ export default function AdminNavigationPage() {
 
   const handleSaveSubmenus = async () => {
     if (!selectedParentItem) return;
+    let finalSubmenus = [...submenus];
+    if (newSubLabel.trim() && newSubHref.trim()) {
+      finalSubmenus.push({
+        id: `sub-${Date.now()}`,
+        label: newSubLabel.trim(),
+        href: newSubHref.trim(),
+        badge: newSubBadge.trim() || undefined,
+        is_active: true,
+      });
+      setNewSubLabel("");
+      setNewSubHref("");
+      setNewSubBadge("");
+    }
     const updated = items.map((item) =>
-      item.id === selectedParentItem.id ? { ...item, submenus } : item
+      item.id === selectedParentItem.id ? { ...item, submenus: finalSubmenus } : item
     );
     await saveNavigationToServer(updated);
     setSubmenuModalOpen(false);
@@ -679,8 +722,16 @@ export default function AdminNavigationPage() {
                     <select
                       value={activeUrlOptions.some((opt) => opt.value === newSubHref) ? newSubHref : "__custom__"}
                       onChange={(e) => {
-                        if (e.target.value !== "__custom__") {
-                          setNewSubHref(e.target.value);
+                        const val = e.target.value;
+                        if (val !== "__custom__") {
+                          setNewSubHref(val);
+                          if (!newSubLabel.trim()) {
+                            const found = activeUrlOptions.find((o) => o.value === val);
+                            if (found) {
+                              const cleanName = found.label.split(" — ")[0].trim();
+                              setNewSubLabel(cleanName);
+                            }
+                          }
                         }
                       }}
                       className="w-full px-3 py-1.5 text-xs bg-white border border-neutral-300 rounded-md font-mono"

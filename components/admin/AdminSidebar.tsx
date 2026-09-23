@@ -15,6 +15,8 @@ import {
   ChevronRight,
   X,
   Sparkles,
+  Layers,
+  Tag,
 } from "lucide-react";
 
 interface AdminSidebarProps {
@@ -41,6 +43,12 @@ const NAV_ITEMS = [
     href: "/admin/heroes",
     icon: ImageIcon,
     badge: "Media",
+  },
+  {
+    label: "Categories (Our Collections)",
+    href: "/admin/categories",
+    icon: Tag,
+    badge: "Store",
   },
   {
     label: "Navigation Bar",

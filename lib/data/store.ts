@@ -10,6 +10,7 @@ import {
   HomepageConfig,
   AnnouncementConfig,
   AnnouncementItem,
+  CircularCollectionItem,
 } from "@/types";
 import { db } from "@/lib/db";
 import { slugify } from "../utils";
@@ -121,6 +122,153 @@ class DataStore {
       status,
       is_active: status === "published",
     });
+  }
+
+  // CIRCULAR COLLECTIONS ("Our Collections")
+  async getCircularCollections(includeInactive: boolean = false): Promise<CircularCollectionItem[]> {
+    try {
+      let query = `SELECT * FROM public.circular_collections`;
+      if (!includeInactive) {
+        query += ` WHERE is_active = true`;
+      }
+      query += ` ORDER BY sort_order ASC, created_at ASC`;
+      const res = await db.query(query);
+      return res.rows.map((row) => ({
+        id: row.id,
+        label: row.label,
+        href: row.href,
+        image: row.image,
+        badge: row.badge || undefined,
+        alt: row.alt || undefined,
+        sort_order: Number(row.sort_order || 0),
+        is_active: Boolean(row.is_active),
+        created_at: row.created_at,
+        updated_at: row.updated_at,
+      }));
+    } catch (err) {
+      console.error("Error fetching circular collections from database:", err);
+      return [];
+    }
+  }
+
+  async getCircularCollectionById(id: string): Promise<CircularCollectionItem | null> {
+    try {
+      const res = await db.query(`SELECT * FROM public.circular_collections WHERE id = $1 LIMIT 1`, [id]);
+      if (res.rows.length === 0) return null;
+      const row = res.rows[0];
+      return {
+        id: row.id,
+        label: row.label,
+        href: row.href,
+        image: row.image,
+        badge: row.badge || undefined,
+        alt: row.alt || undefined,
+        sort_order: Number(row.sort_order || 0),
+        is_active: Boolean(row.is_active),
+        created_at: row.created_at,
+        updated_at: row.updated_at,
+      };
+    } catch (err) {
+      console.error("Error fetching circular collection by id:", err);
+      return null;
+    }
+  }
+
+  async createCircularCollection(data: {
+    label: string;
+    href: string;
+    image: string;
+    badge?: string;
+    alt?: string;
+    sort_order?: number;
+    is_active?: boolean;
+  }): Promise<CircularCollectionItem> {
+    const res = await db.query(
+      `INSERT INTO public.circular_collections (label, href, image, badge, alt, sort_order, is_active)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       RETURNING *`,
+      [
+        data.label.trim(),
+        data.href.trim(),
+        data.image.trim(),
+        data.badge?.trim() || null,
+        data.alt?.trim() || null,
+        data.sort_order ?? 0,
+        data.is_active ?? true,
+      ]
+    );
+    const row = res.rows[0];
+    return {
+      id: row.id,
+      label: row.label,
+      href: row.href,
+      image: row.image,
+      badge: row.badge || undefined,
+      alt: row.alt || undefined,
+      sort_order: Number(row.sort_order || 0),
+      is_active: Boolean(row.is_active),
+      created_at: row.created_at,
+      updated_at: row.updated_at,
+    };
+  }
+
+  async updateCircularCollection(
+    id: string,
+    updates: Partial<{
+      label: string;
+      href: string;
+      image: string;
+      badge: string | null;
+      alt: string | null;
+      sort_order: number;
+      is_active: boolean;
+    }>
+  ): Promise<CircularCollectionItem | null> {
+    const fields: string[] = [];
+    const values: (string | number | boolean | null)[] = [];
+    let i = 1;
+
+    for (const [key, val] of Object.entries(updates)) {
+      if (val !== undefined) {
+        fields.push(`${key} = $${i}`);
+        values.push(val);
+        i++;
+      }
+    }
+
+    if (fields.length === 0) return this.getCircularCollectionById(id);
+
+    fields.push(`updated_at = now()`);
+    values.push(id);
+
+    const res = await db.query(
+      `UPDATE public.circular_collections SET ${fields.join(", ")} WHERE id = $${i} RETURNING *`,
+      values
+    );
+    if (res.rows.length === 0) return null;
+    const row = res.rows[0];
+    return {
+      id: row.id,
+      label: row.label,
+      href: row.href,
+      image: row.image,
+      badge: row.badge || undefined,
+      alt: row.alt || undefined,
+      sort_order: Number(row.sort_order || 0),
+      is_active: Boolean(row.is_active),
+      created_at: row.created_at,
+      updated_at: row.updated_at,
+    };
+  }
+
+  async deleteCircularCollection(id: string): Promise<boolean> {
+    try {
+      const res = await db.query(`DELETE FROM public.circular_collections WHERE id = $1`, [id]);
+      return (res.rowCount ?? 0) > 0;
+    } catch (err) {
+      console.error("Error deleting circular collection:", err);
+      return false;
+    }
   }
 
   // PRODUCTS

@@ -3,7 +3,7 @@
 import React, { useRef, useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, ArrowRight } from "lucide-react";
 
 export interface CircularCollectionItem {
   id: string;
@@ -12,6 +12,7 @@ export interface CircularCollectionItem {
   image: string;
   badge?: string;
   alt?: string;
+  isViewAll?: boolean;
 }
 
 const DEFAULT_COLLECTIONS: CircularCollectionItem[] = [
@@ -128,15 +129,19 @@ export function CircularCollections({
   return (
     <section 
       aria-label="Our Collections" 
-      className="w-full bg-white border-b border-neutral-100/90 pt-3 pb-5 sm:pt-4 sm:pb-6 relative group/section select-none transition-colors"
+      className="w-full bg-white border-b border-neutral-100/90 pt-3 pb-4 sm:pt-4 sm:pb-5 md:pt-5 md:pb-6 relative group/section select-none transition-colors"
     >
-      <div className="max-w-[1440px] mx-auto px-3 sm:px-6 lg:px-8">
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
         
-        {/* Aesthetic Stylish Heading */}
-        <div className="text-center mb-3 sm:mb-4">
-          <h2 className="font-heading text-base sm:text-lg md:text-xl font-medium tracking-[0.18em] uppercase text-neutral-900">
+        {/* Aesthetic Stylish Heading with Montserrat Font */}
+        <div className="text-center mb-4 sm:mb-5">
+          <h2
+            style={{ fontFamily: "var(--font-montserrat), 'Montserrat', sans-serif" }}
+            className="text-lg sm:text-xl md:text-2xl font-semibold tracking-[0.2em] uppercase text-neutral-900"
+          >
             {title}
           </h2>
+          <div className="w-8 h-[1.5px] bg-neutral-900 mx-auto mt-1.5" />
         </div>
 
         {/* Relative Slider Container */}
@@ -147,7 +152,7 @@ export function CircularCollections({
               type="button"
               onClick={() => handleScroll("left")}
               aria-label="Scroll collections left"
-              className="hidden md:flex absolute -left-2 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-white/95 border border-neutral-200/90 shadow-md items-center justify-center text-neutral-700 hover:text-black hover:border-black hover:scale-105 active:scale-95 transition-all duration-200"
+              className="hidden md:flex absolute -left-3 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white/95 border border-neutral-200/90 shadow-md items-center justify-center text-neutral-700 hover:text-black hover:border-black hover:scale-105 active:scale-95 transition-all duration-200"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
@@ -159,7 +164,7 @@ export function CircularCollections({
               type="button"
               onClick={() => handleScroll("right")}
               aria-label="Scroll collections right"
-              className="hidden md:flex absolute -right-2 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-white/95 border border-neutral-200/90 shadow-md items-center justify-center text-neutral-700 hover:text-black hover:border-black hover:scale-105 active:scale-95 transition-all duration-200"
+              className="hidden md:flex absolute -right-3 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white/95 border border-neutral-200/90 shadow-md items-center justify-center text-neutral-700 hover:text-black hover:border-black hover:scale-105 active:scale-95 transition-all duration-200"
             >
               <ChevronRight className="w-4 h-4" />
             </button>
@@ -169,44 +174,76 @@ export function CircularCollections({
           <div
             ref={scrollerRef}
             onScroll={checkScroll}
-            className="flex items-start md:justify-center gap-4 sm:gap-6 lg:gap-8 overflow-x-auto scrollbar-none scroll-smooth snap-x snap-proximity py-2 px-2 -mx-2"
+            className="flex items-start md:justify-center gap-4 sm:gap-6 lg:gap-8 overflow-x-auto scrollbar-none scroll-smooth snap-x snap-proximity py-1 px-2 -mx-2"
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
           >
-            {items.map((item) => (
-              <Link
-                key={item.id}
-                href={item.href}
-                className="group flex flex-col items-center flex-shrink-0 snap-start text-center focus:outline-none"
-              >
-                {/* Circular Media Shell with Aesthetic Grey Ring */}
-                <div className="relative w-[82px] h-[82px] sm:w-[92px] sm:h-[92px] md:w-[104px] md:h-[104px] rounded-full p-[3px] sm:p-1 bg-white ring-2 ring-neutral-300/85 group-hover:ring-neutral-900 group-hover:shadow-[0_6px_20px_rgba(0,0,0,0.08)] transition-all duration-300">
-                  
-                  {/* Optional Badge */}
-                  {item.badge && (
-                    <span className="absolute -top-1 -right-1 z-10 px-1.5 py-0.5 text-[9px] font-bold tracking-wider uppercase bg-black text-white rounded-full shadow-xs leading-none ring-2 ring-white">
-                      {item.badge}
-                    </span>
-                  )}
+            {items.map((item) => {
+              const isViewAll = item.isViewAll || item.id === "col-view-all" || item.label?.toLowerCase() === "view all";
 
-                  {/* Inner Image Frame */}
-                  <div className="w-full h-full rounded-full overflow-hidden bg-[#FAF8F5] border border-neutral-200/60 flex items-center justify-center relative">
-                    <Image
-                      src={item.image}
-                      alt={item.alt || item.label}
-                      width={200}
-                      height={200}
-                      loading="lazy"
-                      className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-110"
-                    />
+              return (
+                <Link
+                  key={item.id}
+                  href={item.href}
+                  className="group flex flex-col items-center flex-shrink-0 snap-start text-center focus:outline-none"
+                >
+                  {/* Circular Media Shell */}
+                  <div
+                    className={`relative w-[86px] h-[86px] sm:w-[98px] sm:h-[98px] md:w-[110px] md:h-[110px] rounded-full p-[3px] sm:p-1 bg-white ring-2 transition-all duration-300 ${
+                      isViewAll
+                        ? "ring-neutral-900 group-hover:ring-black group-hover:shadow-[0_6px_22px_rgba(0,0,0,0.14)]"
+                        : "ring-neutral-300/85 group-hover:ring-neutral-900 group-hover:shadow-[0_6px_20px_rgba(0,0,0,0.08)]"
+                    }`}
+                  >
+                    {/* Optional Badge */}
+                    {item.badge && (
+                      <span className="absolute -top-1 -right-1 z-10 px-1.5 py-0.5 text-[9px] font-bold tracking-wider uppercase bg-black text-white rounded-full shadow-xs leading-none ring-2 ring-white">
+                        {item.badge}
+                      </span>
+                    )}
+
+                    {/* Inner Image Frame */}
+                    <div className="w-full h-full rounded-full overflow-hidden bg-[#FAF8F5] border border-neutral-200/60 flex items-center justify-center relative">
+                      {item.image ? (
+                        <Image
+                          src={item.image}
+                          alt={item.alt || item.label}
+                          width={220}
+                          height={220}
+                          loading="lazy"
+                          className={`w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-110 ${
+                            isViewAll ? "brightness-90 group-hover:brightness-75" : ""
+                          }`}
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-neutral-900 text-white flex items-center justify-center font-bold text-xs uppercase tracking-widest">
+                          DNORA
+                        </div>
+                      )}
+
+                      {/* View All Overlay Indicator */}
+                      {isViewAll && (
+                        <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center text-white transition-opacity duration-300 group-hover:bg-black/55">
+                          <ArrowRight className="w-5 h-5 text-white transition-transform duration-300 group-hover:translate-x-1" />
+                          <span className="text-[9px] font-bold tracking-widest uppercase mt-0.5">ALL</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
 
-                {/* Label */}
-                <span className="mt-2.5 text-[11px] sm:text-xs md:text-[13px] font-medium tracking-wide text-neutral-800 group-hover:text-black group-hover:font-semibold transition-colors duration-200 whitespace-nowrap">
-                  {item.label}
-                </span>
-              </Link>
-            ))}
+                  {/* Label */}
+                  <span
+                    style={isViewAll ? { fontFamily: "var(--font-montserrat), 'Montserrat', sans-serif" } : undefined}
+                    className={`mt-2.5 text-xs sm:text-sm md:text-[15px] font-medium tracking-wide transition-colors duration-200 whitespace-nowrap ${
+                      isViewAll
+                        ? "text-black font-semibold group-hover:underline"
+                        : "text-neutral-800 group-hover:text-black group-hover:font-semibold"
+                    }`}
+                  >
+                    {item.label}
+                  </span>
+                </Link>
+              );
+            })}
           </div>
         </div>
 

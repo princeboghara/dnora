@@ -31,15 +31,17 @@ export async function PUT(
       image_url: image_url !== undefined ? (image_url ? String(image_url).trim() : "") : undefined,
     });
 
-    // Invalidate caches across storefront and admin
-    revalidatePath("/");
-    revalidatePath("/shop");
-    revalidatePath("/#categories");
-    revalidatePath(`/category/${existing.slug}`);
-    if (updated?.slug && updated.slug !== existing.slug) {
-      revalidatePath(`/category/${updated.slug}`);
+    try {
+      revalidatePath("/");
+      revalidatePath("/shop");
+      revalidatePath(`/category/${existing.slug}`);
+      if (updated?.slug && updated.slug !== existing.slug) {
+        revalidatePath(`/category/${updated.slug}`);
+      }
+      revalidatePath("/admin/categories");
+    } catch (revalErr) {
+      console.warn("Path revalidation warning:", revalErr);
     }
-    revalidatePath("/admin/categories");
 
     return NextResponse.json({ success: true, data: updated });
   } catch (error: unknown) {
@@ -73,12 +75,14 @@ export async function DELETE(
       return NextResponse.json({ success: false, error: "Failed to delete category" }, { status: 500 });
     }
 
-    // Invalidate caches across storefront and admin
-    revalidatePath("/");
-    revalidatePath("/shop");
-    revalidatePath("/#categories");
-    revalidatePath(`/category/${existing.slug}`);
-    revalidatePath("/admin/categories");
+    // Invalidate storefront and admin paths safely
+    try {
+      revalidatePath("/");
+      revalidatePath("/shop");
+      revalidatePath("/admin/categories");
+    } catch (revalErr) {
+      console.warn("Path revalidation warning:", revalErr);
+    }
 
     return NextResponse.json({ success: true, message: "Category deleted successfully" });
   } catch (error: unknown) {

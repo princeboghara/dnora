@@ -74,6 +74,8 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
+      secure_url: result.secure_url,
+      url: result.secure_url,
       media: result,
     });
   } catch (error) {

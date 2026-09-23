@@ -27,6 +27,10 @@ const TITLES: Record<string, { title: string; subtitle: string }> = {
     title: "Hero Banner & Media Studio",
     subtitle: "Configure video and image showcase slides with mobile-specific crops",
   },
+  "/admin/categories": {
+    title: "Categories & Our Collections",
+    subtitle: "Manage categories displayed in storefront Our Collections circles and their dynamic live pages",
+  },
   "/admin/navigation": {
     title: "Storefront Navigation Manager",
     subtitle: "Customize categories, mega-menu subcategories, badges, and links",
