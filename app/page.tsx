@@ -1,5 +1,6 @@
 import { store } from "@/lib/data/store";
 import { HeroBanner, HeroSlide } from "@/components/HeroBanner";
+import { CircularCollections } from "@/components/CircularCollections";
 
 export const dynamic = "force-dynamic";
 
@@ -21,6 +22,7 @@ export default async function HomePage() {
   return (
     <main className="w-full min-h-screen bg-white text-neutral-900">
       <HeroBanner initialSlides={slides} />
+      <CircularCollections />
     </main>
   );
 }
