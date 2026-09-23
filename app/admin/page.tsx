@@ -1,338 +1,174 @@
-import React from "react";
+"use client";
+
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import {
-  ShoppingBag,
-  Sparkles,
-  Flame,
-  Image as ImageIcon,
-  FileEdit,
-  ArrowUpRight,
-  Plus,
-  AlertTriangle,
-  Users,
-  Package,
   Megaphone,
-  Layers,
-  Video,
+  ImageIcon,
+  Compass,
   Sliders,
-  Star,
-  Info,
+  ArrowRight,
+  ExternalLink,
+  Sparkles,
+  CheckCircle2,
+  Clock,
+  Eye,
 } from "lucide-react";
-import { redirect } from "next/navigation";
-import { store } from "@/lib/data/store";
-import { formatPrice } from "@/lib/utils";
-import { verifyAdminSession } from "@/lib/auth/session";
 
-export const dynamic = "force-dynamic";
+export default function AdminDashboardPage() {
+  const [announcementsCount, setAnnouncementsCount] = useState<number | null>(null);
+  const [heroesCount, setHeroesCount] = useState<number | null>(null);
+  const [navItemsCount, setNavItemsCount] = useState<number | null>(null);
 
-export default async function AdminDashboardPage() {
-  const session = await verifyAdminSession();
-  if (!session) {
-    redirect("/admin/login");
-  }
+  useEffect(() => {
+    async function loadStats() {
+      try {
+        const [annRes, heroRes, navRes] = await Promise.allSettled([
+          fetch("/api/announcements").then((r) => r.json()),
+          fetch("/api/heroes").then((r) => r.json()),
+          fetch("/api/navigation?target=storefront").then((r) => r.json()),
+        ]);
 
-  const stats = await store.getDashboardStats();
+        if (annRes.status === "fulfilled" && annRes.value?.items) {
+          setAnnouncementsCount(annRes.value.items.length);
+        }
+        if (heroRes.status === "fulfilled" && heroRes.value?.banners) {
+          setHeroesCount(heroRes.value.banners.length);
+        }
+        if (navRes.status === "fulfilled" && navRes.value?.items) {
+          setNavItemsCount(navRes.value.items.length);
+        }
+      } catch {
+        // ignore
+      }
+    }
 
-  const statCards = [
+    loadStats();
+  }, []);
+
+  const SECTIONS = [
     {
-      label: "Total Orders",
-      value: stats.totalOrders ?? 0,
-      icon: Package,
-      href: "/admin/orders",
-      badge: "Acquisitions",
+      id: "announcements",
+      title: "Announcement Bar",
+      subtitle: "Top-level storewide ticker banner",
+      description: "Manage ticker notifications, interval speed, links, and active toggle.",
+      icon: Megaphone,
+      href: "/admin/announcements",
+      stat: announcementsCount !== null ? `${announcementsCount} Active Messages` : "Live Connected",
+      color: "bg-blue-500/10 text-blue-600 border-blue-200",
     },
     {
-      label: "Action Needed",
-      value: stats.pendingOrders ?? 0,
-      icon: Package,
-      href: "/admin/orders?status=processing",
-      badge: "Processing",
-    },
-    {
-      label: "Total Revenue",
-      value: formatPrice(stats.totalRevenue ?? 0),
-      icon: Sparkles,
-      href: "/admin/orders",
-      badge: "Active Volume",
-    },
-    {
-      label: "Total Customers",
-      value: stats.totalCustomers ?? 0,
-      icon: Users,
-      href: "/admin/customers",
-      badge: "CRM Directory",
-    },
-    {
-      label: "Total Products",
-      value: stats.totalProducts,
-      icon: ShoppingBag,
-      href: "/admin/products",
-      badge: "In Catalog",
-    },
-    {
-      label: "Best Sellers",
-      value: stats.bestSellersCount,
-      icon: Flame,
-      href: "/admin/products?filter=best_seller",
-      badge: "Flagged",
-    },
-    {
-      label: "New Arrivals",
-      value: stats.newArrivalsCount,
-      icon: Sparkles,
-      href: "/admin/products?filter=new_arrival",
-      badge: "Active",
-    },
-    {
-      label: "Active Hero Banners",
-      value: stats.activeHeroBanners,
+      id: "heroes",
+      title: "Hero Banner & Video Studio",
+      subtitle: "High-impact visual showcase",
+      description: "Control video & image slides, push transitions, and mobile square crops.",
       icon: ImageIcon,
       href: "/admin/heroes",
-      badge: "Live on Site",
+      stat: heroesCount !== null ? `${heroesCount} Published Slides` : "3 Loaded Slides",
+      color: "bg-emerald-500/10 text-emerald-600 border-emerald-200",
     },
     {
-      label: "Draft Hero Banners",
-      value: stats.draftHeroBanners,
-      icon: FileEdit,
-      href: "/admin/heroes",
-      badge: "Unpublished",
-    },
-    {
-      label: "Low Stock Items",
-      value: stats.lowStockCount,
-      icon: AlertTriangle,
-      href: "/admin/products",
-      badge: "< 10 units",
-    },
-  ];
-
-  const customizationCards = [
-    {
-      title: "Announcement Bar",
-      slug: "announcementbar",
-      badge: "Header Ticker",
-      description: "Topbar promotional messages, auto-swipe rotation & links",
-      icon: Megaphone,
-    },
-    {
-      title: "Hero Banner",
-      slug: "herobanner",
-      badge: "Cinematic Slides",
-      description: "Full-bleed campaign slides, desktop/mobile imagery & CTAs",
-      icon: Layers,
-    },
-    {
-      title: "Best Sellers",
-      slug: "bestsellers",
-      badge: "Top Curation",
-      description: "Trending silhouettes carousel, order priority & typography",
-      icon: Flame,
-    },
-    {
-      title: "New In",
-      slug: "newin",
-      badge: "Fresh Arrivals",
-      description: "Latest boutique additions, seasonal launches & tags",
-      icon: Sparkles,
-    },
-    {
-      title: "Seen On You",
-      slug: "seenonyou",
-      badge: "9:16 Video Reels",
-      description: "Vertical video styling, client reviews & tagged products",
-      icon: Video,
-    },
-    {
-      title: "Middle Banner",
-      slug: "middlebanner",
-      badge: "Editorial Spotlight",
-      description: "Atelier craftsmanship campaign, high-resolution media & CTA",
-      icon: Sliders,
-    },
-    {
-      title: "Customer Review",
-      slug: "customerreview",
-      badge: "Client Feedback",
-      description: "Verified testimonials, 5-star ratings & client locations",
-      icon: Star,
-    },
-    {
-      title: "Footer",
-      slug: "footer",
-      badge: "Maison Footer",
-      description: "Brand narrative, boutique addresses, policies & social channels",
-      icon: Info,
-    },
-    {
-      title: "Categories",
-      slug: "category",
-      badge: "Silhouettes",
-      description: "Circular category carousel, taxonomy & collection covers",
-      icon: ShoppingBag,
+      id: "navigation",
+      title: "Navigation Bar",
+      subtitle: "Main storefront category menus",
+      description: "Customize top-level tabs, mega-menu subcategories, badges, and URL destinations.",
+      icon: Compass,
+      href: "/admin/navigation",
+      stat: navItemsCount !== null ? `${navItemsCount} Navigation Tabs` : "Live Categories",
+      color: "bg-purple-500/10 text-purple-600 border-purple-200",
     },
   ];
 
   return (
-    <div className="space-y-8">
-      {/* Page Title & Quick Actions */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-[#E8E5DE]">
-        <div>
-          <span className="text-xs uppercase tracking-[0.2em] text-[#0E0E0E] font-semibold block mb-1">
-            Overview
-          </span>
-          <h1 className="text-2xl sm:text-3xl font-heading font-extrabold text-[#0E0E0E] tracking-tight">
-            DNORA Executive Dashboard
-          </h1>
+    <div className="space-y-8 animate-in fade-in duration-300">
+      {/* Welcome Banner */}
+      <div className="bg-gradient-to-r from-[#090D16] to-[#161F32] rounded-2xl p-6 sm:p-8 text-white shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="space-y-2 max-w-xl">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 text-white/90 text-[10.5px] font-bold uppercase tracking-widest">
+            <Sparkles className="w-3 h-3 text-[#D4AF37]" />
+            <span>Storefront Presentation Hub</span>
+          </div>
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight">
+            Welcome to DNORA Administration Suite
+          </h2>
+          <p className="text-xs sm:text-sm text-neutral-300 leading-relaxed">
+            Full administrative authority over your brand’s topbar, ticker, mega-menus, and hero visual banners.
+          </p>
         </div>
 
         <div className="flex items-center gap-3">
           <Link
-            href="/admin/heroes"
-            className="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-[#E8E5DE] hover:border-[#0E0E0E] text-xs font-semibold uppercase tracking-wider text-[#0E0E0E] rounded transition-all shadow-sm"
+            href="/"
+            target="_blank"
+            className="inline-flex items-center gap-2 px-5 py-3 rounded-lg bg-white text-neutral-950 hover:bg-neutral-200 font-bold text-xs uppercase tracking-wider transition-all shadow-md active:scale-[0.98]"
           >
-            <Plus className="w-3.5 h-3.5" />
-            <span>New Banner</span>
-          </Link>
-          <Link
-            href="/admin/products"
-            className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#0E0E0E] hover:bg-[#2C2B29] text-xs font-semibold uppercase tracking-wider text-[#FAF9F6] rounded transition-all shadow-sm"
-          >
-            <Plus className="w-3.5 h-3.5 text-[#0E0E0E]" />
-            <span>Add Product</span>
+            <span>Preview Storefront</span>
+            <ExternalLink className="w-3.5 h-3.5" />
           </Link>
         </div>
       </div>
 
-      {/* Metrics Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-        {statCards.map((card) => {
-          const Icon = card.icon;
-          return (
-            <Link
-              key={card.label}
-              href={card.href}
-              className="group p-6 bg-white border border-[#E8E5DE] rounded-lg shadow-sm hover:shadow-md hover:border-[#0E0E0E] transition-all flex flex-col justify-between"
-            >
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-xs uppercase tracking-wider font-semibold text-[#73706A]">
-                  {card.label}
-                </span>
-                <div className="p-2 rounded-md bg-[#F5F3EF] text-[#0E0E0E] group-hover:bg-[#0E0E0E] group-hover:text-[#FAF9F6] transition-colors">
-                  <Icon className="w-4 h-4" />
-                </div>
-              </div>
-
-              <div className="flex items-baseline justify-between">
-                <span className="text-3xl font-heading font-extrabold text-[#0E0E0E]">
-                  {card.value}
-                </span>
-                <span className="text-[11px] font-medium text-[#8C8983] bg-[#F5F3EF] px-2 py-0.5 rounded">
-                  {card.badge}
-                </span>
-              </div>
-            </Link>
-          );
-        })}
-      </div>
-
-      {/* CUSTOMIZATION SECTION (Quick Access to All Landing Page Modules) */}
-      <div className="pt-2 space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-[#E8E5DE]">
-          <div>
-            <span className="text-xs uppercase tracking-[0.2em] text-[#0E0E0E] font-semibold block mb-0.5">
-              Storefront CMS
-            </span>
-            <h2 className="text-xl sm:text-2xl font-heading font-extrabold text-[#0E0E0E] tracking-tight">
-              Customization
-            </h2>
-          </div>
-          <Link
-            href="/admin/customization/announcementbar"
-            className="text-xs font-semibold text-[#0E0E0E] hover:text-[#73706A] inline-flex items-center gap-1.5 uppercase tracking-wider transition-colors"
-          >
-            <span>Open Customizer Studio</span>
-            <ArrowUpRight className="w-3.5 h-3.5" />
-          </Link>
+      {/* Control Module Cards */}
+      <div>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-neutral-500">
+            Presentation Control Modules
+          </h3>
+          <span className="text-xs text-neutral-400 font-medium">
+            4 Core Storefront Controllers
+          </span>
         </div>
 
-        {/* Small Cards Grid (nanacard) */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 gap-3.5 sm:gap-4">
-          {customizationCards.map((card) => {
-            const Icon = card.icon;
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
+          {SECTIONS.map((section) => {
+            const Icon = section.icon;
             return (
-              <Link
-                key={card.slug}
-                href={`/admin/customization/${card.slug}`}
-                className="group relative p-4 bg-white border border-[#E8E5DE] hover:border-[#0E0E0E] rounded-lg shadow-xs hover:shadow-md transition-all flex flex-col justify-between"
+              <div
+                key={section.id}
+                className="bg-white border border-neutral-200/80 rounded-xl p-6 shadow-xs hover:shadow-md transition-all duration-200 flex flex-col justify-between group"
               >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="p-2 rounded-md bg-[#F5F3EF] text-[#0E0E0E] group-hover:bg-[#0E0E0E] group-hover:text-white transition-colors">
-                    <Icon className="w-4 h-4" />
-                  </div>
-                  <span className="text-[10px] uppercase font-bold tracking-wider text-[#8C8983] bg-[#FAF9F6] px-2 py-0.5 rounded border border-[#E8E5DE]">
-                    {card.badge}
-                  </span>
-                </div>
+                <div>
+                  <div className="flex items-start justify-between gap-4 mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center border ${section.color}`}>
+                        <Icon className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h4 className="text-base font-bold text-neutral-900 group-hover:text-black transition-colors">
+                          {section.title}
+                        </h4>
+                        <p className="text-[11px] text-neutral-400 tracking-wider uppercase">
+                          {section.subtitle}
+                        </p>
+                      </div>
+                    </div>
 
-                <div className="mt-3">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-heading font-bold text-sm text-[#0E0E0E] group-hover:underline">
-                      {card.title}
-                    </h3>
-                    <ArrowUpRight className="w-3.5 h-3.5 text-[#8C8983] group-hover:text-[#0E0E0E] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
+                    <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-neutral-100 text-neutral-700">
+                      {section.stat}
+                    </span>
                   </div>
-                  <p className="text-[11px] text-[#73706A] mt-1 line-clamp-1 leading-snug">
-                    {card.description}
+
+                  <p className="text-xs text-neutral-600 leading-relaxed mb-6">
+                    {section.description}
                   </p>
                 </div>
-              </Link>
+
+                <div className="pt-4 border-t border-neutral-100 flex items-center justify-between">
+                  <span className="text-[11px] text-neutral-400 font-medium">
+                    Click to configure &amp; edit live
+                  </span>
+                  <Link
+                    href={section.href}
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-neutral-900 hover:text-black uppercase tracking-wider group-hover:translate-x-0.5 transition-all"
+                  >
+                    <span>Manage Section</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
+              </div>
             );
           })}
         </div>
-      </div>
-
-
-      {/* Quick Access Action Banners */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Link
-          href="/admin/homepage"
-          className="group p-6 bg-white border border-[#E8E5DE] hover:border-[#0E0E0E] rounded-lg shadow-xs hover:shadow-md transition-all flex items-center justify-between"
-        >
-          <div className="space-y-1">
-            <span className="text-[10px] uppercase font-bold tracking-[0.2em] text-[#73706A]">
-              Storefront CMS
-            </span>
-            <h3 className="font-heading font-extrabold text-lg text-[#0E0E0E] group-hover:underline">
-              Landing Page Customizer
-            </h3>
-            <p className="text-xs text-[#73706A]">
-              Customize Topbar, Hero, Categories, Best Sellers, New In, Middle Banner, Reviews &amp; Footer.
-            </p>
-          </div>
-          <div className="w-10 h-10 rounded-full bg-[#FAF9F6] border border-[#E8E5DE] group-hover:bg-[#0E0E0E] group-hover:text-white flex items-center justify-center transition-colors shrink-0 ml-4">
-            <ArrowUpRight className="w-4 h-4" />
-          </div>
-        </Link>
-
-        <Link
-          href="/admin/orders"
-          className="group p-6 bg-white border border-[#E8E5DE] hover:border-[#0E0E0E] rounded-lg shadow-xs hover:shadow-md transition-all flex items-center justify-between"
-        >
-          <div className="space-y-1">
-            <span className="text-[10px] uppercase font-bold tracking-[0.2em] text-[#73706A]">
-              Fulfillment Operations
-            </span>
-            <h3 className="font-heading font-extrabold text-lg text-[#0E0E0E] group-hover:underline">
-              Manage Client Orders
-            </h3>
-            <p className="text-xs text-[#73706A]">
-              Track customer details, generate invoices, update courier tracking and fulfillment status.
-            </p>
-          </div>
-          <div className="w-10 h-10 rounded-full bg-[#FAF9F6] border border-[#E8E5DE] group-hover:bg-[#0E0E0E] group-hover:text-white flex items-center justify-center transition-colors shrink-0 ml-4">
-            <ArrowUpRight className="w-4 h-4" />
-          </div>
-        </Link>
       </div>
     </div>
   );

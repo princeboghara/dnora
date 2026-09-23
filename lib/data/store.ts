@@ -20,7 +20,7 @@ class DataStore {
     try {
       let query = `SELECT * FROM public.hero_banners`;
       if (!includeDrafts) {
-        query += ` WHERE status = 'published' AND is_active = true`;
+        query += ` WHERE status = 'published' AND is_active = true AND (start_date IS NULL OR start_date <= now()) AND (end_date IS NULL OR end_date >= now())`;
       }
       query += ` ORDER BY sort_order ASC, created_at DESC`;
       const res = await db.query(query);
@@ -56,23 +56,27 @@ class DataStore {
   async createHeroBanner(data: Omit<HeroBanner, "id" | "created_at" | "updated_at">): Promise<HeroBanner> {
     const res = await db.query(
       `INSERT INTO public.hero_banners 
-        (title, subtitle, media_type, cloudinary_public_id, media_url, mobile_media_url, button_text, button_link, duration_seconds, sort_order, is_active, status, text_alignment)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+        (title, heading, subtitle, media_type, cloudinary_public_id, media_url, tablet_media_url, mobile_media_url, button_text, button_link, duration_seconds, sort_order, is_active, status, text_alignment, start_date, end_date)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
        RETURNING *`,
       [
         data.title,
+        data.heading || null,
         data.subtitle || null,
         data.media_type,
         data.cloudinary_public_id || null,
         data.media_url,
+        data.tablet_media_url || null,
         data.mobile_media_url || null,
-        data.button_text || "Explore Collection",
+        data.button_text ?? null,
         data.button_link || "/shop",
         data.duration_seconds || 5,
         data.sort_order || 0,
         data.is_active ?? true,
         data.status || "draft",
         data.text_alignment || "left",
+        data.start_date || null,
+        data.end_date || null,
       ]
     );
     return res.rows[0];

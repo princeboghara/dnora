@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { NextRequest, NextResponse } from "next/server";
 import { store } from "@/lib/data/store";
 import { verifyAdminSession } from "@/lib/auth/session";
@@ -35,8 +37,14 @@ export async function POST(req: NextRequest) {
 
     const newBanner = await store.createHeroBanner({
       ...validated,
-      mobile_media_url: validated.mobile_media_url || undefined,
-      subtitle: validated.subtitle || undefined,
+      button_link: validated.button_link || "/shop",
+      button_text: validated.button_text && validated.button_text.trim() ? validated.button_text.trim() : null,
+      heading: validated.heading && validated.heading.trim() ? validated.heading.trim() : null,
+      tablet_media_url: validated.tablet_media_url && validated.tablet_media_url.trim() ? validated.tablet_media_url.trim() : null,
+      mobile_media_url: validated.mobile_media_url && validated.mobile_media_url.trim() ? validated.mobile_media_url.trim() : null,
+      subtitle: validated.subtitle && validated.subtitle.trim() ? validated.subtitle.trim() : null,
+      start_date: validated.start_date || null,
+      end_date: validated.end_date || null,
     });
 
     // Revalidate live storefront

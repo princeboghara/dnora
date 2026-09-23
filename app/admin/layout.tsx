@@ -1,11 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminHeader } from "@/components/admin/AdminHeader";
-import { ToastProvider } from "@/components/ui/Toast";
-import { cn } from "@/lib/utils";
 
 export default function AdminLayout({
   children,
@@ -13,69 +11,70 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
+
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  const [customizerOpen, setCustomizerOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(true);
 
-  // Restore collapsed state from localStorage
+  // If on login page, render standalone clean view without sidebar or layout restrictions
+  const isLoginPage = pathname === "/admin/login";
+
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem("dnora_admin_sidebar_collapsed");
-      if (stored !== null) {
-        setSidebarCollapsed(stored === "true");
-      }
-    } catch {
-      // ignore
+    if (isLoginPage) {
+      setIsVerifying(false);
+      return;
     }
-  }, []);
 
-  const handleToggleCollapse = () => {
-    setSidebarCollapsed((prev) => {
-      const next = !prev;
+    async function checkAuth() {
       try {
-        localStorage.setItem("dnora_admin_sidebar_collapsed", String(next));
+        const res = await fetch("/api/auth/admin-check");
+        if (!res.ok) {
+          router.replace("/admin/login");
+        } else {
+          setIsVerifying(false);
+        }
       } catch {
-        // ignore
+        router.replace("/admin/login");
       }
-      return next;
-    });
-  };
+    }
 
-  // If on login page, render clean standalone view
-  if (pathname === "/admin/login") {
-    return <ToastProvider>{children}</ToastProvider>;
+    checkAuth();
+  }, [isLoginPage, router, pathname]);
+
+  if (isLoginPage) {
+    return <>{children}</>;
+  }
+
+  if (isVerifying) {
+    return (
+      <div className="min-h-screen bg-[#090D16] flex items-center justify-center text-white text-xs font-mono tracking-widest uppercase">
+        Verifying Administrative Access...
+      </div>
+    );
   }
 
   return (
-    <ToastProvider>
-      <div className="min-h-screen bg-[#F8FAFC] text-[#0F172A] flex">
-        {/* Sidebar */}
-        <AdminSidebar
-          mobileOpen={mobileSidebarOpen}
-          onCloseMobile={() => setMobileSidebarOpen(false)}
-          customizerOpen={customizerOpen}
-          onOpenCustomizer={() => setCustomizerOpen(true)}
-          onCloseCustomizer={() => setCustomizerOpen(false)}
-          collapsed={sidebarCollapsed}
-          onToggleCollapse={handleToggleCollapse}
-        />
+    <div className="min-h-screen bg-[#F8FAFC] text-neutral-900 flex flex-col md:flex-row">
+      {/* Sidebar */}
+      <AdminSidebar
+        mobileOpen={mobileSidebarOpen}
+        onCloseMobile={() => setMobileSidebarOpen(false)}
+        collapsed={sidebarCollapsed}
+        onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+      />
 
-        {/* Main Content Area */}
-        <div
-          className={cn(
-            "flex-1 flex flex-col min-w-0 transition-all duration-300 ease-in-out",
-            sidebarCollapsed ? "md:pl-20" : "md:pl-64"
-          )}
-        >
-          <AdminHeader
-            onOpenMobileSidebar={() => setMobileSidebarOpen(true)}
-            onOpenCustomizer={() => setCustomizerOpen(true)}
-            sidebarCollapsed={sidebarCollapsed}
-            onToggleCollapse={handleToggleCollapse}
-          />
-          <main className="flex-1 p-4 sm:p-8 max-w-7xl w-full mx-auto">{children}</main>
-        </div>
+      {/* Main Content Area */}
+      <div
+        className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ease-in-out ${
+          sidebarCollapsed ? "md:pl-20" : "md:pl-64"
+        }`}
+      >
+        <AdminHeader onOpenMobileSidebar={() => setMobileSidebarOpen(true)} />
+        <main className="flex-1 p-4 sm:p-8 max-w-7xl w-full mx-auto">
+          {children}
+        </main>
       </div>
-    </ToastProvider>
+    </div>
   );
 }

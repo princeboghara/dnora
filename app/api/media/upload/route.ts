@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
 
     const formData = await req.formData();
     const file = formData.get("file") as File | null;
-    const folder = (formData.get("folder") as MediaFolder) || "dnora/products";
+    const folder = (formData.get("folder") as MediaFolder) || "dnora/herobanner";
     const resourceTypeParam = formData.get("resource_type") as string | null;
 
     if (!file) {
@@ -51,7 +51,26 @@ export async function POST(req: NextRequest) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    const result = await uploadMedia(buffer, folder, resourceType, file.name.split(".")[0]);
+    let result;
+    try {
+      result = await uploadMedia(buffer, folder, resourceType, file.name.split(".")[0]);
+    } catch (cloudErr) {
+      console.warn("Cloudinary upload fallback to local storage:", cloudErr);
+      const fs = await import("fs/promises");
+      const path = await import("path");
+      const subFolder = folder.replace("dnora/", "");
+      const uploadDir = path.join(process.cwd(), "public", "uploads", subFolder);
+      await fs.mkdir(uploadDir, { recursive: true });
+      const safeName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
+      const filePath = path.join(uploadDir, safeName);
+      await fs.writeFile(filePath, buffer);
+      result = {
+        secure_url: `/uploads/${subFolder}/${safeName}`,
+        public_id: safeName,
+        format: file.name.split(".").pop() || "jpg",
+        resource_type: resourceType,
+      };
+    }
 
     return NextResponse.json({
       success: true,

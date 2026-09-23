@@ -76,18 +76,22 @@ export type HeroTextAlignment = "left" | "center" | "right";
 export interface HeroBanner {
   id: string;
   title: string;
-  subtitle?: string;
+  heading?: string | null;
+  subtitle?: string | null;
   media_type: HeroMediaType;
-  cloudinary_public_id?: string;
+  cloudinary_public_id?: string | null;
   media_url: string;
-  mobile_media_url?: string;
-  button_text: string;
+  tablet_media_url?: string | null;
+  mobile_media_url?: string | null;
+  button_text?: string | null;
   button_link: string;
   duration_seconds: number; // default e.g. 5 for images, ignored or fallback for video
   sort_order: number;
   is_active: boolean;
   status: HeroBannerStatus;
   text_alignment?: HeroTextAlignment;
+  start_date?: string | null;
+  end_date?: string | null;
   created_at: string;
   updated_at: string;
 }

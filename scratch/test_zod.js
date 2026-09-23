@@ -1,6 +1,6 @@
-import { z } from "zod";
+const { z } = require("zod");
 
-export const heroBannerBaseSchema = z.object({
+const heroBannerBaseSchema = z.object({
   title: z.string().min(2, "Title must be at least 2 characters").max(100),
   heading: z.string().max(100).optional().nullable().or(z.literal("")),
   subtitle: z.string().max(200).optional().nullable().or(z.literal("")),
@@ -19,15 +19,10 @@ export const heroBannerBaseSchema = z.object({
   end_date: z.string().optional().nullable().or(z.literal("")),
 });
 
-export const heroBannerSchema = heroBannerBaseSchema.extend({
-  duration_seconds: z.coerce.number().int().min(2, "Duration must be at least 2 seconds").max(30).default(5),
-  sort_order: z.coerce.number().int().default(0),
-  is_active: z.boolean().default(true),
-  status: z.enum(["draft", "published", "archived"]).default("draft"),
-  text_alignment: z.enum(["left", "center", "right"]).default("left"),
-});
+const heroBannerUpdateSchema = heroBannerBaseSchema.partial();
 
-export const heroBannerUpdateSchema = heroBannerBaseSchema.partial();
+const input1 = { heading: null, subtitle: null };
+console.log("Input 1 (null):", heroBannerUpdateSchema.parse(input1));
 
-export type HeroBannerInput = z.infer<typeof heroBannerSchema>;
-export type HeroBannerUpdateInput = z.infer<typeof heroBannerUpdateSchema>;
+const input2 = { heading: "", subtitle: "" };
+console.log("Input 2 (empty string):", heroBannerUpdateSchema.parse(input2));

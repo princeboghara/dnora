@@ -1,6 +1,7 @@
-import React from "react";
-import { LuxuryPageLoader } from "@/components/ui/LuxuryPageLoader";
-
 export default function GlobalLoading() {
-  return <LuxuryPageLoader isNavigating fullscreen />;
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-white text-slate-800">
+      <div className="w-8 h-8 border-2 border-slate-200 border-t-slate-800 rounded-full animate-spin" />
+    </div>
+  );
 }

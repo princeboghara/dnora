@@ -1,7 +1,14 @@
 import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans, Inter } from "next/font/google";
 import "./globals.css";
-import { NavigationLoadingProvider } from "@/components/ui/NavigationLoadingProvider";
+import { AnnouncementBar } from "@/components/AnnouncementBar";
+import { TopBar, NavCategory } from "@/components/TopBar";
+import { CartDrawer } from "@/components/CartDrawer";
+import { CartProvider } from "@/lib/store/cart-store";
+import { WishlistProvider } from "@/lib/store/wishlist-store";
+import { store } from "@/lib/data/store";
+import { db } from "@/lib/db";
+import { AnnouncementConfig } from "@/types";
 
 const plusJakarta = Plus_Jakarta_Sans({
   variable: "--font-jakarta",
@@ -88,11 +95,46 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  let announcementConfig: AnnouncementConfig | null = null;
+  let initialNavCategories: NavCategory[] | undefined = undefined;
+  try {
+    const [annCfg, navRes] = await Promise.all([
+      store.getAnnouncementsConfig().catch(() => null),
+      db.query(`SELECT items FROM public.site_navigation_config WHERE id = 'storefront' LIMIT 1`).catch(() => ({ rows: [] })),
+    ]);
+    announcementConfig = annCfg;
+    if (navRes.rows.length > 0 && Array.isArray(navRes.rows[0].items)) {
+      initialNavCategories = navRes.rows[0].items
+        .filter((item: any) => item.is_active)
+        .map((item: any) => ({
+          id: item.id,
+          label: item.label,
+          href: item.href || "/shop",
+          badge: item.badge,
+          subcategories:
+            item.submenus && item.submenus.length > 0
+              ? [
+                  {
+                    title: "EXPLORE EDITS",
+                    items: item.submenus.map((s: any) => ({
+                      label: s.label,
+                      href: s.href,
+                      badge: s.badge,
+                    })),
+                  },
+                ]
+              : undefined,
+        }));
+    }
+  } catch (err) {
+    console.error("Failed to prefetch header data:", err);
+  }
+
   return (
     <html lang="en" suppressHydrationWarning className={`${plusJakarta.variable} ${inter.variable} h-full`}>
       <head>
@@ -104,9 +146,14 @@ export default function RootLayout({
         />
       </head>
       <body suppressHydrationWarning className="min-h-full flex flex-col font-sans bg-white text-[#0E0E0E] antialiased selection:bg-[#0E0E0E] selection:text-white">
-        <NavigationLoadingProvider>
-          {children}
-        </NavigationLoadingProvider>
+        <WishlistProvider>
+          <CartProvider>
+            <AnnouncementBar initialConfig={announcementConfig} />
+            <TopBar initialNavCategories={initialNavCategories} />
+            <div className="flex-1 flex flex-col">{children}</div>
+            <CartDrawer />
+          </CartProvider>
+        </WishlistProvider>
       </body>
     </html>
   );

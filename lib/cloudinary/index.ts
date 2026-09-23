@@ -19,6 +19,7 @@ export interface UploadResult {
 }
 
 export type MediaFolder =
+  | "dnora/herobanner"
   | "dnora/heroes"
   | "dnora/products"
   | "dnora/categories"
@@ -53,18 +54,8 @@ export async function uploadMedia(
         folder,
         public_id: publicId,
         resource_type: resourceType,
-        transformation:
-          resourceType === "image"
-            ? [
-                {
-                  width: 1600,
-                  height: 1600,
-                  crop: "limit",
-                  quality: "auto:good",
-                  fetch_format: "auto",
-                },
-              ]
-            : undefined,
+        // Preserve full original clarity and high resolution without forced downscaling
+        transformation: undefined,
       },
       (error, result) => {
         if (error || !result) {
