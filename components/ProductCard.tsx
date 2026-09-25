@@ -21,8 +21,30 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
   const [selectedVariantIndex, setSelectedVariantIndex] = useState<number | null>(null);
 
   const isFavorited = isInWishlist(product.id);
-  const primaryImage = product.images?.[0]?.secure_url || "";
-  const hoverImage = product.images?.[1]?.secure_url || primaryImage;
+
+  // Fallback chain for primary image
+  const primaryImage =
+    product.images?.[0]?.secure_url ||
+    product.color_variants?.[0]?.images?.[0]?.secure_url ||
+    "";
+
+  // Fallback chain for hover image (supports product.images and color_variants)
+  let hoverImage = "";
+  if (product.images && product.images.length > 1 && product.images[1]?.secure_url) {
+    hoverImage = product.images[1].secure_url;
+  } else if (
+    product.color_variants?.[0]?.images &&
+    product.color_variants[0].images.length > 1 &&
+    product.color_variants[0].images[1]?.secure_url
+  ) {
+    hoverImage = product.color_variants[0].images[1].secure_url;
+  } else if (
+    product.color_variants &&
+    product.color_variants.length > 1 &&
+    product.color_variants[1]?.images?.[0]?.secure_url
+  ) {
+    hoverImage = product.color_variants[1].images[0].secure_url;
+  }
 
   // Active image based on selected color variant
   const activeVariant =
@@ -36,7 +58,7 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
   const currentHoverImage =
     activeVariant && activeVariant.images?.[1]?.secure_url
       ? activeVariant.images[1].secure_url
-      : hoverImage;
+      : hoverImage || currentDisplayImage;
 
   const discountPercent =
     product.compare_at_price && product.compare_at_price > product.price
@@ -57,10 +79,13 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
     toggleWishlist(product);
   };
 
+  const hasHoverImage =
+    Boolean(currentHoverImage) && currentHoverImage !== currentDisplayImage;
+
   return (
-    <div className="group flex flex-col justify-between bg-white relative">
-      {/* Product Image Frame with Smooth Rounded Edges */}
-      <div className="relative aspect-3/4 rounded-xl overflow-hidden bg-[#FAF8F5] border border-neutral-200/70">
+    <div className="flex flex-col justify-between bg-white relative">
+      {/* Product Image Frame with Smooth Rounded Edges — scoped with group/image so hover triggers ONLY on image */}
+      <div className="group/image relative aspect-3/4 rounded-xl overflow-hidden bg-[#FAF8F5] border border-neutral-200/70">
         <Link href={`/product/${product.slug}`} className="block relative w-full h-full">
           {currentDisplayImage ? (
             <Image
@@ -70,7 +95,7 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
               priority={priority}
               className={`object-cover transition-opacity duration-500 ${
-                currentHoverImage && currentHoverImage !== currentDisplayImage ? "group-hover:opacity-0" : ""
+                hasHoverImage ? "group-hover/image:opacity-0" : ""
               }`}
             />
           ) : (
@@ -79,13 +104,13 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
             </div>
           )}
 
-          {currentHoverImage && currentHoverImage !== currentDisplayImage && (
+          {hasHoverImage && (
             <Image
               src={currentHoverImage}
-              alt={`${product.name} alternate`}
+              alt={`${product.name} alternate angle`}
               fill
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-              className="object-cover absolute inset-0 opacity-0 transition-all duration-500 group-hover:opacity-100 group-hover:scale-105"
+              className="object-cover absolute inset-0 opacity-0 transition-all duration-500 group-hover/image:opacity-100 group-hover/image:scale-105"
             />
           )}
         </Link>

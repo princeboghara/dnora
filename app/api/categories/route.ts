@@ -25,7 +25,16 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { name, slug, description, image_url } = body;
+    const {
+      name,
+      slug,
+      description,
+      image_url,
+      banner_image_url,
+      banner_heading,
+      banner_subtitle,
+      banner_media_type,
+    } = body;
 
     if (!name || typeof name !== "string" || !name.trim()) {
       return NextResponse.json(
@@ -39,6 +48,10 @@ export async function POST(req: NextRequest) {
       slug: typeof slug === "string" ? slug.trim() : undefined,
       description: typeof description === "string" ? description.trim() : undefined,
       image_url: typeof image_url === "string" ? image_url.trim() : undefined,
+      banner_image_url: typeof banner_image_url === "string" ? banner_image_url.trim() : undefined,
+      banner_heading: typeof banner_heading === "string" ? banner_heading.trim() : undefined,
+      banner_subtitle: typeof banner_subtitle === "string" ? banner_subtitle.trim() : undefined,
+      banner_media_type: banner_media_type === "video" ? "video" : "image",
     });
 
     return NextResponse.json({ success: true, data: category });

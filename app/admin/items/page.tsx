@@ -19,6 +19,7 @@ import {
   X,
   Tag,
   Upload,
+  Edit,
 } from "lucide-react";
 import { Product, ProductCategory } from "@/types";
 import { formatPrice, slugify } from "@/lib/utils";
@@ -371,7 +372,7 @@ export default function AdminAllItemsPage() {
   const lowStockCount = products.filter((p) => p.stock < 10).length;
 
   return (
-    <div className="space-y-8 max-w-7xl mx-auto pb-16 animate-in fade-in duration-200">
+    <div className="space-y-8 w-full pb-16 animate-in fade-in duration-200">
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-neutral-200 pb-5">
         <div>
@@ -681,13 +682,22 @@ export default function AdminAllItemsPage() {
                         </button>
                       </td>
 
-                      {/* Row Actions: View Storefront & Delete Product */}
+                      {/* Row Actions: Edit, View Storefront & Delete Product */}
                       <td className="py-3.5 px-4 text-right whitespace-nowrap">
-                        <div className="flex items-center justify-end gap-2">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <Link
+                            href={`/admin/products/${p.id}/edit`}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold text-neutral-800 hover:text-black bg-neutral-100 hover:bg-neutral-200 border border-neutral-200/80 rounded-lg transition shadow-2xs"
+                            title="Edit Product Details & Variants"
+                          >
+                            <Edit className="w-3 h-3 text-neutral-600" />
+                            <span>Edit</span>
+                          </Link>
+
                           <Link
                             href={`/product/${p.slug}`}
                             target="_blank"
-                            className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold text-neutral-600 hover:text-black bg-neutral-100 hover:bg-neutral-200 rounded-lg transition"
+                            className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold text-neutral-600 hover:text-black bg-neutral-50 hover:bg-neutral-100 rounded-lg transition"
                             title="View on Storefront"
                           >
                             <span>View</span>

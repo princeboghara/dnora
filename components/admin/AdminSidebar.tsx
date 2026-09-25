@@ -22,6 +22,7 @@ import {
   Video,
   Layers,
   Sparkles,
+  Package,
 } from "lucide-react";
 
 interface AdminSidebarProps {
@@ -53,6 +54,13 @@ const NAV_GROUPS: NavGroupItem[] = [
     label: "Dashboard",
     href: "/admin",
     icon: LayoutDashboard,
+  },
+  {
+    id: "orders",
+    label: "Orders & Shipments",
+    href: "/admin/orders",
+    icon: Package,
+    badge: "Live",
   },
   {
     id: "products",
@@ -95,6 +103,12 @@ const NAV_GROUPS: NavGroupItem[] = [
         href: "/admin/heroes",
         icon: ImageIcon,
         badge: "Media",
+      },
+      {
+        label: "Campaign Banner",
+        href: "/admin/campaign-banner",
+        icon: Sparkles,
+        badge: "Architecture",
       },
       {
         label: "Announcement Bar",

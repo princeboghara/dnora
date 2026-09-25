@@ -73,71 +73,128 @@ export default async function CategoryPage({
   }
 
   return (
-    <div className="min-h-screen bg-white text-neutral-900 pb-24">
-      {/* Editorial Header Banner */}
-      <section className="relative w-full bg-[#FAF8F5] border-b border-neutral-200/80 pt-10 pb-12 sm:pt-14 sm:pb-16 md:pt-18 md:pb-20">
-        <div className="max-w-[1820px] 2xl:max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12">
-          
-          {/* Breadcrumb Trail */}
-          <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs text-neutral-500 mb-6">
-            <Link href="/" className="hover:text-black transition-colors">
-              Home
-            </Link>
-            <ChevronRight className="w-3 h-3 text-neutral-400" />
-            <Link href="/shop" className="hover:text-black transition-colors">
-              Collections
-            </Link>
-            <ChevronRight className="w-3 h-3 text-neutral-400" />
-            <span className="text-neutral-900 font-semibold tracking-wide">
-              {title}
-            </span>
-          </nav>
-
-          {/* Silhouette Title & Editorial Narrative */}
-          <div className="max-w-3xl space-y-3">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-neutral-900 text-white text-[10px] font-bold uppercase tracking-[0.2em]">
-              <Sparkles className="w-3 h-3 text-[#D4AF37]" />
-              <span>DNORA Silhouette Edit</span>
-            </div>
-
-            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-heading font-normal tracking-[0.16em] uppercase text-neutral-950">
-              {title}
-            </h1>
-
-            <p className="text-xs sm:text-sm md:text-base text-neutral-600 font-light leading-relaxed max-w-2xl">
-              {description}
-            </p>
-          </div>
-
-          {/* Quick Silhouette Filter Badges */}
-          {allCategories.length > 0 && (
-            <div className="mt-8 flex items-center gap-2 overflow-x-auto scrollbar-none pb-1 pt-2">
-              <span className="text-[10px] uppercase font-bold tracking-[0.2em] text-neutral-400 mr-2 shrink-0">
-                Other Silhouettes:
-              </span>
-              {allCategories.map((c) => {
-                const isActive = c.slug === slug;
-                return (
-                  <Link
-                    key={c.id}
-                    href={`/category/${c.slug}`}
-                    className={`text-xs px-3.5 py-1.5 rounded-full uppercase tracking-wider font-medium transition-all shrink-0 ${
-                      isActive
-                        ? "bg-black text-white shadow-xs"
-                        : "bg-white text-neutral-700 border border-neutral-200/80 hover:border-black hover:text-black"
-                    }`}
-                  >
-                    {c.name}
-                  </Link>
-                );
-              })}
-            </div>
+    <div className="min-h-screen bg-[#FDFCFB] text-neutral-900 pb-24">
+      {/* Category Hero Banner (Image or Video) */}
+      {category?.banner_image_url ? (
+        <section className="relative w-full h-[360px] sm:h-[420px] md:h-[480px] bg-black overflow-hidden flex items-end">
+          {category.banner_media_type === "video" ? (
+            <video
+              src={category.banner_image_url}
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="absolute inset-0 w-full h-full object-cover opacity-75"
+            />
+          ) : (
+            <Image
+              src={category.banner_image_url}
+              alt={title}
+              fill
+              priority
+              className="object-cover opacity-75"
+              sizes="100vw"
+            />
           )}
-        </div>
-      </section>
 
-      {/* Main Grid & Content */}
-      <div className="max-w-[1820px] 2xl:max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 mt-8 sm:mt-10">
+          {/* Cinematic Dark & Gold Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/45 to-black/30 pointer-events-none" />
+
+          {/* Content Container */}
+          <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-10 sm:pb-12 md:pb-14">
+            {/* Breadcrumb Trail */}
+            <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs text-white/70 mb-4">
+              <Link href="/" className="hover:text-white transition-colors">
+                Home
+              </Link>
+              <ChevronRight className="w-3 h-3 text-white/50" />
+              <Link href="/shop" className="hover:text-white transition-colors">
+                Collections
+              </Link>
+              <ChevronRight className="w-3 h-3 text-white/50" />
+              <span className="text-white font-medium tracking-wide">
+                {title}
+              </span>
+            </nav>
+
+            <div className="max-w-2xl space-y-2.5 text-white">
+              <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-[#E5C378] text-[10px] font-bold uppercase tracking-[0.25em]">
+                <Sparkles className="w-3 h-3" />
+                <span>{category.banner_subtitle || "DNORA Silhouette Edit"}</span>
+              </div>
+
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-heading font-light tracking-[0.16em] uppercase text-white drop-shadow-sm">
+                {category.banner_heading || title}
+              </h1>
+
+              <p className="text-xs sm:text-sm text-neutral-200 font-light leading-relaxed max-w-xl line-clamp-3">
+                {description}
+              </p>
+            </div>
+          </div>
+        </section>
+      ) : (
+        /* Fallback Editorial Header if banner is not uploaded */
+        <section className="relative w-full bg-[#FAF8F5] border-b border-neutral-200/80 pt-10 pb-10 sm:pt-14 sm:pb-14">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs text-neutral-500 mb-5">
+              <Link href="/" className="hover:text-black transition-colors">
+                Home
+              </Link>
+              <ChevronRight className="w-3 h-3 text-neutral-400" />
+              <Link href="/shop" className="hover:text-black transition-colors">
+                Collections
+              </Link>
+              <ChevronRight className="w-3 h-3 text-neutral-400" />
+              <span className="text-neutral-900 font-semibold tracking-wide">
+                {title}
+              </span>
+            </nav>
+
+            <div className="max-w-2xl space-y-2.5">
+              <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-neutral-900 text-white text-[10px] font-bold uppercase tracking-[0.2em]">
+                <Sparkles className="w-3 h-3 text-[#D4AF37]" />
+                <span>DNORA Silhouette Edit</span>
+              </div>
+
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-heading font-normal tracking-[0.16em] uppercase text-neutral-950">
+                {title}
+              </h1>
+
+              <p className="text-xs sm:text-sm text-neutral-600 font-light leading-relaxed max-w-xl">
+                {description}
+              </p>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Main Grid & Content: Compact Container Matching Storefront */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 sm:mt-10">
+        {/* Silhouette Quick Filter Pills */}
+        {allCategories.length > 0 && (
+          <div className="mb-6 flex items-center gap-2 overflow-x-auto scrollbar-none pb-2">
+            <span className="text-[10px] uppercase font-bold tracking-[0.2em] text-neutral-400 mr-2 shrink-0">
+              Silhouettes:
+            </span>
+            {allCategories.map((c) => {
+              const isActive = c.slug === slug;
+              return (
+                <Link
+                  key={c.id}
+                  href={`/category/${c.slug}`}
+                  className={`text-[11px] px-3.5 py-1.5 rounded-full uppercase tracking-wider font-medium transition-all shrink-0 ${
+                    isActive
+                      ? "bg-black text-white shadow-xs"
+                      : "bg-white text-neutral-700 border border-neutral-200 hover:border-black hover:text-black"
+                  }`}
+                >
+                  {c.name}
+                </Link>
+              );
+            })}
+          </div>
+        )}
         
         {/* Results Bar & Sorting */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-neutral-200">

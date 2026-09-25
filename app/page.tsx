@@ -12,7 +12,7 @@ import React from "react";
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const [banners, categories, allProducts, videos, reviews, sections, trendingItems] = await Promise.all([
+  const [banners, categories, allProducts, videos, reviews, sections, trendingItems, promoConfig] = await Promise.all([
     store.getHeroBanners(false),
     store.getCategories(),
     store.getProducts(),
@@ -20,6 +20,7 @@ export default async function HomePage() {
     store.getReviews(true),
     store.getHomepageSections(),
     store.getTrendingNowItems(true),
+    store.getPromoBannerConfig(),
   ]);
 
   const slides: HeroSlide[] = banners.map((b) => ({
@@ -105,7 +106,18 @@ export default async function HomePage() {
           return (
             <React.Fragment key={sec.id}>
               {/* Promo banner placed seamlessly after the first section */}
-              {idx === 1 && <PromoBanner />}
+              {idx === 1 && (
+                <PromoBanner
+                  slides={promoConfig.slides}
+                  heading={promoConfig.heading}
+                  tagline={promoConfig.tagline}
+                  description={promoConfig.description}
+                  buttonText={promoConfig.button_text}
+                  buttonLink={promoConfig.button_link}
+                  imageUrl={promoConfig.image_url}
+                  isActive={promoConfig.is_active}
+                />
+              )}
               {/* "TRENDING NOW NEW IN NI UPER LY LE" - Render Trending Now ABOVE New In */}
               {isNewIn && <TrendingNowSection items={trendingItems} />}
               <DynamicHomeSection section={sec} products={secProducts} />
@@ -123,7 +135,18 @@ export default async function HomePage() {
       })()}
 
       {/* If only 0 or 1 section was rendered, ensure PromoBanner still displays */}
-      {activeSections.length <= 1 && <PromoBanner />}
+      {activeSections.length <= 1 && (
+        <PromoBanner
+          slides={promoConfig.slides}
+          heading={promoConfig.heading}
+          tagline={promoConfig.tagline}
+          description={promoConfig.description}
+          buttonText={promoConfig.button_text}
+          buttonLink={promoConfig.button_link}
+          imageUrl={promoConfig.image_url}
+          isActive={promoConfig.is_active}
+        />
+      )}
 
       {/* 4. Seen On You (Videos / Reels Section) */}
       <SeenOnYouSection videos={videos} />

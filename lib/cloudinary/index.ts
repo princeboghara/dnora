@@ -1,12 +1,33 @@
 import { v2 as cloudinary } from "cloudinary";
 
-// Initialize Cloudinary SDK
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-  secure: true,
-});
+function configureCloudinary(): boolean {
+  const cloudinaryUrl = process.env.CLOUDINARY_URL;
+  if (cloudinaryUrl) {
+    cloudinary.config(true);
+    return true;
+  }
+
+  const cloudName =
+    process.env.CLOUDINARY_CLOUD_NAME ||
+    process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+  const apiKey = process.env.CLOUDINARY_API_KEY;
+  const apiSecret = process.env.CLOUDINARY_API_SECRET;
+
+  if (cloudName && apiKey && apiSecret && !apiKey.includes("mock")) {
+    cloudinary.config({
+      cloud_name: cloudName,
+      api_key: apiKey,
+      api_secret: apiSecret,
+      secure: true,
+    });
+    return true;
+  }
+
+  return false;
+}
+
+// Initial config
+configureCloudinary();
 
 export interface UploadResult {
   public_id: string;
@@ -28,7 +49,7 @@ export type MediaFolder =
 
 /**
  * Uploads a file buffer or base64 to Cloudinary
- * In demo mode without valid API secrets, gracefully generates a working asset representation.
+ * Dynamically adapts to any new Cloudinary credentials set in .env
  */
 export async function uploadMedia(
   fileBuffer: Buffer,
@@ -36,13 +57,12 @@ export async function uploadMedia(
   resourceType: "image" | "video" = "image",
   fileName?: string
 ): Promise<UploadResult> {
-  const isCloudinaryConfigured =
-    process.env.CLOUDINARY_API_KEY &&
-    process.env.CLOUDINARY_API_SECRET &&
-    !process.env.CLOUDINARY_API_KEY.includes("mock");
+  const isCloudinaryConfigured = configureCloudinary();
 
   if (!isCloudinaryConfigured) {
-    throw new Error("Cloudinary API credentials are required for uploading media.");
+    throw new Error(
+      "Cloudinary credentials not configured. Please specify CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET (or CLOUDINARY_URL) in your .env file."
+    );
   }
 
   return new Promise((resolve, reject) => {

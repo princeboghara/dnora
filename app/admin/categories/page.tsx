@@ -17,6 +17,8 @@ import {
   Upload,
   Crop,
   Sparkles,
+  Film,
+  Image as ImageIcon,
 } from "lucide-react";
 import { ProductCategory } from "@/types";
 import { CircularImageCropperModal } from "@/components/admin/CircularImageCropperModal";
@@ -39,6 +41,13 @@ export default function AdminCategoriesPage() {
   const [formSlug, setFormSlug] = useState("");
   const [formDescription, setFormDescription] = useState("");
   const [formImageUrl, setFormImageUrl] = useState("");
+
+  // Category Hero Banner Fields
+  const [formBannerImageUrl, setFormBannerImageUrl] = useState("");
+  const [formBannerHeading, setFormBannerHeading] = useState("");
+  const [formBannerSubtitle, setFormBannerSubtitle] = useState("");
+  const [formBannerMediaType, setFormBannerMediaType] = useState<"image" | "video">("image");
+  const [uploadingBanner, setUploadingBanner] = useState(false);
 
   // Circular Cropper state (Instagram PFP Style)
   const [cropperOpen, setCropperOpen] = useState(false);
@@ -97,6 +106,10 @@ export default function AdminCategoriesPage() {
     setFormSlug("");
     setFormDescription("");
     setFormImageUrl("");
+    setFormBannerImageUrl("");
+    setFormBannerHeading("");
+    setFormBannerSubtitle("");
+    setFormBannerMediaType("image");
     setModalOpen(true);
   };
 
@@ -106,6 +119,10 @@ export default function AdminCategoriesPage() {
     setFormSlug(cat.slug || "");
     setFormDescription(cat.description || "");
     setFormImageUrl(cat.image_url || "");
+    setFormBannerImageUrl(cat.banner_image_url || "");
+    setFormBannerHeading(cat.banner_heading || "");
+    setFormBannerSubtitle(cat.banner_subtitle || "");
+    setFormBannerMediaType(cat.banner_media_type || "image");
     setModalOpen(true);
   };
 
@@ -151,6 +168,39 @@ export default function AdminCategoriesPage() {
     }
   };
 
+  const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingBanner(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("folder", "dnora/categories/banners");
+
+      const isVideo = file.type.startsWith("video");
+      if (isVideo) {
+        setFormBannerMediaType("video");
+      }
+
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) throw new Error("Upload failed");
+      const data = await res.json();
+      setFormBannerImageUrl(data.secure_url || data.url);
+      showStatus("success", "Category hero banner uploaded successfully!");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Banner upload failed";
+      showStatus("error", message);
+    } finally {
+      setUploadingBanner(false);
+      e.target.value = "";
+    }
+  };
+
   const handleSaveCategory = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formName.trim()) {
@@ -170,6 +220,10 @@ export default function AdminCategoriesPage() {
             slug: formSlug.trim() || undefined,
             description: formDescription.trim() || undefined,
             image_url: formImageUrl.trim() || undefined,
+            banner_image_url: formBannerImageUrl.trim() || undefined,
+            banner_heading: formBannerHeading.trim() || undefined,
+            banner_subtitle: formBannerSubtitle.trim() || undefined,
+            banner_media_type: formBannerMediaType,
           }),
         });
 
@@ -194,6 +248,10 @@ export default function AdminCategoriesPage() {
             slug: formSlug.trim() || undefined,
             description: formDescription.trim() || undefined,
             image_url: formImageUrl.trim() || undefined,
+            banner_image_url: formBannerImageUrl.trim() || undefined,
+            banner_heading: formBannerHeading.trim() || undefined,
+            banner_subtitle: formBannerSubtitle.trim() || undefined,
+            banner_media_type: formBannerMediaType,
           }),
         });
 
@@ -237,7 +295,7 @@ export default function AdminCategoriesPage() {
   };
 
   return (
-    <div className="space-y-8 max-w-6xl mx-auto pb-16 animate-in fade-in duration-200">
+    <div className="space-y-8 w-full pb-16 animate-in fade-in duration-200">
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-neutral-200 pb-5">
         <div>
@@ -328,7 +386,7 @@ export default function AdminCategoriesPage() {
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-5">
           {categories.map((cat) => (
             <div
               key={cat.id}
@@ -357,6 +415,19 @@ export default function AdminCategoriesPage() {
                   <p className="text-xs text-neutral-600 line-clamp-2 leading-relaxed font-light">
                     {cat.description}
                   </p>
+                )}
+
+                {cat.banner_image_url && (
+                  <div className="flex items-center gap-1.5 px-2.5 py-1 bg-amber-50 border border-amber-200/80 rounded-md w-fit">
+                    {cat.banner_media_type === "video" ? (
+                      <Film className="w-3 h-3 text-amber-700" />
+                    ) : (
+                      <ImageIcon className="w-3 h-3 text-amber-700" />
+                    )}
+                    <span className="text-[10px] font-semibold text-amber-900 uppercase tracking-wider">
+                      Hero Banner Set ({cat.banner_media_type || "image"})
+                    </span>
+                  </div>
                 )}
               </div>
 
@@ -399,7 +470,7 @@ export default function AdminCategoriesPage() {
       {/* Add / Edit Category Modal */}
       {modalOpen && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-neutral-100 animate-in fade-in zoom-in-95 max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-2xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl border border-neutral-100 animate-in fade-in zoom-in-95 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-4 border-b border-neutral-100">
               <div>
                 <h3 className="text-base font-bold text-neutral-900 uppercase">
@@ -418,7 +489,7 @@ export default function AdminCategoriesPage() {
               </button>
             </div>
 
-            <form onSubmit={handleSaveCategory} className="space-y-4 my-5">
+            <form onSubmit={handleSaveCategory} className="space-y-5 my-5">
               <div>
                 <label className="block text-xs font-semibold text-neutral-700 mb-1.5">
                   Category Name *
@@ -455,7 +526,7 @@ export default function AdminCategoriesPage() {
                   Editorial Description (Optional)
                 </label>
                 <textarea
-                  rows={3}
+                  rows={2}
                   value={formDescription}
                   onChange={(e) => setFormDescription(e.target.value)}
                   placeholder="Concise luxury narrative describing this silhouette collection..."
@@ -463,13 +534,13 @@ export default function AdminCategoriesPage() {
                 />
               </div>
 
+              {/* Storefront Round Silhouette / Avatar */}
               <div>
                 <label className="block text-xs font-semibold text-neutral-700 mb-1.5">
-                  Category Image & Storefront Round Silhouette
+                  Storefront Round Silhouette Image
                 </label>
 
                 <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center p-3 bg-neutral-50 rounded-xl border border-neutral-200">
-                  {/* Round Storefront Avatar Preview */}
                   <div className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-white shadow-md bg-neutral-200 shrink-0 flex items-center justify-center">
                     {formImageUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
@@ -497,7 +568,7 @@ export default function AdminCategoriesPage() {
                     <div className="flex flex-wrap items-center gap-2">
                       <label className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold bg-black hover:bg-neutral-800 text-white rounded-lg cursor-pointer transition shadow-xs">
                         <Upload className="w-3.5 h-3.5" />
-                        <span>Upload Image</span>
+                        <span>Upload Round Image</span>
                         <input
                           type="file"
                           accept="image/*"
@@ -516,14 +587,147 @@ export default function AdminCategoriesPage() {
                           <span>Adjust Circle</span>
                         </button>
                       )}
-
-
                     </div>
                   </div>
                 </div>
-                <p className="text-[11px] text-neutral-500 mt-1.5">
-                  This image appears inside the circular &quot;Our Collections&quot; row on the storefront. Use the Instagram-style crop tool to pan and zoom for a perfect round fit.
+                <p className="text-[11px] text-neutral-500 mt-1">
+                  Shown in the round &quot;Our Collections&quot; row on the storefront.
                 </p>
+              </div>
+
+              {/* NEW: Category Hero Banner Section */}
+              <div className="pt-4 border-t border-neutral-200">
+                <div className="flex items-center justify-between mb-2">
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-neutral-900">
+                      Top Category Hero Banner (Page Header)
+                    </label>
+                    <p className="text-[11px] text-neutral-500">
+                      Displayed across the top of <span className="font-mono text-neutral-700">/category/{formSlug || "[slug]"}</span> with cinematic background & typography.
+                    </p>
+                  </div>
+                  {/* Media Type Toggle */}
+                  <div className="flex items-center bg-neutral-100 p-0.5 rounded-lg border border-neutral-200">
+                    <button
+                      type="button"
+                      onClick={() => setFormBannerMediaType("image")}
+                      className={`inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold rounded-md transition ${
+                        formBannerMediaType === "image"
+                          ? "bg-white text-black shadow-xs font-bold"
+                          : "text-neutral-500 hover:text-neutral-800"
+                      }`}
+                    >
+                      <ImageIcon className="w-3 h-3" />
+                      Image
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFormBannerMediaType("video")}
+                      className={`inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold rounded-md transition ${
+                        formBannerMediaType === "video"
+                          ? "bg-white text-black shadow-xs font-bold"
+                          : "text-neutral-500 hover:text-neutral-800"
+                      }`}
+                    >
+                      <Film className="w-3 h-3" />
+                      Video
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-3 bg-neutral-50 p-3.5 rounded-xl border border-neutral-200">
+                  {/* Banner Heading & Subtitle */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[11px] font-medium text-neutral-700 mb-1">
+                        Banner Headline
+                      </label>
+                      <input
+                        type="text"
+                        value={formBannerHeading}
+                        onChange={(e) => setFormBannerHeading(e.target.value)}
+                        placeholder="e.g. THE TOTE COLLECTION"
+                        className="w-full px-3 py-1.5 text-xs bg-white border border-neutral-300 rounded-lg focus:outline-none focus:border-black uppercase tracking-wider font-medium"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-medium text-neutral-700 mb-1">
+                        Banner Subtitle / Tagline
+                      </label>
+                      <input
+                        type="text"
+                        value={formBannerSubtitle}
+                        onChange={(e) => setFormBannerSubtitle(e.target.value)}
+                        placeholder="e.g. Pure geometric precision & Italian leather"
+                        className="w-full px-3 py-1.5 text-xs bg-white border border-neutral-300 rounded-lg focus:outline-none focus:border-black"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Banner Media URL & Upload */}
+                  <div>
+                    <label className="block text-[11px] font-medium text-neutral-700 mb-1">
+                      Banner {formBannerMediaType === "video" ? "Video" : "Image"} URL or File Upload
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        type="url"
+                        value={formBannerImageUrl}
+                        onChange={(e) => setFormBannerImageUrl(e.target.value)}
+                        placeholder={`https://... (${formBannerMediaType === "video" ? "MP4 video URL" : "High-res Image URL"})`}
+                        className="flex-1 px-3 py-1.5 text-xs bg-white border border-neutral-300 rounded-lg focus:outline-none focus:border-black"
+                      />
+                      <label className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-neutral-900 hover:bg-black text-white rounded-lg cursor-pointer transition shrink-0">
+                        {uploadingBanner ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : formBannerMediaType === "video" ? (
+                          <Film className="w-3.5 h-3.5" />
+                        ) : (
+                          <Upload className="w-3.5 h-3.5" />
+                        )}
+                        <span>{uploadingBanner ? "Uploading..." : "Upload File"}</span>
+                        <input
+                          type="file"
+                          accept={formBannerMediaType === "video" ? "video/mp4,video/webm" : "image/*"}
+                          onChange={handleBannerUpload}
+                          disabled={uploadingBanner}
+                          className="hidden"
+                        />
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Banner Preview Card */}
+                  {formBannerImageUrl && (
+                    <div className="relative w-full h-36 rounded-lg overflow-hidden border border-neutral-300 shadow-inner bg-black flex items-center justify-center">
+                      {formBannerMediaType === "video" ? (
+                        <video
+                          src={formBannerImageUrl}
+                          autoPlay
+                          loop
+                          muted
+                          playsInline
+                          className="w-full h-full object-cover opacity-60"
+                        />
+                      ) : (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={formBannerImageUrl}
+                          alt="Banner Preview"
+                          className="w-full h-full object-cover opacity-60"
+                        />
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex flex-col justify-end p-4 text-white">
+                        <span className="text-[9px] font-bold uppercase tracking-widest text-[#B39359] mb-0.5">
+                          {formBannerSubtitle || "Luxury Silhouettes"}
+                        </span>
+                        <h4 className="text-sm font-light tracking-widest uppercase">
+                          {formBannerHeading || formName || "Category Banner"}
+                        </h4>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="flex items-center justify-end gap-2 pt-5 border-t border-neutral-100">

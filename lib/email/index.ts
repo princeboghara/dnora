@@ -15,6 +15,11 @@ interface SendOtpOptions {
  * 3. Gmail App Password (GMAIL_USER, GMAIL_PASS)
  * 4. Development mode: logs cleanly to console.
  */
+// Global Outbound Email Switch
+// Set ENABLE_EMAIL_DISPATCH="true" in .env once email providers are fully configured.
+// Currently MUTED as requested by admin to prevent sending unwanted/failed emails during setup.
+const IS_EMAIL_ACTIVE = process.env.ENABLE_EMAIL_DISPATCH === "true";
+
 export async function sendVerificationOtpEmail({ email, name, otp }: SendOtpOptions): Promise<{
   success: boolean;
   delivered: boolean;
@@ -25,6 +30,15 @@ export async function sendVerificationOtpEmail({ email, name, otp }: SendOtpOpti
   console.log("=================================================");
   console.log(`🔑 [DNORA OTP] 6-Digit Code for ${email}: [ ${otp} ]`);
   console.log("=================================================");
+
+  if (!IS_EMAIL_ACTIVE) {
+    console.log(`🔇 [EMAIL DISPATCH MUTED] Outbound email suppressed for ${email}. (Set ENABLE_EMAIL_DISPATCH=true in .env to activate)`);
+    return {
+      success: true,
+      delivered: false,
+      message: "Email dispatch is paused by system configuration. No external email was sent.",
+    };
+  }
 
   const resendApiKey = process.env.RESEND_API_KEY;
   const gmailUser = process.env.GMAIL_USER;
@@ -183,6 +197,15 @@ export async function sendWelcomeEmail({ email, name }: SendWelcomeOptions): Pro
   console.log("=================================================");
   console.log(`🎉 [DNORA WELCOME] Sending welcome email to: ${email}`);
   console.log("=================================================");
+
+  if (!IS_EMAIL_ACTIVE) {
+    console.log(`🔇 [EMAIL DISPATCH MUTED] Welcome email suppressed for ${email}. (Set ENABLE_EMAIL_DISPATCH=true in .env to activate)`);
+    return {
+      success: true,
+      delivered: false,
+      message: "Email dispatch is paused by system configuration. No external email was sent.",
+    };
+  }
 
   const resendApiKey = process.env.RESEND_API_KEY;
   const gmailUser = process.env.GMAIL_USER;

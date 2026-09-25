@@ -440,7 +440,7 @@ export default function AdminNewProductPage() {
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-6">
+      <div className="w-full pt-6">
         {/* Status Alerts */}
         {errorMsg && (
           <div className="mb-6 p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 flex items-start gap-3 shadow-xs">

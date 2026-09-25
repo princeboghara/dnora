@@ -17,7 +17,16 @@ export async function PUT(
   try {
     const { id } = await context.params;
     const body = await req.json();
-    const { name, slug, description, image_url } = body;
+    const {
+      name,
+      slug,
+      description,
+      image_url,
+      banner_image_url,
+      banner_heading,
+      banner_subtitle,
+      banner_media_type,
+    } = body;
 
     const existing = await store.getCategoryById(id);
     if (!existing) {
@@ -29,6 +38,30 @@ export async function PUT(
       slug: typeof slug === "string" ? slug.trim() : undefined,
       description: typeof description === "string" ? description.trim() : undefined,
       image_url: image_url !== undefined ? (image_url ? String(image_url).trim() : "") : undefined,
+      banner_image_url:
+        banner_image_url !== undefined
+          ? banner_image_url
+            ? String(banner_image_url).trim()
+            : ""
+          : undefined,
+      banner_heading:
+        banner_heading !== undefined
+          ? banner_heading
+            ? String(banner_heading).trim()
+            : ""
+          : undefined,
+      banner_subtitle:
+        banner_subtitle !== undefined
+          ? banner_subtitle
+            ? String(banner_subtitle).trim()
+            : ""
+          : undefined,
+      banner_media_type:
+        banner_media_type !== undefined
+          ? banner_media_type === "video"
+            ? "video"
+            : "image"
+          : undefined,
     });
 
     try {

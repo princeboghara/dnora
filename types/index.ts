@@ -29,6 +29,10 @@ export interface ProductCategory {
   slug: string;
   image_url?: string;
   description?: string;
+  banner_image_url?: string;
+  banner_heading?: string;
+  banner_subtitle?: string;
+  banner_media_type?: "image" | "video";
   product_count?: number;
   created_at?: string;
 }
@@ -62,6 +66,8 @@ export interface Product {
   images: ProductImage[];
   color_variants?: ProductColorVariant[];
   categories?: ProductCategory[];
+  category_name?: string;
+  category_slug?: string;
   is_best_seller?: boolean;
   is_new_arrival?: boolean;
   sort_order?: number;
@@ -162,7 +168,7 @@ export interface UserAddress {
   created_at: string;
 }
 
-export type OrderStatus = "processing" | "confirmed" | "shipped" | "delivered" | "cancelled";
+export type OrderStatus = "pending" | "processing" | "confirmed" | "shipped" | "delivered" | "cancelled";
 export type PaymentStatus = "pending" | "paid" | "failed" | "refunded";
 
 export interface OrderItem {

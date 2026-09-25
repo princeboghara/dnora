@@ -89,26 +89,29 @@ export async function POST(req: NextRequest) {
       [normalizedEmail, otpHash, name.trim(), phone?.trim() || null, pwdHash, expiresAt]
     );
 
-    // 6. Send verification directly via Supabase Auth email service
-    let supaNotice = "";
-    try {
-      const supabase = await createClient();
-      const { error: supaErr } = await supabase.auth.signUp({
-        email: normalizedEmail,
-        password,
-        options: {
-          data: {
-            full_name: name.trim(),
-            phone: phone?.trim() || null,
+    // 6. External Email Dispatch (Muted by default as per admin request)
+    const isEmailDispatchEnabled = process.env.ENABLE_EMAIL_DISPATCH === "true";
+    if (isEmailDispatchEnabled) {
+      try {
+        const supabase = await createClient();
+        const { error: supaErr } = await supabase.auth.signUp({
+          email: normalizedEmail,
+          password,
+          options: {
+            data: {
+              full_name: name.trim(),
+              phone: phone?.trim() || null,
+            },
           },
-        },
-      });
-      if (supaErr) {
-        console.warn("[Supabase Auth] Notice:", supaErr.message);
-        supaNotice = supaErr.message;
+        });
+        if (supaErr) {
+          console.warn("[Supabase Auth] Notice:", supaErr.message);
+        }
+      } catch (e) {
+        console.warn("Supabase auth signup exception:", e);
       }
-    } catch (e) {
-      console.warn("Supabase auth signup exception:", e);
+    } else {
+      console.log(`🔇 [EMAIL DISPATCH MUTED] Supabase external auth email suppressed for ${normalizedEmail}. Code stored in DB.`);
     }
 
     return NextResponse.json({

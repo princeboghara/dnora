@@ -173,7 +173,7 @@ export default function AdminDashboardPage() {
           </span>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5 sm:gap-6">
           {SECTIONS.map((section) => {
             const Icon = section.icon;
             return (

@@ -147,8 +147,9 @@ export async function getUserOrders(userId: string, email?: string): Promise<Ord
 export async function getOrderById(orderId: string): Promise<Order | null> {
   try {
     const hasValidUuid = isValidUUID(orderId);
+    const whereClause = hasValidUuid ? "id = $1::uuid" : "order_number = $1";
     const res = await db.query(
-      `SELECT * FROM public.orders WHERE ${hasValidUuid ? "id = $1 OR " : ""}order_number = $1 LIMIT 1`,
+      `SELECT * FROM public.orders WHERE ${whereClause} LIMIT 1`,
       [orderId]
     );
     if (res.rows.length > 0) {

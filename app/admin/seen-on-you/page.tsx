@@ -278,7 +278,7 @@ export default function AdminSeenOnYouPage() {
   const activeCount = videos.filter((v) => v.status === "active").length;
 
   return (
-    <div className="space-y-8 max-w-6xl mx-auto pb-16 animate-in fade-in duration-200">
+    <div className="space-y-8 w-full pb-16 animate-in fade-in duration-200">
       {/* Page Title & Actions */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-neutral-200 pb-5">
         <div>
@@ -396,7 +396,7 @@ export default function AdminSeenOnYouPage() {
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-5">
           {videos.map((vid) => (
             <div
               key={vid.id}

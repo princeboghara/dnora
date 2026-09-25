@@ -43,9 +43,19 @@ export function CartDrawer() {
 
   if (!isOpen) return null;
 
-  const handleCheckout = () => {
+  const handleCheckout = async () => {
     closeCart();
-    router.push("/checkout");
+    try {
+      const res = await fetch("/api/user/session");
+      const data = await res.json();
+      if (!data.authenticated) {
+        router.push("/login?redirect=/checkout");
+      } else {
+        router.push("/checkout");
+      }
+    } catch {
+      router.push("/login?redirect=/checkout");
+    }
   };
 
   return (

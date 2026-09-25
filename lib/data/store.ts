@@ -656,8 +656,22 @@ class DataStore {
   }
 
   // CATEGORIES
+  async ensureCategoryBannerColumns(): Promise<void> {
+    try {
+      await db.query(`
+        ALTER TABLE public.product_categories ADD COLUMN IF NOT EXISTS banner_image_url TEXT;
+        ALTER TABLE public.product_categories ADD COLUMN IF NOT EXISTS banner_heading TEXT;
+        ALTER TABLE public.product_categories ADD COLUMN IF NOT EXISTS banner_subtitle TEXT;
+        ALTER TABLE public.product_categories ADD COLUMN IF NOT EXISTS banner_media_type TEXT DEFAULT 'image';
+      `);
+    } catch {
+      // non-blocking
+    }
+  }
+
   async getCategories(): Promise<ProductCategory[]> {
     try {
+      await this.ensureCategoryBannerColumns();
       const res = await db.query(`SELECT * FROM public.product_categories ORDER BY created_at ASC`);
       return res.rows;
     } catch (err) {
@@ -668,6 +682,7 @@ class DataStore {
 
   async getCategoryBySlug(slug: string): Promise<ProductCategory | null> {
     try {
+      await this.ensureCategoryBannerColumns();
       const res = await db.query(`SELECT * FROM public.product_categories WHERE slug = $1 LIMIT 1`, [slug]);
       return res.rows[0] || null;
     } catch (err) {
@@ -678,6 +693,7 @@ class DataStore {
 
   async getCategoryById(id: string): Promise<ProductCategory | null> {
     try {
+      await this.ensureCategoryBannerColumns();
       const res = await db.query(`SELECT * FROM public.product_categories WHERE id = $1 LIMIT 1`, [id]);
       return res.rows[0] || null;
     } catch (err) {
@@ -691,21 +707,46 @@ class DataStore {
     slug?: string;
     description?: string;
     image_url?: string;
+    banner_image_url?: string;
+    banner_heading?: string;
+    banner_subtitle?: string;
+    banner_media_type?: "image" | "video";
   }): Promise<ProductCategory> {
+    await this.ensureCategoryBannerColumns();
     const slug = data.slug?.trim() ? slugify(data.slug) : slugify(data.name);
     const res = await db.query(
-      `INSERT INTO public.product_categories (name, slug, description, image_url)
-       VALUES ($1, $2, $3, $4)
+      `INSERT INTO public.product_categories 
+        (name, slug, description, image_url, banner_image_url, banner_heading, banner_subtitle, banner_media_type)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        RETURNING *`,
-      [data.name.trim(), slug, data.description || null, data.image_url || null]
+      [
+        data.name.trim(),
+        slug,
+        data.description || null,
+        data.image_url || null,
+        data.banner_image_url || null,
+        data.banner_heading || null,
+        data.banner_subtitle || null,
+        data.banner_media_type || "image",
+      ]
     );
     return res.rows[0];
   }
 
   async updateCategory(
     id: string,
-    data: Partial<{ name: string; slug: string; description: string; image_url: string }>
+    data: Partial<{
+      name: string;
+      slug: string;
+      description: string;
+      image_url: string;
+      banner_image_url: string;
+      banner_heading: string;
+      banner_subtitle: string;
+      banner_media_type: "image" | "video";
+    }>
   ): Promise<ProductCategory | null> {
+    await this.ensureCategoryBannerColumns();
     const updates: string[] = [];
     const params: (string | null)[] = [];
     let idx = 1;
@@ -725,6 +766,22 @@ class DataStore {
     if (data.image_url !== undefined) {
       updates.push(`image_url = $${idx++}`);
       params.push(data.image_url || null);
+    }
+    if (data.banner_image_url !== undefined) {
+      updates.push(`banner_image_url = $${idx++}`);
+      params.push(data.banner_image_url || null);
+    }
+    if (data.banner_heading !== undefined) {
+      updates.push(`banner_heading = $${idx++}`);
+      params.push(data.banner_heading || null);
+    }
+    if (data.banner_subtitle !== undefined) {
+      updates.push(`banner_subtitle = $${idx++}`);
+      params.push(data.banner_subtitle || null);
+    }
+    if (data.banner_media_type !== undefined) {
+      updates.push(`banner_media_type = $${idx++}`);
+      params.push(data.banner_media_type || "image");
     }
 
     if (updates.length === 0) return this.getCategoryById(id);
@@ -1702,6 +1759,189 @@ class DataStore {
       return false;
     }
   }
+
+  // PROMO / CAMPAIGN BANNER (THE ARCHITECTURE OF LUXURY)
+  async ensurePromoBannerTable(): Promise<void> {
+    try {
+      await db.query(`
+        CREATE TABLE IF NOT EXISTS public.promo_banner_config (
+          id TEXT PRIMARY KEY DEFAULT 'default',
+          heading TEXT NOT NULL DEFAULT 'THE ARCHITECTURE OF LUXURY',
+          tagline TEXT NOT NULL DEFAULT 'THE FLORENTINE ATELIER',
+          description TEXT NOT NULL DEFAULT 'Cut from full-grain vegetable-tanned Italian calfskin with hand-painted beveled edges and signature brushed champagne brass hardware.',
+          button_text TEXT NOT NULL DEFAULT 'EXPLORE THE CAMPAIGN',
+          button_link TEXT NOT NULL DEFAULT '/shop',
+          image_url TEXT NOT NULL DEFAULT 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=2000&q=85',
+          is_active BOOLEAN NOT NULL DEFAULT true,
+          slides JSONB DEFAULT '[]'::jsonb,
+          updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+        );
+        INSERT INTO public.promo_banner_config (id) VALUES ('default') ON CONFLICT (id) DO NOTHING;
+        ALTER TABLE public.promo_banner_config ADD COLUMN IF NOT EXISTS slides JSONB DEFAULT '[]'::jsonb;
+      `);
+    } catch (err) {
+      // non-blocking
+    }
+  }
+
+  async getPromoBannerConfig(): Promise<PromoBannerConfig> {
+    const defaultVal: PromoBannerConfig = {
+      id: "default",
+      heading: "THE ARCHITECTURE OF LUXURY",
+      tagline: "THE FLORENTINE ATELIER",
+      description:
+        "Cut from full-grain vegetable-tanned Italian calfskin with hand-painted beveled edges and signature brushed champagne brass hardware.",
+      button_text: "EXPLORE THE CAMPAIGN",
+      button_link: "/shop",
+      image_url:
+        "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=2000&q=85",
+      is_active: true,
+      slides: [
+        {
+          id: "default-slide-1",
+          heading: "THE ARCHITECTURE OF LUXURY",
+          tagline: "THE FLORENTINE ATELIER",
+          description:
+            "Cut from full-grain vegetable-tanned Italian calfskin with hand-painted beveled edges and signature brushed champagne brass hardware.",
+          button_text: "EXPLORE THE CAMPAIGN",
+          button_link: "/shop",
+          media_type: "image",
+          media_url:
+            "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=2000&q=85",
+          duration_seconds: 6,
+        },
+      ],
+    };
+
+    try {
+      await this.ensurePromoBannerTable();
+      const res = await db.query(
+        `SELECT * FROM public.promo_banner_config WHERE id = 'default' LIMIT 1`
+      );
+      if (res.rows.length > 0) {
+        const row = res.rows[0];
+
+        let parsedSlides: CampaignSlide[] = [];
+        if (row.slides) {
+          try {
+            parsedSlides = typeof row.slides === "string" ? JSON.parse(row.slides) : row.slides;
+          } catch {
+            parsedSlides = [];
+          }
+        }
+
+        // If no slides array yet, seed with primary banner data
+        if (!Array.isArray(parsedSlides) || parsedSlides.length === 0) {
+          parsedSlides = [
+            {
+              id: "slide-1",
+              heading: row.heading || defaultVal.heading,
+              tagline: row.tagline || defaultVal.tagline,
+              description: row.description || defaultVal.description,
+              button_text: row.button_text || defaultVal.button_text,
+              button_link: row.button_link || defaultVal.button_link,
+              media_type: "image",
+              media_url: row.image_url || defaultVal.image_url,
+              duration_seconds: 6,
+            },
+          ];
+        }
+
+        return {
+          id: row.id,
+          heading: row.heading || defaultVal.heading,
+          tagline: row.tagline || defaultVal.tagline,
+          description: row.description || defaultVal.description,
+          button_text: row.button_text || defaultVal.button_text,
+          button_link: row.button_link || defaultVal.button_link,
+          image_url: row.image_url || defaultVal.image_url,
+          is_active: row.is_active !== undefined ? Boolean(row.is_active) : true,
+          slides: parsedSlides,
+          updated_at: row.updated_at,
+        };
+      }
+    } catch (err) {
+      console.error("Error fetching promo banner config:", err);
+    }
+    return defaultVal;
+  }
+
+  async updatePromoBannerConfig(
+    data: Partial<Omit<PromoBannerConfig, "id">>
+  ): Promise<PromoBannerConfig> {
+    await this.ensurePromoBannerTable();
+    const fields: string[] = [];
+    const values: (string | boolean)[] = [];
+    let i = 1;
+
+    if (data.heading !== undefined) {
+      fields.push(`heading = $${i++}`);
+      values.push(data.heading);
+    }
+    if (data.tagline !== undefined) {
+      fields.push(`tagline = $${i++}`);
+      values.push(data.tagline);
+    }
+    if (data.description !== undefined) {
+      fields.push(`description = $${i++}`);
+      values.push(data.description);
+    }
+    if (data.button_text !== undefined) {
+      fields.push(`button_text = $${i++}`);
+      values.push(data.button_text);
+    }
+    if (data.button_link !== undefined) {
+      fields.push(`button_link = $${i++}`);
+      values.push(data.button_link);
+    }
+    if (data.image_url !== undefined) {
+      fields.push(`image_url = $${i++}`);
+      values.push(data.image_url);
+    }
+    if (data.is_active !== undefined) {
+      fields.push(`is_active = $${i++}`);
+      values.push(Boolean(data.is_active));
+    }
+    if (data.slides !== undefined) {
+      fields.push(`slides = $${i++}`);
+      values.push(JSON.stringify(data.slides));
+    }
+
+    if (fields.length > 0) {
+      fields.push(`updated_at = timezone('utc'::text, now())`);
+      await db.query(
+        `UPDATE public.promo_banner_config SET ${fields.join(", ")} WHERE id = 'default'`,
+        values
+      );
+    }
+
+    return this.getPromoBannerConfig();
+  }
+}
+
+export interface CampaignSlide {
+  id: string;
+  heading: string;
+  tagline: string;
+  description: string;
+  button_text: string;
+  button_link: string;
+  media_type: "image" | "video";
+  media_url: string;
+  duration_seconds?: number;
+}
+
+export interface PromoBannerConfig {
+  id: string;
+  heading: string;
+  tagline: string;
+  description: string;
+  button_text: string;
+  button_link: string;
+  image_url: string;
+  is_active: boolean;
+  slides?: CampaignSlide[];
+  updated_at?: string;
 }
 
 // Export singleton instance

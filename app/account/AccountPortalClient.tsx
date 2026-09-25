@@ -22,11 +22,13 @@ import {
   Loader2,
   ChevronRight,
   ArrowRight,
+  Printer,
 } from "lucide-react";
 import { UserSession } from "@/lib/auth/user-session";
 import { Order, UserAddress } from "@/types";
 import { useWishlist } from "@/lib/store/wishlist-store";
 import { useCart } from "@/lib/store/cart-store";
+import InvoiceModal from "@/components/InvoiceModal";
 import { formatPrice } from "@/lib/utils";
 
 interface AccountPortalClientProps {
@@ -52,6 +54,7 @@ export default function AccountPortalClient({
   const [orders] = useState<Order[]>(initialOrders);
   const [addresses, setAddresses] = useState<UserAddress[]>(initialAddresses);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [viewingInvoiceOrder, setViewingInvoiceOrder] = useState<Order | null>(null);
 
   // Address modal states
   const [addressModalOpen, setAddressModalOpen] = useState(false);
@@ -420,13 +423,25 @@ export default function AccountPortalClient({
                               </span>
                             </div>
 
-                            <button
-                              type="button"
-                              onClick={() => setSelectedOrder(isSelected ? null : order)}
-                              className="px-3.5 py-2 text-xs font-bold uppercase tracking-wider text-neutral-800 bg-neutral-100 hover:bg-neutral-200 rounded-xl transition cursor-pointer"
-                            >
-                              {isSelected ? "Close Tracking" : "Track Order"}
-                            </button>
+                            <div className="flex items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={() => setViewingInvoiceOrder(order)}
+                                className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold uppercase tracking-wider text-neutral-800 bg-white border border-neutral-200 hover:bg-neutral-50 rounded-xl transition cursor-pointer shadow-2xs"
+                                title="Instant View & Download PDF Invoice"
+                              >
+                                <Printer className="w-3.5 h-3.5 text-neutral-600" />
+                                <span>Bill (PDF)</span>
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => setSelectedOrder(isSelected ? null : order)}
+                                className="px-3.5 py-2 text-xs font-bold uppercase tracking-wider text-neutral-800 bg-neutral-100 hover:bg-neutral-200 rounded-xl transition cursor-pointer"
+                              >
+                                {isSelected ? "Close Tracking" : "Track Order"}
+                              </button>
+                            </div>
                           </div>
                         </div>
 
@@ -976,6 +991,12 @@ export default function AccountPortalClient({
           </div>
         </div>
       )}
+
+      {/* Instant High-Resolution Invoice Modal */}
+      <InvoiceModal
+        order={viewingInvoiceOrder}
+        onClose={() => setViewingInvoiceOrder(null)}
+      />
     </div>
   );
 }

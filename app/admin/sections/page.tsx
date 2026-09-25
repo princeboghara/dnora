@@ -276,7 +276,7 @@ export default function AdminHomepageSectionsPage() {
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-6">
+      <div className="w-full pt-6">
         {/* Status Msg */}
         {statusMsg && (
           <div
