@@ -1,7 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { CheckCircle2, Package, ArrowRight, ShieldCheck, Mail, MapPin, Printer } from "lucide-react";
+import { CheckCircle2, Package, ArrowRight, MapPin } from "lucide-react";
 import { getOrderById } from "@/lib/data/account";
 import { formatPrice } from "@/lib/utils";
 import InvoicePrintButton from "@/components/InvoicePrintButton";
@@ -14,7 +14,7 @@ export default async function OrderSuccessPage({ params }: OrderSuccessPageProps
   const { id } = await params;
   const order = await getOrderById(id);
 
-  const shippingAddr = order?.shipping_address as any;
+  const shippingAddr = (order?.shipping_address || null) as Record<string, string | undefined> | null;
 
   return (
     <div className="min-h-screen bg-[#FAF9F6] text-neutral-900 py-12 px-4 sm:px-6">

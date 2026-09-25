@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { Order, OrderItem, UserAddress } from "@/types";
+import { Order, OrderItem } from "@/types";
 import { ensureAccountTables } from "./account";
 
 export interface CreateOrderInput {
@@ -45,63 +45,76 @@ export async function createNewOrder(input: CreateOrderInput): Promise<Order> {
   const itemsTotal = input.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const totalAmount = itemsTotal + (input.shippingCost || 0);
 
-  const orderRes = await db.query(
-    `INSERT INTO public.orders 
-      (order_number, user_id, customer_email, customer_name, customer_phone, total_amount, status, payment_status, payment_method, shipping_address, notes)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-     RETURNING *`,
-    [
-      orderNumber,
-      validUserId,
-      input.customerEmail.toLowerCase().trim(),
-      input.customerName.trim(),
-      input.customerPhone || null,
-      totalAmount,
-      "pending",
-      input.paymentStatus || "paid",
-      input.paymentMethod || "card",
-      JSON.stringify(input.shippingAddress),
-      input.notes || null,
-    ]
-  );
+  const client = await db.connect();
 
-  const orderRow = orderRes.rows[0];
+  try {
+    await client.query("BEGIN");
 
-  const createdItems: OrderItem[] = [];
-  for (const item of input.items) {
-    const validProductId = isValidUUID(item.productId) ? item.productId : null;
-    const itemRes = await db.query(
-      `INSERT INTO public.order_items 
-        (order_id, product_id, product_name, product_slug, price, quantity, image_url, attributes)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+    const orderRes = await client.query(
+      `INSERT INTO public.orders 
+        (order_number, user_id, customer_email, customer_name, customer_phone, total_amount, status, payment_status, payment_method, shipping_address, notes)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
        RETURNING *`,
       [
-        orderRow.id,
-        validProductId,
-        item.productName,
-        item.productSlug || null,
-        item.price,
-        item.quantity,
-        item.imageUrl || null,
-        JSON.stringify({
-          selectedColor: item.selectedColor,
-          ...(item.attributes || {}),
-        }),
+        orderNumber,
+        validUserId,
+        input.customerEmail.toLowerCase().trim(),
+        input.customerName.trim(),
+        input.customerPhone || null,
+        totalAmount,
+        "pending",
+        input.paymentStatus || "paid",
+        input.paymentMethod || "card",
+        JSON.stringify(input.shippingAddress),
+        input.notes || null,
       ]
     );
 
-    const inserted = itemRes.rows[0];
-    createdItems.push({
-      ...inserted,
-      price: Number(inserted.price),
-    });
-  }
+    const orderRow = orderRes.rows[0];
+    const createdItems: OrderItem[] = [];
 
-  return {
-    ...orderRow,
-    total_amount: Number(orderRow.total_amount),
-    items: createdItems,
-  };
+    for (const item of input.items) {
+      const validProductId = isValidUUID(item.productId) ? item.productId : null;
+      const itemRes = await client.query(
+        `INSERT INTO public.order_items 
+          (order_id, product_id, product_name, product_slug, price, quantity, image_url, attributes)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+         RETURNING *`,
+        [
+          orderRow.id,
+          validProductId,
+          item.productName,
+          item.productSlug || null,
+          item.price,
+          item.quantity,
+          item.imageUrl || null,
+          JSON.stringify({
+            selectedColor: item.selectedColor,
+            ...(item.attributes || {}),
+          }),
+        ]
+      );
+
+      const inserted = itemRes.rows[0];
+      createdItems.push({
+        ...inserted,
+        price: Number(inserted.price),
+      });
+    }
+
+    await client.query("COMMIT");
+
+    return {
+      ...orderRow,
+      total_amount: Number(orderRow.total_amount),
+      items: createdItems,
+    };
+  } catch (err) {
+    await client.query("ROLLBACK").catch(() => {});
+    throw err;
+  } finally {
+    client.release();
+  }
 }
 
 export async function getAllOrdersAdmin(filters?: {

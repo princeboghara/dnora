@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import Image from "next/image";
 import {
   ZoomIn,
   ZoomOut,
@@ -38,14 +37,19 @@ export function CircularImageCropperModal({
   const viewportRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
 
-  // Initialize or reset when modal opens
-  useEffect(() => {
+  // Sync state when props change during render
+  const [prevOpen, setPrevOpen] = useState(isOpen);
+  const [prevInitialUrl, setPrevInitialUrl] = useState(initialImageUrl);
+
+  if (isOpen !== prevOpen || initialImageUrl !== prevInitialUrl) {
+    setPrevOpen(isOpen);
+    setPrevInitialUrl(initialImageUrl);
     if (isOpen && initialImageUrl) {
       setImageSrc(initialImageUrl);
       setZoom(1);
       setPan({ x: 0, y: 0 });
     }
-  }, [isOpen, initialImageUrl]);
+  }
 
   const handleImageLoad = () => {
     setPan({ x: 0, y: 0 });

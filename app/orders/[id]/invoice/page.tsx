@@ -1,6 +1,5 @@
 import React from "react";
 import Image from "next/image";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import InvoiceControls from "@/components/InvoiceControls";
 import { getOrderById } from "@/lib/data/account";
@@ -18,7 +17,7 @@ export default async function InvoicePage({ params }: InvoicePageProps) {
     notFound();
   }
 
-  const shippingAddr = order.shipping_address as any;
+  const shippingAddr = (order.shipping_address || {}) as Record<string, string | undefined>;
   const invoiceNumber = `INV-${order.order_number}`;
   const invoiceDate = new Date(order.created_at).toLocaleDateString("en-IN", {
     day: "numeric",

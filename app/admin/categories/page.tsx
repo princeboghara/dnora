@@ -221,8 +221,8 @@ export default function AdminCategoriesPage() {
             description: formDescription.trim() || undefined,
             image_url: formImageUrl.trim() || undefined,
             banner_image_url: formBannerImageUrl.trim() || undefined,
-            banner_heading: formBannerHeading.trim() || undefined,
-            banner_subtitle: formBannerSubtitle.trim() || undefined,
+            banner_heading: formBannerHeading.trim(),
+            banner_subtitle: formBannerSubtitle.trim(),
             banner_media_type: formBannerMediaType,
           }),
         });
@@ -249,8 +249,8 @@ export default function AdminCategoriesPage() {
             description: formDescription.trim() || undefined,
             image_url: formImageUrl.trim() || undefined,
             banner_image_url: formBannerImageUrl.trim() || undefined,
-            banner_heading: formBannerHeading.trim() || undefined,
-            banner_subtitle: formBannerSubtitle.trim() || undefined,
+            banner_heading: formBannerHeading.trim(),
+            banner_subtitle: formBannerSubtitle.trim(),
             banner_media_type: formBannerMediaType,
           }),
         });
@@ -640,7 +640,7 @@ export default function AdminCategoriesPage() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <label className="block text-[11px] font-medium text-neutral-700 mb-1">
-                        Banner Headline
+                        Banner Headline (Optional)
                       </label>
                       <input
                         type="text"
@@ -652,7 +652,7 @@ export default function AdminCategoriesPage() {
                     </div>
                     <div>
                       <label className="block text-[11px] font-medium text-neutral-700 mb-1">
-                        Banner Subtitle / Tagline
+                        Banner Subtitle / Tagline (Optional)
                       </label>
                       <input
                         type="text"
@@ -662,6 +662,9 @@ export default function AdminCategoriesPage() {
                         className="w-full px-3 py-1.5 text-xs bg-white border border-neutral-300 rounded-lg focus:outline-none focus:border-black"
                       />
                     </div>
+                    <p className="text-[10px] text-neutral-400 col-span-1 sm:col-span-2">
+                      Optional: Leave both empty if you want a clean banner image without any text overlay.
+                    </p>
                   </div>
 
                   {/* Banner Media URL & Upload */}

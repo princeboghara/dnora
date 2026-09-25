@@ -255,7 +255,6 @@ export default function AdminOrdersPage() {
               </thead>
               <tbody className="divide-y divide-neutral-100">
                 {orders.map((order) => {
-                  const addr = order.shipping_address as any;
                   return (
                     <tr key={order.id} className="hover:bg-neutral-50/70 transition-colors">
                       {/* Order Number */}
@@ -540,19 +539,22 @@ export default function AdminOrdersPage() {
                 <div className="p-3.5 bg-white rounded-lg border border-neutral-200/80 space-y-1">
                   <p className="text-[10px] uppercase font-bold text-neutral-400 tracking-wider">Destination</p>
                   {selectedOrder.shipping_address ? (
-                    <>
-                      <p className="text-neutral-800 font-medium">
-                        {(selectedOrder.shipping_address as any).addressLine1}
-                      </p>
-                      <p className="text-neutral-600 font-light">
-                        {(selectedOrder.shipping_address as any).city},{" "}
-                        {(selectedOrder.shipping_address as any).state} -{" "}
-                        {(selectedOrder.shipping_address as any).postalCode}
-                      </p>
-                      <p className="text-neutral-500 font-light">
-                        {(selectedOrder.shipping_address as any).country || "India"}
-                      </p>
-                    </>
+                    (() => {
+                      const addr = selectedOrder.shipping_address as Record<string, string | undefined>;
+                      return (
+                        <>
+                          <p className="text-neutral-800 font-medium">
+                            {addr.address_line1 || addr.addressLine1 || ""}
+                          </p>
+                          <p className="text-neutral-600 font-light">
+                            {addr.city}, {addr.state} - {addr.postal_code || addr.postalCode}
+                          </p>
+                          <p className="text-neutral-500 font-light">
+                            {addr.country || "India"}
+                          </p>
+                        </>
+                      );
+                    })()
                   ) : (
                     <p className="text-neutral-400 italic">No physical address stored.</p>
                   )}

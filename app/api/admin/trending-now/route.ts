@@ -31,6 +31,9 @@ export async function POST(req: NextRequest) {
       alt_text: body.alt_text || body.title || "",
       sort_order: Number(body.sort_order ?? 0),
       is_active: body.is_active !== undefined ? Boolean(body.is_active) : true,
+      target_link: body.target_link || undefined,
+      product_id: body.product_id || undefined,
+      product_slug: body.product_slug || undefined,
     });
 
     revalidatePath("/");
@@ -61,6 +64,9 @@ export async function PUT(req: NextRequest) {
       alt_text: body.alt_text,
       sort_order: body.sort_order !== undefined ? Number(body.sort_order) : undefined,
       is_active: body.is_active !== undefined ? Boolean(body.is_active) : undefined,
+      target_link: body.target_link !== undefined ? body.target_link : undefined,
+      product_id: body.product_id !== undefined ? body.product_id : undefined,
+      product_slug: body.product_slug !== undefined ? body.product_slug : undefined,
     });
 
     revalidatePath("/");

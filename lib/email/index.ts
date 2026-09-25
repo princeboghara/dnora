@@ -358,3 +358,185 @@ export async function sendWelcomeEmail({ email, name }: SendWelcomeOptions): Pro
   };
 }
 
+export interface SendOrderConfirmationOptions {
+  orderNumber: string;
+  customerEmail: string;
+  customerName: string;
+  totalAmount: number;
+  paymentMethod: string;
+  shippingAddress: {
+    fullName: string;
+    addressLine1: string;
+    city: string;
+    state: string;
+    postalCode: string;
+  };
+  items: {
+    productName: string;
+    price: number;
+    quantity: number;
+    selectedColor?: string;
+  }[];
+}
+
+/**
+ * Sends a luxury order confirmation and receipt email.
+ */
+export async function sendOrderConfirmationEmail(opts: SendOrderConfirmationOptions): Promise<{
+  success: boolean;
+  delivered: boolean;
+  message?: string;
+}> {
+  console.log("=================================================");
+  console.log(`📦 [DNORA ORDER CONFIRMATION] Order #${opts.orderNumber} for ${opts.customerEmail}`);
+  console.log("=================================================");
+
+  if (!IS_EMAIL_ACTIVE) {
+    console.log(`🔇 [EMAIL DISPATCH MUTED] Order confirmation email suppressed for ${opts.customerEmail}. (Set ENABLE_EMAIL_DISPATCH=true in .env to activate)`);
+    return {
+      success: true,
+      delivered: false,
+      message: "Email dispatch is paused by system configuration. Order was recorded successfully.",
+    };
+  }
+
+  const resendApiKey = process.env.RESEND_API_KEY;
+  const gmailUser = process.env.GMAIL_USER;
+  const gmailPass = process.env.GMAIL_PASS || process.env.GMAIL_APP_PASSWORD;
+  const smtpHost = process.env.SMTP_HOST;
+  const smtpPort = Number(process.env.SMTP_PORT) || 587;
+  const smtpUser = process.env.SMTP_USER;
+  const smtpPass = process.env.SMTP_PASS;
+
+  const itemsHtml = opts.items
+    .map(
+      (item) => `
+      <tr>
+        <td style="padding: 10px 0; border-bottom: 1px solid #ECE9E2; font-size: 13px; color: #111;">
+          <strong>${item.productName}</strong>${item.selectedColor ? ` <span style="color:#777; font-size: 11px;">(${item.selectedColor})</span>` : ""}
+          <br><span style="font-size: 11px; color: #888;">Qty: ${item.quantity}</span>
+        </td>
+        <td style="padding: 10px 0; border-bottom: 1px solid #ECE9E2; text-align: right; font-size: 13px; font-weight: 600; color: #111;">
+          ₹${(item.price * item.quantity).toLocaleString("en-IN")}
+        </td>
+      </tr>
+    `
+    )
+    .join("");
+
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <style>
+        body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #FAF9F6; margin: 0; padding: 40px 20px; color: #0E0E0E; }
+        .container { max-width: 560px; margin: 0 auto; background: #FFFFFF; border: 1px solid #E8E5DE; padding: 44px 36px; border-radius: 2px; }
+        .brand { text-align: center; letter-spacing: 0.35em; font-size: 18px; font-weight: 800; color: #0E0E0E; margin-bottom: 6px; text-transform: uppercase; }
+        .subbrand { text-align: center; letter-spacing: 0.2em; font-size: 10px; color: #C5A880; font-weight: 700; text-transform: uppercase; margin-bottom: 30px; }
+        .order-badge { background: #F5F3EF; border: 1px solid #E8E5DE; padding: 18px 24px; text-align: center; margin-bottom: 28px; }
+        .order-num { font-size: 16px; font-weight: 700; letter-spacing: 0.1em; color: #0E0E0E; font-family: monospace; }
+        .text { font-size: 13px; line-height: 1.6; color: #4A4844; margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
+        .total-row { font-size: 15px; font-weight: bold; color: #0E0E0E; }
+        .address-box { background: #FAF9F6; border: 1px solid #E8E5DE; padding: 16px; font-size: 12px; color: #555; line-height: 1.5; margin-bottom: 24px; }
+        .footer { text-align: center; font-size: 11px; color: #A8A59E; margin-top: 36px; border-top: 1px solid #E8E5DE; padding-top: 20px; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="brand">DNORA</div>
+        <div class="subbrand">Maison Concierge &bull; Order Confirmation</div>
+
+        <div class="order-badge">
+          <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; color: #888; margin-bottom: 4px;">Order Confirmed</div>
+          <div class="order-num">#${opts.orderNumber}</div>
+        </div>
+
+        <p class="text">
+          Dear ${opts.customerName},<br><br>
+          Thank you for choosing <strong>DNORA</strong>. Your order has been registered at our atelier and is currently being prepared for dispatch with insured white-glove packaging.
+        </p>
+
+        <table>
+          <thead>
+            <tr>
+              <th style="text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: #888; padding-bottom: 8px; border-bottom: 1px solid #DDD;">Silhouette</th>
+              <th style="text-align: right; font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: #888; padding-bottom: 8px; border-bottom: 1px solid #DDD;">Price</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${itemsHtml}
+            <tr>
+              <td style="padding: 14px 0 0 0; font-size: 14px; font-weight: 700; color: #0E0E0E;">Total Paid (${opts.paymentMethod.toUpperCase()})</td>
+              <td style="padding: 14px 0 0 0; text-align: right; font-size: 16px; font-weight: 800; color: #0E0E0E;">₹${opts.totalAmount.toLocaleString("en-IN")}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="address-box">
+          <strong style="color: #111; display: block; margin-bottom: 4px;">Delivery Destination:</strong>
+          ${opts.shippingAddress.fullName}<br>
+          ${opts.shippingAddress.addressLine1}<br>
+          ${opts.shippingAddress.city}, ${opts.shippingAddress.state} - ${opts.shippingAddress.postalCode}
+        </div>
+
+        <p class="text" style="font-size: 12px; text-align: center; color: #777;">
+          You can track your order status in real time anytime by visiting your DNORA client portal.
+        </p>
+
+        <div class="footer">
+          &copy; ${new Date().getFullYear()} DNORA Luxury Handbags & Leather Goods Atelier.<br>
+          Handcrafted in Florence, Italy
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  if (resendApiKey) {
+    try {
+      const resend = new Resend(resendApiKey);
+      const fromEmail = process.env.EMAIL_FROM || "DNORA Atelier <onboarding@resend.dev>";
+      await resend.emails.send({
+        from: fromEmail,
+        to: [opts.customerEmail],
+        subject: `Order Confirmation #${opts.orderNumber} — DNORA Atelier`,
+        html: htmlContent,
+      });
+      return { success: true, delivered: true };
+    } catch (e) {
+      console.error("Resend order email error:", e);
+    }
+  }
+
+  if (gmailUser || smtpHost) {
+    try {
+      const transporter = gmailUser
+        ? nodemailer.createTransport({
+            service: "gmail",
+            auth: { user: gmailUser, pass: gmailPass },
+          })
+        : nodemailer.createTransport({
+            host: smtpHost,
+            port: smtpPort,
+            secure: smtpPort === 465,
+            auth: { user: smtpUser, pass: smtpPass },
+          });
+
+      await transporter.sendMail({
+        from: gmailUser ? `"DNORA Atelier" <${gmailUser}>` : process.env.EMAIL_FROM || `"DNORA Atelier" <${smtpUser}>`,
+        to: opts.customerEmail,
+        subject: `Order Confirmation #${opts.orderNumber} — DNORA Atelier`,
+        html: htmlContent,
+      });
+      return { success: true, delivered: true };
+    } catch (e) {
+      console.error("SMTP order email error:", e);
+    }
+  }
+
+  return { success: true, delivered: false, message: "Order processed, email provider unconfigured." };
+}
+
+

@@ -72,11 +72,32 @@ export default async function CategoryPage({
     products.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   }
 
+  const hasBannerText = Boolean(category?.banner_heading?.trim() || category?.banner_subtitle?.trim());
+
   return (
     <div className="min-h-screen bg-[#FDFCFB] text-neutral-900 pb-24">
+      {/* Top Breadcrumb Trail - Above the Banner */}
+      <div className="bg-[#FAF8F5] border-b border-neutral-200/70 py-3">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs text-neutral-500">
+            <Link href="/" className="hover:text-black transition-colors">
+              Home
+            </Link>
+            <ChevronRight className="w-3 h-3 text-neutral-400" />
+            <Link href="/shop" className="hover:text-black transition-colors">
+              Collections
+            </Link>
+            <ChevronRight className="w-3 h-3 text-neutral-400" />
+            <span className="text-neutral-900 font-semibold tracking-wide">
+              {title}
+            </span>
+          </nav>
+        </div>
+      </div>
+
       {/* Category Hero Banner (Image or Video) */}
       {category?.banner_image_url ? (
-        <section className="relative w-full h-[360px] sm:h-[420px] md:h-[480px] bg-black overflow-hidden flex items-end">
+        <section className="relative w-full h-[320px] sm:h-[400px] md:h-[480px] lg:h-[540px] bg-neutral-950 overflow-hidden flex items-end">
           {category.banner_media_type === "video" ? (
             <video
               src={category.banner_image_url}
@@ -84,7 +105,7 @@ export default async function CategoryPage({
               loop
               muted
               playsInline
-              className="absolute inset-0 w-full h-full object-cover opacity-75"
+              className="absolute inset-0 w-full h-full object-cover"
             />
           ) : (
             <Image
@@ -92,77 +113,44 @@ export default async function CategoryPage({
               alt={title}
               fill
               priority
-              className="object-cover opacity-75"
+              className="object-cover"
               sizes="100vw"
             />
           )}
 
-          {/* Cinematic Dark & Gold Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/45 to-black/30 pointer-events-none" />
+          {/* Only render text & gradient overlay if the admin explicitly provided headline or subtitle */}
+          {hasBannerText && (
+            <>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent pointer-events-none" />
+              <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8 sm:pb-10 md:pb-12">
+                <div className="max-w-2xl space-y-2 text-white">
+                  {category.banner_subtitle?.trim() && (
+                    <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-[#E5C378] text-[10px] font-bold uppercase tracking-[0.25em]">
+                      <Sparkles className="w-3 h-3" />
+                      <span>{category.banner_subtitle.trim()}</span>
+                    </div>
+                  )}
 
-          {/* Content Container */}
-          <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-10 sm:pb-12 md:pb-14">
-            {/* Breadcrumb Trail */}
-            <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs text-white/70 mb-4">
-              <Link href="/" className="hover:text-white transition-colors">
-                Home
-              </Link>
-              <ChevronRight className="w-3 h-3 text-white/50" />
-              <Link href="/shop" className="hover:text-white transition-colors">
-                Collections
-              </Link>
-              <ChevronRight className="w-3 h-3 text-white/50" />
-              <span className="text-white font-medium tracking-wide">
-                {title}
-              </span>
-            </nav>
-
-            <div className="max-w-2xl space-y-2.5 text-white">
-              <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-[#E5C378] text-[10px] font-bold uppercase tracking-[0.25em]">
-                <Sparkles className="w-3 h-3" />
-                <span>{category.banner_subtitle || "DNORA Silhouette Edit"}</span>
+                  {category.banner_heading?.trim() && (
+                    <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-heading font-light tracking-[0.16em] uppercase text-white drop-shadow-sm">
+                      {category.banner_heading.trim()}
+                    </h1>
+                  )}
+                </div>
               </div>
-
-              <h1 className="text-3xl sm:text-4xl md:text-5xl font-heading font-light tracking-[0.16em] uppercase text-white drop-shadow-sm">
-                {category.banner_heading || title}
-              </h1>
-
-              <p className="text-xs sm:text-sm text-neutral-200 font-light leading-relaxed max-w-xl line-clamp-3">
-                {description}
-              </p>
-            </div>
-          </div>
+            </>
+          )}
         </section>
       ) : (
         /* Fallback Editorial Header if banner is not uploaded */
-        <section className="relative w-full bg-[#FAF8F5] border-b border-neutral-200/80 pt-10 pb-10 sm:pt-14 sm:pb-14">
+        <section className="relative w-full bg-[#FAF8F5] border-b border-neutral-200/80 pt-8 pb-8 sm:pt-12 sm:pb-12">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs text-neutral-500 mb-5">
-              <Link href="/" className="hover:text-black transition-colors">
-                Home
-              </Link>
-              <ChevronRight className="w-3 h-3 text-neutral-400" />
-              <Link href="/shop" className="hover:text-black transition-colors">
-                Collections
-              </Link>
-              <ChevronRight className="w-3 h-3 text-neutral-400" />
-              <span className="text-neutral-900 font-semibold tracking-wide">
-                {title}
-              </span>
-            </nav>
-
             <div className="max-w-2xl space-y-2.5">
-              <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-neutral-900 text-white text-[10px] font-bold uppercase tracking-[0.2em]">
-                <Sparkles className="w-3 h-3 text-[#D4AF37]" />
-                <span>DNORA Silhouette Edit</span>
-              </div>
-
               <h1 className="text-2xl sm:text-3xl md:text-4xl font-heading font-normal tracking-[0.16em] uppercase text-neutral-950">
                 {title}
               </h1>
-
               <p className="text-xs sm:text-sm text-neutral-600 font-light leading-relaxed max-w-xl">
-                {description}
+                {category?.description || `Explore our bespoke curated range of ${title.toLowerCase()}, sculpted with artisanal Italian craftsmanship.`}
               </p>
             </div>
           </div>

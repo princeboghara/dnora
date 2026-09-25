@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Sparkles, ChevronLeft, ChevronRight } from "lucide-react";
@@ -27,12 +27,9 @@ export function PromoBanner({
   imageUrl = "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=2000&q=85",
   isActive = true,
 }: PromoBannerProps) {
-  // If explicitly inactive, do not render
-  if (isActive === false) return null;
-
   // Prepare slides list with fallback to top-level props
-  const resolvedSlides: CampaignSlide[] =
-    slides && slides.length > 0
+  const resolvedSlides: CampaignSlide[] = useMemo(() => {
+    return slides && slides.length > 0
       ? slides
       : [
           {
@@ -47,6 +44,7 @@ export function PromoBanner({
             duration_seconds: 6,
           },
         ];
+  }, [slides, heading, tagline, description, buttonText, buttonLink, imageUrl]);
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
@@ -65,7 +63,7 @@ export function PromoBanner({
 
   // Auto-advance timer (push transition)
   useEffect(() => {
-    if (totalSlides <= 1 || isHovered) return;
+    if (!isActive || totalSlides <= 1 || isHovered) return;
 
     const currentSlide = resolvedSlides[currentIndex];
     const duration = (currentSlide?.duration_seconds || 6) * 1000;
@@ -75,7 +73,12 @@ export function PromoBanner({
     }, duration);
 
     return () => clearTimeout(timer);
-  }, [currentIndex, isHovered, totalSlides, resolvedSlides, nextSlide]);
+  }, [isActive, currentIndex, isHovered, totalSlides, resolvedSlides, nextSlide]);
+
+  // If explicitly inactive, do not render
+  if (isActive === false) {
+    return null;
+  }
 
   // Handle Touch Swipe on Mobile
   const handleTouchStart = (e: React.TouchEvent) => {

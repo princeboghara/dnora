@@ -1,12 +1,12 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import {
   Volume2,
   VolumeX,
 } from "lucide-react";
+import { HeroBanner as HeroBannerType } from "@/types";
 
 export interface HeroSlide {
   id: string;
@@ -83,8 +83,8 @@ export function HeroBanner({
           const data = await res.json();
           if (data.banners && Array.isArray(data.banners) && data.banners.length > 0) {
             const active = data.banners
-              .filter((b: any) => b.is_active && b.status === "published")
-              .map((b: any) => ({
+              .filter((b: HeroBannerType) => b.is_active && b.status === "published")
+              .map((b: HeroBannerType) => ({
                 id: b.id,
                 media_type: b.media_type,
                 media_url: b.media_url,

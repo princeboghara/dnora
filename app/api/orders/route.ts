@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { store } from "@/lib/data/store";
+import { createNewOrder } from "@/lib/data/orders";
 import { getUserSession } from "@/lib/auth/user-session";
 
 export const dynamic = "force-dynamic";
@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { formData, items, subtotal } = body;
+    const { formData, items } = body;
 
     if (!formData || !items || !Array.isArray(items) || items.length === 0) {
       return NextResponse.json(
@@ -19,45 +19,42 @@ export async function POST(req: NextRequest) {
     // Check if user is logged in
     const session = await getUserSession();
 
-    const orderNumber = `DN-${Date.now().toString().slice(-6)}-${Math.floor(100 + Math.random() * 900)}`;
-
-    const orderData = {
-      order_number: orderNumber,
-      user_id: session?.id || null,
-      customer_name: `${formData.firstName || ""} ${formData.lastName || ""}`.trim() || "Guest Customer",
-      customer_email: formData.email,
-      customer_phone: formData.phone || null,
-      total_amount: Number(subtotal || 0),
-      status: "processing" as const,
-      payment_status: formData.paymentMethod === "cod" ? ("pending" as const) : ("paid" as const),
-      payment_method: formData.paymentMethod === "cod" ? "Cash on Delivery" : "Online Payment / Card",
-      shipping_address: {
-        full_name: `${formData.firstName || ""} ${formData.lastName || ""}`.trim(),
+    const createdOrder = await createNewOrder({
+      userId: session?.id || null,
+      customerName: `${formData.firstName || ""} ${formData.lastName || ""}`.trim() || "Guest Customer",
+      customerEmail: formData.email?.toLowerCase().trim() || "",
+      customerPhone: formData.phone || undefined,
+      shippingAddress: {
+        fullName: `${formData.firstName || ""} ${formData.lastName || ""}`.trim() || "Valued Customer",
         phone: formData.phone || "",
-        address_line1: formData.address || "",
+        addressLine1: formData.address || "",
         city: formData.city || "",
         state: formData.state || "Gujarat",
-        postal_code: formData.postalCode || "",
+        postalCode: formData.postalCode || "",
         country: "India",
       },
-      notes: formData.specialInstructions || (formData.giftWrap ? "Complimentary luxury gift wrapping requested." : null),
-    };
-
-    const orderItems = items.map((it: {
-      product: { id?: string; name: string; slug?: string; price: number; images?: { secure_url?: string }[] };
-      quantity: number;
-      selectedVariant?: { name?: string; color_hex?: string };
-    }) => ({
-      product_id: it.product?.id || null,
-      product_name: it.product?.name || "DNORA Luxury Handbag",
-      product_slug: it.product?.slug || null,
-      price: Number(it.product?.price || 0),
-      quantity: Number(it.quantity || 1),
-      image_url: it.product?.images?.[0]?.secure_url || null,
-      attributes: it.selectedVariant ? { variant: it.selectedVariant.name } : undefined,
-    }));
-
-    const createdOrder = await store.createOrder(orderData, orderItems);
+      items: items.map((it: {
+        productId?: string;
+        product?: { id?: string; name: string; slug?: string; price: number; images?: { secure_url?: string }[] };
+        productName?: string;
+        productSlug?: string;
+        price?: number;
+        quantity: number;
+        imageUrl?: string;
+        selectedVariant?: { name?: string; color_hex?: string };
+      }) => ({
+        productId: it.product?.id || it.productId,
+        productName: it.product?.name || it.productName || "DNORA Luxury Handbag",
+        productSlug: it.product?.slug || it.productSlug,
+        price: Number(it.product?.price || it.price || 0),
+        quantity: Number(it.quantity || 1),
+        imageUrl: it.product?.images?.[0]?.secure_url || it.imageUrl,
+        attributes: it.selectedVariant ? { variant: it.selectedVariant.name } : undefined,
+      })),
+      paymentMethod: formData.paymentMethod || "card",
+      paymentStatus: formData.paymentMethod === "cod" ? "pending" : "paid",
+      notes: formData.specialInstructions || (formData.giftWrap ? "Complimentary luxury gift wrapping requested." : undefined),
+    });
 
     return NextResponse.json({
       success: true,
@@ -70,3 +67,4 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
+

@@ -248,7 +248,7 @@ export default function AdminAllItemsPage() {
     }
 
     // Auto-add pending image url if filled
-    let finalImages = [...newProdImages];
+    const finalImages = [...newProdImages];
     if (newProdImageUrl.trim()) {
       try {
         new URL(newProdImageUrl.trim());

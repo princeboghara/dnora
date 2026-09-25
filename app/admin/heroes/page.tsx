@@ -29,6 +29,7 @@ import {
   X,
 } from "lucide-react";
 import { HeroBanner } from "@/types";
+import { DestinationLinkSelect } from "@/components/admin/DestinationLinkSelect";
 
 export default function AdminHeroesPage() {
   const [banners, setBanners] = useState<HeroBanner[]>([]);
@@ -581,6 +582,14 @@ export default function AdminHeroesPage() {
               Multi-image responsive banners with Desktop, Tablet, and Mobile assets.
             </p>
           </div>
+          <button
+            type="button"
+            onClick={openCreateModal}
+            className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider text-white bg-black rounded-lg hover:bg-neutral-800 transition cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Add Slide</span>
+          </button>
         </div>
 
         {banners.length === 0 && !loading ? (
@@ -1177,20 +1186,14 @@ export default function AdminHeroesPage() {
                       If left empty, clicking anywhere on the hero banner image/video will redirect to the Target URL.
                     </p>
                   </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-neutral-700 mb-1">
-                      Target Link / URL
-                    </label>
-                    <input
-                      type="text"
+                  <div className="sm:col-span-2">
+                    <DestinationLinkSelect
                       value={formButtonLink}
-                      onChange={(e) => setFormButtonLink(e.target.value)}
+                      onChange={setFormButtonLink}
+                      label="Target Link / URL (Select active page, category, product or type custom URL)"
                       placeholder="/shop or /category/handbags"
-                      className="w-full px-3 py-2 text-xs font-mono border border-neutral-300 rounded-lg bg-white"
+                      helperText="Destination page when the slide or CTA button is clicked."
                     />
-                    <p className="text-[10px] text-neutral-400 mt-1">
-                      Destination page when the slide or button is clicked.
-                    </p>
                   </div>
                 </div>
               </div>
@@ -1212,6 +1215,9 @@ export default function AdminHeroesPage() {
                       onChange={(e) => setFormSortOrder(Number(e.target.value))}
                       className="w-full px-3 py-2 text-xs border border-neutral-300 rounded-lg bg-white"
                     />
+                    <p className="text-[10px] text-neutral-400 mt-1">
+                      Lower numbers appear first in the carousel sequence.
+                    </p>
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-neutral-700 mb-1">

@@ -15,11 +15,21 @@ import {
   ExternalLink,
   Eye,
   EyeOff,
+  ShoppingBag,
+  ImageIcon,
 } from "lucide-react";
 import { TrendingNowItem } from "@/types";
 
+interface ProductOption {
+  id: string;
+  title: string;
+  slug: string;
+  thumbnail?: string;
+}
+
 export default function AdminTrendingNowPage() {
   const [items, setItems] = useState<TrendingNowItem[]>([]);
+  const [products, setProducts] = useState<ProductOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -27,6 +37,8 @@ export default function AdminTrendingNowPage() {
   // New Item State
   const [title, setTitle] = useState("");
   const [imageUrl, setImageUrl] = useState("");
+  const [selectedProductId, setSelectedProductId] = useState("");
+  const [targetLink, setTargetLink] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Status Alerts
@@ -50,7 +62,36 @@ export default function AdminTrendingNowPage() {
 
   useEffect(() => {
     fetchItems();
+    fetch("/api/products")
+      .then((res) => res.json())
+      .then((data) => {
+        const list = Array.isArray(data) ? data : data.products || data.data || [];
+        setProducts(
+          list.map((p: any) => ({
+            id: p.id,
+            title: p.title,
+            slug: p.slug,
+            thumbnail: p.images?.[0] || p.thumbnail || "",
+          }))
+        );
+      })
+      .catch(() => {});
   }, []);
+
+  const handleProductSelect = (prodId: string) => {
+    setSelectedProductId(prodId || "");
+    if (!prodId) {
+      setTargetLink("");
+      return;
+    }
+    const found = products.find((p) => p.id === prodId);
+    if (found) {
+      setTargetLink(found.slug ? `/product/${found.slug}` : "");
+      if (!title) {
+        setTitle(found.title || "");
+      }
+    }
+  };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -74,7 +115,7 @@ export default function AdminTrendingNowPage() {
         throw new Error(data.error || "Failed to upload image");
       }
 
-      setImageUrl(data.secure_url || data.url);
+      setImageUrl(data.secure_url || data.url || "");
       setSuccessMsg("Image uploaded successfully! Fill title and click Add Image.");
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Upload failed";
@@ -87,7 +128,8 @@ export default function AdminTrendingNowPage() {
 
   const handleAddItem = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!imageUrl.trim()) {
+    const cleanImageUrl = (imageUrl || "").trim();
+    if (!cleanImageUrl) {
       setErrorMsg("Please upload an image or provide an Image URL.");
       return;
     }
@@ -96,15 +138,21 @@ export default function AdminTrendingNowPage() {
     setErrorMsg(null);
     setSuccessMsg(null);
 
+    const selectedProd = products.find((p) => p.id === selectedProductId);
+    const finalTargetLink = (targetLink || "").trim() || (selectedProd?.slug ? `/product/${selectedProd.slug}` : "");
+
     try {
       const res = await fetch("/api/admin/trending-now", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          title: title.trim(),
-          image_url: imageUrl.trim(),
+          title: (title || "").trim(),
+          image_url: cleanImageUrl,
           sort_order: items.length + 1,
           is_active: true,
+          target_link: finalTargetLink,
+          product_id: selectedProd?.id || null,
+          product_slug: selectedProd?.slug || null,
         }),
       });
 
@@ -113,6 +161,8 @@ export default function AdminTrendingNowPage() {
 
       setTitle("");
       setImageUrl("");
+      setSelectedProductId("");
+      setTargetLink("");
       setSuccessMsg("New lookbook image published successfully!");
       fetchItems();
     } catch (err: unknown) {
@@ -226,7 +276,7 @@ export default function AdminTrendingNowPage() {
               Upload New Lookbook Image
             </h2>
             <p className="text-xs text-neutral-500 mt-0.5">
-              These images appear in the &ldquo;TRENDING NOW&rdquo; section directly below &ldquo;NEW IN&rdquo; on the homepage and on the dedicated <code>/trending-now</code> page. ONLY pure images are displayed (no price, no discount).
+              These images appear in the &ldquo;TRENDING NOW&rdquo; section on the homepage and on <code>/trending-now</code>. You can optionally link each image to a specific product.
             </p>
           </div>
 
@@ -277,7 +327,7 @@ export default function AdminTrendingNowPage() {
                 </div>
               </div>
 
-              {/* Title & Submit details */}
+              {/* Title & Product details */}
               <div className="sm:col-span-2 space-y-4">
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-wider text-neutral-700 mb-1.5">
@@ -285,7 +335,7 @@ export default function AdminTrendingNowPage() {
                   </label>
                   <input
                     type="text"
-                    value={title}
+                    value={title || ""}
                     onChange={(e) => setTitle(e.target.value)}
                     placeholder="e.g. Architectural Silhouette in Noir"
                     className="w-full text-sm px-3.5 py-2.5 rounded-xl border border-neutral-300 focus:outline-none focus:border-black"
@@ -295,13 +345,65 @@ export default function AdminTrendingNowPage() {
                   </p>
                 </div>
 
+                {/* Associate with Product */}
+                <div className="bg-neutral-50/80 rounded-xl p-3.5 border border-neutral-200/80 space-y-3">
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="text-xs font-bold uppercase tracking-wider text-neutral-800 flex items-center gap-1.5">
+                        <ShoppingBag className="w-3.5 h-3.5 text-neutral-700" />
+                        <span>Associate with Product (Optional)</span>
+                      </label>
+                      {selectedProductId && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedProductId("");
+                            setTargetLink("");
+                          }}
+                          className="text-[10px] text-rose-600 hover:underline font-semibold cursor-pointer"
+                        >
+                          Clear Selection
+                        </button>
+                      )}
+                    </div>
+                    <select
+                      value={selectedProductId || ""}
+                      onChange={(e) => handleProductSelect(e.target.value)}
+                      className="w-full text-xs sm:text-sm px-3 py-2 rounded-lg border border-neutral-300 bg-white focus:outline-none focus:border-black cursor-pointer"
+                    >
+                      <option value="">-- No Product (Opens /trending-now page) --</option>
+                      {products.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.title} (/product/{p.slug})
+                        </option>
+                      ))}
+                    </select>
+                    <p className="text-[11px] text-neutral-500 mt-1">
+                      When clicked, users go directly to this product&apos;s details page. If unlinked, it opens the Trending Now page.
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold uppercase tracking-wider text-neutral-700 mb-1">
+                      Destination Link / Target URL (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      value={targetLink || ""}
+                      onChange={(e) => setTargetLink(e.target.value)}
+                      placeholder="/product/... or /shop or custom URL"
+                      className="w-full text-xs font-mono px-3 py-2 rounded-lg border border-neutral-300 bg-white focus:outline-none focus:border-black"
+                    />
+                  </div>
+                </div>
+
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-wider text-neutral-700 mb-1.5">
                     Or Paste Direct Image URL
                   </label>
                   <input
                     type="url"
-                    value={imageUrl}
+                    value={imageUrl || ""}
                     onChange={(e) => setImageUrl(e.target.value)}
                     placeholder="https://images.unsplash.com/..."
                     className="w-full text-sm px-3.5 py-2 rounded-xl border border-neutral-300 focus:outline-none focus:border-black font-mono text-xs"
@@ -375,6 +477,24 @@ export default function AdminTrendingNowPage() {
                     <p className="text-xs font-semibold text-neutral-900 truncate">
                       {item.title || "Untitled Look"}
                     </p>
+
+                    {/* Associated Product or Target */}
+                    {item.product_slug ? (
+                      <div className="mt-1 flex items-center gap-1 text-[10px] font-medium text-emerald-700 truncate">
+                        <ShoppingBag className="w-3 h-3 shrink-0" />
+                        <span className="truncate">Product: {item.product_slug}</span>
+                      </div>
+                    ) : item.target_link ? (
+                      <div className="mt-1 flex items-center gap-1 text-[10px] font-medium text-neutral-600 truncate">
+                        <ExternalLink className="w-3 h-3 shrink-0" />
+                        <span className="truncate">{item.target_link}</span>
+                      </div>
+                    ) : (
+                      <p className="mt-1 text-[10px] text-neutral-400 italic">
+                        Unlinked (opens /trending-now)
+                      </p>
+                    )}
+
                     <div className="flex items-center justify-between mt-2 pt-2 border-t border-neutral-100">
                       <button
                         type="button"

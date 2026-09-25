@@ -15,14 +15,13 @@ export default function AdminLayout({
 
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [isVerifying, setIsVerifying] = useState(true);
 
   // If on login page, render standalone clean view without sidebar or layout restrictions
   const isLoginPage = pathname === "/admin/login";
+  const [isVerifying, setIsVerifying] = useState(!isLoginPage);
 
   useEffect(() => {
     if (isLoginPage) {
-      setIsVerifying(false);
       return;
     }
 

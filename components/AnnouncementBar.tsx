@@ -25,7 +25,6 @@ const DEFAULT_ANNOUNCEMENTS: AnnouncementItem[] = [
 
 export function AnnouncementBar({ initialConfig }: { initialConfig?: AnnouncementConfig | null }) {
   const pathname = usePathname();
-  if (pathname?.startsWith("/admin")) return null;
 
   const [config, setConfig] = useState<AnnouncementConfig>(() => initialConfig || {
     id: "default",
@@ -100,6 +99,10 @@ export function AnnouncementBar({ initialConfig }: { initialConfig?: Announcemen
       if (timerRef.current) clearInterval(timerRef.current);
     };
   }, [config.interval_seconds, config.is_active, items.length, isHovered, goToNext]);
+
+  if (pathname?.startsWith("/admin")) {
+    return null;
+  }
 
   if (!config.is_active || items.length === 0) {
     return null;

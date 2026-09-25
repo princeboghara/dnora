@@ -26,7 +26,7 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
   const { sort, category } = await searchParams;
 
   const allCategories = await store.getCategories();
-  let products = await store.getProducts({
+  const products = await store.getProducts({
     category_slug: category,
     status: "active",
   });

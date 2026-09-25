@@ -276,7 +276,7 @@ export default function AdminNavigationPage() {
 
   const handleSaveSubmenus = async () => {
     if (!selectedParentItem) return;
-    let finalSubmenus = [...submenus];
+    const finalSubmenus = [...submenus];
     if (newSubLabel.trim() && newSubHref.trim()) {
       finalSubmenus.push({
         id: `sub-${Date.now()}`,

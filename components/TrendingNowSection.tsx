@@ -39,32 +39,44 @@ export function TrendingNowSection({ items }: TrendingNowSectionProps) {
               key={`${item.id}-${idx}`}
               className="w-[160px] sm:w-[200px] md:w-[230px] lg:w-[250px] shrink-0"
             >
-              {/* Clicking on any image opens the dedicated /trending-now lookbook page */}
-              <Link
-                href="/trending-now"
-                className="group/card block relative aspect-3/4 rounded-lg sm:rounded-xl overflow-hidden bg-neutral-100 shadow-2xs hover:shadow-xl transition-all duration-300 cursor-pointer"
-              >
-                <Image
-                  src={item.image_url}
-                  alt={item.alt_text || item.title || "DNORA Trending Silhouette"}
-                  fill
-                  sizes="(max-width: 640px) 160px, (max-width: 1024px) 230px, 250px"
-                  className="object-cover transition-transform duration-500 ease-out group-hover/card:scale-106"
-                />
+              {/* Link: navigates to product details if associated, otherwise to /trending-now */}
+              {(() => {
+                const itemLink = item.product_slug
+                  ? `/product/${item.product_slug}`
+                  : (item.target_link && item.target_link.trim()) || "/trending-now";
+                const isProductLink = Boolean(
+                  item.product_slug ||
+                  (item.target_link && item.target_link.includes("/product/"))
+                );
 
-                {/* Chic Minimalist Hover Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/10 to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-3 sm:p-4">
-                  {item.title && (
-                    <p className="text-white text-[11px] sm:text-xs font-medium tracking-wide drop-shadow-sm truncate">
-                      {item.title}
-                    </p>
-                  )}
-                  <span className="text-[9px] sm:text-[10px] text-white/90 font-semibold tracking-widest uppercase mt-0.5 flex items-center gap-1">
-                    <span>Lookbook</span>
-                    <ArrowRight className="w-3 h-3" />
-                  </span>
-                </div>
-              </Link>
+                return (
+                  <Link
+                    href={itemLink}
+                    className="group/card block relative aspect-3/4 rounded-lg sm:rounded-xl overflow-hidden bg-neutral-100 shadow-2xs hover:shadow-xl transition-all duration-300 cursor-pointer"
+                  >
+                    <Image
+                      src={item.image_url}
+                      alt={item.alt_text || item.title || "DNORA Trending Silhouette"}
+                      fill
+                      sizes="(max-width: 640px) 160px, (max-width: 1024px) 230px, 250px"
+                      className="object-cover transition-transform duration-500 ease-out group-hover/card:scale-106"
+                    />
+
+                    {/* Chic Minimalist Hover Overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/10 to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-3 sm:p-4">
+                      {item.title && (
+                        <p className="text-white text-[11px] sm:text-xs font-medium tracking-wide drop-shadow-sm truncate">
+                          {item.title}
+                        </p>
+                      )}
+                      <span className="text-[9px] sm:text-[10px] text-white/90 font-semibold tracking-widest uppercase mt-0.5 flex items-center gap-1">
+                        <span>{isProductLink ? "Shop Silhouette" : "Lookbook"}</span>
+                        <ArrowRight className="w-3 h-3" />
+                      </span>
+                    </div>
+                  </Link>
+                );
+              })()}
             </div>
           ))}
         </div>

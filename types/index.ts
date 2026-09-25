@@ -411,5 +411,8 @@ export interface TrendingNowItem {
   alt_text?: string;
   sort_order: number;
   is_active: boolean;
+  target_link?: string;
+  product_id?: string;
+  product_slug?: string;
   created_at?: string;
 }

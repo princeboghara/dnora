@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -39,13 +39,20 @@ interface SavedAddress {
   is_default: boolean;
 }
 
+interface CheckoutUser {
+  id?: string;
+  email?: string;
+  full_name?: string;
+  phone?: string;
+}
+
 export default function CheckoutPage() {
   const router = useRouter();
   const { items, subtotal, clearCart } = useCart();
 
   // Auth & Saved Addresses
   const [loadingUser, setLoadingUser] = useState(true);
-  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [currentUser, setCurrentUser] = useState<CheckoutUser | null>(null);
   const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
   const [addressMode, setAddressMode] = useState<"saved" | "new">("new");
   const [selectedAddressId, setSelectedAddressId] = useState<string>("new");
@@ -82,6 +89,19 @@ export default function CheckoutPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [orderError, setOrderError] = useState("");
 
+  // Apply a saved address to form
+  const applySavedAddress = useCallback((addr: SavedAddress) => {
+    setFullName(addr.full_name);
+    setPhone(addr.phone);
+    setAddressLine1(addr.address_line1);
+    setAddressLine2(addr.address_line2 || "");
+    setPostalCode(addr.postal_code);
+    setCity(addr.city);
+    setState(addr.state);
+    setCountry(addr.country || "India");
+    setPincodeSuccess(true);
+  }, []);
+
   // Check auth and fetch saved addresses
   useEffect(() => {
     async function loadUserData() {
@@ -117,20 +137,7 @@ export default function CheckoutPage() {
     }
 
     loadUserData();
-  }, [router]);
-
-  // Apply a saved address to form
-  const applySavedAddress = (addr: SavedAddress) => {
-    setFullName(addr.full_name);
-    setPhone(addr.phone);
-    setAddressLine1(addr.address_line1);
-    setAddressLine2(addr.address_line2 || "");
-    setPostalCode(addr.postal_code);
-    setCity(addr.city);
-    setState(addr.state);
-    setCountry(addr.country || "India");
-    setPincodeSuccess(true);
-  };
+  }, [router, applySavedAddress]);
 
   // Indian Postal PIN Code API integration
   const handlePincodeChange = async (val: string) => {
@@ -222,15 +229,20 @@ export default function CheckoutPage() {
   const shippingCost = shippingMethod === "vip" ? 150 : 0;
   const grandTotal = subtotal + shippingCost;
 
-  // Step 3 Fast/Instant Payment & Place Order (No artificial delays!)
+  // Step 3 Fast/Instant Payment & Place Order (No artificial delays & double-click protected)
   const handlePlaceOrder = async () => {
+    if (isProcessing) return;
     setOrderError("");
     setIsProcessing(true);
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 25000); // 25s timeout to prevent infinite spinner
 
     try {
       const res = await fetch("/api/orders/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        signal: controller.signal,
         body: JSON.stringify({
           customerName: fullName,
           customerEmail: email || currentUser?.email,
@@ -251,7 +263,7 @@ export default function CheckoutPage() {
         }),
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         throw new Error(data.error || "Failed to create order.");
       }
@@ -261,10 +273,17 @@ export default function CheckoutPage() {
 
       // Immediate redirect to Order Confirmation Page
       router.push(`/order-success/${data.order.order_number}`);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Payment error:", err);
-      setOrderError(err.message || "An unexpected error occurred. Please try again.");
+      if (err instanceof DOMException && err.name === "AbortError") {
+        setOrderError("The order request timed out. Please check your network connection and try again.");
+      } else {
+        const msg = err instanceof Error ? err.message : "An unexpected error occurred. Please try again.";
+        setOrderError(msg);
+      }
       setIsProcessing(false);
+    } finally {
+      clearTimeout(timeoutId);
     }
   };
 

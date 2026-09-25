@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -23,6 +23,7 @@ import {
   Layers,
   Sparkles,
   Package,
+  Sliders,
 } from "lucide-react";
 
 interface AdminSidebarProps {
@@ -80,10 +81,10 @@ const NAV_GROUPS: NavGroupItem[] = [
         badge: "New",
       },
       {
-        label: "Categories",
+        label: "Categories / Collections",
         href: "/admin/categories",
         icon: Tag,
-        badge: "Our Collections",
+        badge: "Live",
       },
     ],
   },
@@ -93,22 +94,20 @@ const NAV_GROUPS: NavGroupItem[] = [
     icon: Layers,
     subitems: [
       {
-        label: "Home Sections",
-        href: "/admin/sections",
-        icon: LayoutList,
-        badge: "Manager",
-      },
-      {
         label: "Hero Banners",
         href: "/admin/heroes",
         icon: ImageIcon,
-        badge: "Media",
+      },
+      {
+        label: "Trending Now",
+        href: "/admin/trending-now",
+        icon: Sparkles,
+        badge: "Lookbook",
       },
       {
         label: "Campaign Banner",
         href: "/admin/campaign-banner",
-        icon: Sparkles,
-        badge: "Architecture",
+        icon: Layers,
       },
       {
         label: "Announcement Bar",
@@ -117,10 +116,9 @@ const NAV_GROUPS: NavGroupItem[] = [
         badge: "Live",
       },
       {
-        label: "Trending Now",
-        href: "/admin/trending-now",
-        icon: Sparkles,
-        badge: "Lookbook",
+        label: "Home Sections",
+        href: "/admin/sections",
+        icon: LayoutList,
       },
       {
         label: "Seen On You (Reels)",
@@ -132,7 +130,11 @@ const NAV_GROUPS: NavGroupItem[] = [
         label: "Navigation Menu",
         href: "/admin/navigation",
         icon: Compass,
-        badge: "Menu",
+      },
+      {
+        label: "Header & Top Bar",
+        href: "/admin/topbar",
+        icon: Sliders,
       },
     ],
   },
@@ -213,12 +215,12 @@ export function AdminSidebar({
       </div>
 
       {/* Navigation Groups with Menus & Submenus */}
-      <div className="flex-1 overflow-y-auto px-3 py-4 space-y-3 scrollbar-none">
+      <div className="flex-1 overflow-y-auto px-3 py-4 space-y-2 scrollbar-none">
         {NAV_GROUPS.map((group) => {
           const Icon = group.icon;
           const isGroupOpen = expandedGroups[group.id] ?? false;
 
-          // Case 1: Standalone item (e.g. Dashboard)
+          // Case 1: Standalone item (e.g. Dashboard, Orders)
           if (!group.subitems || group.subitems.length === 0) {
             const isActive = pathname === group.href;
 
@@ -235,13 +237,22 @@ export function AdminSidebar({
                   }`}
                 >
                   <Icon className={`w-4 h-4 shrink-0 ${isActive ? "text-black" : "text-white/70"}`} />
-                  {!collapsed && <span className="flex-1 truncate">{group.label}</span>}
+                  {!collapsed && (
+                    <>
+                      <span className="flex-1 truncate">{group.label}</span>
+                      {group.badge && (
+                        <span className="text-[8.5px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider bg-white/10 text-white/70">
+                          {group.badge}
+                        </span>
+                      )}
+                    </>
+                  )}
                 </Link>
               </div>
             );
           }
 
-          // Case 2: Group with Submenus
+          // Case 2: Group with Submenus (Closed by default, click to open)
           const isChildActive = group.subitems.some(
             (sub) => pathname === sub.href || (sub.href !== "/admin" && pathname.startsWith(sub.href))
           );
@@ -264,14 +275,14 @@ export function AdminSidebar({
                 <button
                   type="button"
                   onClick={() => toggleGroup(group.id)}
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-colors cursor-pointer ${
+                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold tracking-wider transition-colors cursor-pointer ${
                     isChildActive
-                      ? "text-white font-extrabold bg-white/5"
-                      : "text-white/60 hover:text-white hover:bg-white/5"
+                      ? "text-white font-bold bg-white/10"
+                      : "text-white/70 hover:text-white hover:bg-white/5"
                   }`}
                 >
-                  <div className="flex items-center gap-2.5">
-                    <Icon className="w-3.5 h-3.5 opacity-80" />
+                  <div className="flex items-center gap-3">
+                    <Icon className="w-4 h-4 opacity-80" />
                     <span>{group.label}</span>
                   </div>
                   <ChevronDown
@@ -282,8 +293,8 @@ export function AdminSidebar({
                 </button>
               )}
 
-              {/* Submenu Items */}
-              {(!collapsed && isGroupOpen) && (
+              {/* Submenu Items - ONLY visible when clicked open */}
+              {!collapsed && isGroupOpen && (
                 <div className="pl-3 space-y-1 pt-0.5 animate-fadeIn">
                   {group.subitems.map((sub) => {
                     const isSubActive =

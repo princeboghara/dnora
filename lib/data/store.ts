@@ -340,7 +340,24 @@ class DataStore {
               ) ORDER BY pi.sort_order ASC
             ) FILTER (WHERE pi.id IS NOT NULL),
             '[]'::json
-          ) as images
+          ) as images,
+          COALESCE(
+            (
+              SELECT json_agg(
+                json_build_object(
+                  'id', cat.id,
+                  'name', cat.name,
+                  'slug', cat.slug,
+                  'description', cat.description,
+                  'image_url', cat.image_url
+                )
+              )
+              FROM public.product_category_relations pcr
+              JOIN public.product_categories cat ON cat.id = pcr.category_id
+              WHERE pcr.product_id = p.id
+            ),
+            '[]'::json
+          ) as categories
         FROM public.products p
         LEFT JOIN public.product_flags pf ON pf.product_id = p.id
         LEFT JOIN public.product_images pi ON pi.product_id = p.id
@@ -361,6 +378,7 @@ class DataStore {
             : Array.isArray(row.color_variants)
             ? row.color_variants
             : [],
+        categories: Array.isArray(row.categories) ? row.categories : [],
       }));
 
       if (rows.length === 0) {
@@ -417,7 +435,24 @@ class DataStore {
               ) ORDER BY pi.sort_order ASC
             ) FILTER (WHERE pi.id IS NOT NULL),
             '[]'::json
-          ) as images
+          ) as images,
+          COALESCE(
+            (
+              SELECT json_agg(
+                json_build_object(
+                  'id', cat.id,
+                  'name', cat.name,
+                  'slug', cat.slug,
+                  'description', cat.description,
+                  'image_url', cat.image_url
+                )
+              )
+              FROM public.product_category_relations pcr
+              JOIN public.product_categories cat ON cat.id = pcr.category_id
+              WHERE pcr.product_id = p.id
+            ),
+            '[]'::json
+          ) as categories
         FROM public.products p
         LEFT JOIN public.product_flags pf ON pf.product_id = p.id
         LEFT JOIN public.product_images pi ON pi.product_id = p.id
@@ -439,6 +474,7 @@ class DataStore {
             : Array.isArray(row.color_variants)
             ? row.color_variants
             : [],
+        categories: Array.isArray(row.categories) ? row.categories : [],
       };
     } catch (err) {
       console.error("Error fetching product by slug from database:", err);
@@ -464,7 +500,24 @@ class DataStore {
               ) ORDER BY pi.sort_order ASC
             ) FILTER (WHERE pi.id IS NOT NULL),
             '[]'::json
-          ) as images
+          ) as images,
+          COALESCE(
+            (
+              SELECT json_agg(
+                json_build_object(
+                  'id', cat.id,
+                  'name', cat.name,
+                  'slug', cat.slug,
+                  'description', cat.description,
+                  'image_url', cat.image_url
+                )
+              )
+              FROM public.product_category_relations pcr
+              JOIN public.product_categories cat ON cat.id = pcr.category_id
+              WHERE pcr.product_id = p.id
+            ),
+            '[]'::json
+          ) as categories
         FROM public.products p
         LEFT JOIN public.product_flags pf ON pf.product_id = p.id
         LEFT JOIN public.product_images pi ON pi.product_id = p.id
@@ -486,6 +539,7 @@ class DataStore {
             : Array.isArray(row.color_variants)
             ? row.color_variants
             : [],
+        categories: Array.isArray(row.categories) ? row.categories : [],
       };
     } catch (err) {
       console.error("Error fetching product by ID from database:", err);
@@ -1636,8 +1690,15 @@ class DataStore {
             alt_text TEXT,
             sort_order INTEGER NOT NULL DEFAULT 0,
             is_active BOOLEAN NOT NULL DEFAULT true,
+            target_link TEXT,
+            product_id UUID,
+            product_slug TEXT,
             created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
-          );`
+          );
+          ALTER TABLE public.trending_now_items ADD COLUMN IF NOT EXISTS target_link TEXT;
+          ALTER TABLE public.trending_now_items ADD COLUMN IF NOT EXISTS product_id UUID;
+          ALTER TABLE public.trending_now_items ADD COLUMN IF NOT EXISTS product_slug TEXT;
+          `
         )
         .catch(() => {});
 
@@ -1653,6 +1714,9 @@ class DataStore {
         alt_text: row.alt_text || row.title || "DNORA Trending",
         sort_order: Number(row.sort_order ?? 0),
         is_active: Boolean(row.is_active ?? true),
+        target_link: row.target_link || undefined,
+        product_id: row.product_id || undefined,
+        product_slug: row.product_slug || undefined,
         created_at: row.created_at ? new Date(row.created_at).toISOString() : undefined,
       }));
     } catch {
@@ -1666,6 +1730,9 @@ class DataStore {
     alt_text?: string;
     sort_order?: number;
     is_active?: boolean;
+    target_link?: string;
+    product_id?: string;
+    product_slug?: string;
   }): Promise<TrendingNowItem> {
     await db
       .query(
@@ -1676,14 +1743,21 @@ class DataStore {
           alt_text TEXT,
           sort_order INTEGER NOT NULL DEFAULT 0,
           is_active BOOLEAN NOT NULL DEFAULT true,
+          target_link TEXT,
+          product_id UUID,
+          product_slug TEXT,
           created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
-        );`
+        );
+        ALTER TABLE public.trending_now_items ADD COLUMN IF NOT EXISTS target_link TEXT;
+        ALTER TABLE public.trending_now_items ADD COLUMN IF NOT EXISTS product_id UUID;
+        ALTER TABLE public.trending_now_items ADD COLUMN IF NOT EXISTS product_slug TEXT;
+        `
       )
       .catch(() => {});
 
     const res = await db.query(
-      `INSERT INTO public.trending_now_items (title, image_url, alt_text, sort_order, is_active)
-       VALUES ($1, $2, $3, $4, $5)
+      `INSERT INTO public.trending_now_items (title, image_url, alt_text, sort_order, is_active, target_link, product_id, product_slug)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        RETURNING *`,
       [
         data.title || "",
@@ -1691,6 +1765,9 @@ class DataStore {
         data.alt_text || data.title || "",
         data.sort_order ?? 0,
         data.is_active ?? true,
+        data.target_link || null,
+        data.product_id || null,
+        data.product_slug || null,
       ]
     );
 
@@ -1702,6 +1779,9 @@ class DataStore {
       alt_text: row.alt_text,
       sort_order: Number(row.sort_order),
       is_active: Boolean(row.is_active),
+      target_link: row.target_link || undefined,
+      product_id: row.product_id || undefined,
+      product_slug: row.product_slug || undefined,
       created_at: row.created_at ? new Date(row.created_at).toISOString() : undefined,
     };
   }
@@ -1734,6 +1814,18 @@ class DataStore {
       if (data.is_active !== undefined) {
         updates.push(`is_active = $${i++}`);
         values.push(data.is_active);
+      }
+      if (data.target_link !== undefined) {
+        updates.push(`target_link = $${i++}`);
+        values.push(data.target_link || null);
+      }
+      if (data.product_id !== undefined) {
+        updates.push(`product_id = $${i++}`);
+        values.push(data.product_id || null);
+      }
+      if (data.product_slug !== undefined) {
+        updates.push(`product_slug = $${i++}`);
+        values.push(data.product_slug || null);
       }
 
       if (updates.length === 0) return true;
@@ -1779,7 +1871,7 @@ class DataStore {
         INSERT INTO public.promo_banner_config (id) VALUES ('default') ON CONFLICT (id) DO NOTHING;
         ALTER TABLE public.promo_banner_config ADD COLUMN IF NOT EXISTS slides JSONB DEFAULT '[]'::jsonb;
       `);
-    } catch (err) {
+    } catch {
       // non-blocking
     }
   }

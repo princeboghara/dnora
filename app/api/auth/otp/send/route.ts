@@ -114,12 +114,14 @@ export async function POST(req: NextRequest) {
       console.log(`🔇 [EMAIL DISPATCH MUTED] Supabase external auth email suppressed for ${normalizedEmail}. Code stored in DB.`);
     }
 
+    const isDev = process.env.NODE_ENV === "development";
+
     return NextResponse.json({
       success: true,
       delivered: true,
       message: "Verification code sent to your email.",
       email: normalizedEmail,
-      devHint: `Verification Code: ${otp}`,
+      ...(isDev ? { devHint: `[DEV ONLY] Verification Code: ${otp}` } : {}),
     });
   } catch (err: unknown) {
     console.error("Error sending OTP:", err);

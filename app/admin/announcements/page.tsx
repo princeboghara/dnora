@@ -18,6 +18,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { AnnouncementConfig, AnnouncementItem } from "@/types";
+import { DestinationLinkSelect } from "@/components/admin/DestinationLinkSelect";
 
 export default function AnnouncementsAdminPage() {
   const [config, setConfig] = useState<AnnouncementConfig>({
@@ -409,15 +410,12 @@ export default function AnnouncementsAdminPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-neutral-700 mb-1.5">
-                  Destination Link (URL)
-                </label>
-                <input
-                  type="text"
+                <DestinationLinkSelect
                   value={itemLink}
-                  onChange={(e) => setItemLink(e.target.value)}
+                  onChange={setItemLink}
+                  label="Destination Link (URL)"
                   placeholder="/shop or /category/tote-bags"
-                  className="w-full border border-neutral-300 rounded-lg px-3.5 py-2.5 text-xs text-neutral-900 focus:outline-hidden focus:border-black font-mono"
+                  helperText="Choose an active page, category, or product from dropdown, or customize the URL."
                 />
               </div>
 

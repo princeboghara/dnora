@@ -29,7 +29,7 @@ export default function InvoiceModal({ order, onClose }: InvoiceModalProps) {
 
   if (!order) return null;
 
-  const rawAddr = (order.shipping_address || {}) as any;
+  const rawAddr = (order.shipping_address || {}) as Record<string, string | undefined>;
   const shippingAddr = {
     fullName: rawAddr.fullName || rawAddr.full_name || order.customer_name || "",
     phone: rawAddr.phone || rawAddr.customer_phone || order.customer_phone || "",

@@ -70,9 +70,16 @@ export async function ensureAccountTables(): Promise<void> {
         attributes JSONB,
         created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
       );
+
+      -- High-Performance Lookup & Foreign Key Indexes
+      CREATE INDEX IF NOT EXISTS idx_orders_user_id ON public.orders(user_id);
+      CREATE INDEX IF NOT EXISTS idx_orders_customer_email ON public.orders(LOWER(customer_email));
+      CREATE INDEX IF NOT EXISTS idx_orders_created_at ON public.orders(created_at DESC);
+      CREATE INDEX IF NOT EXISTS idx_order_items_order_id ON public.order_items(order_id);
+      CREATE INDEX IF NOT EXISTS idx_user_addresses_user_id ON public.user_addresses(user_id);
     `);
     accountTablesEnsured = true;
-  } catch (err) {
+  } catch {
     // Non-blocking warning
   }
 }

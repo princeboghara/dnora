@@ -95,13 +95,15 @@ export default async function HomePage() {
 
       {/* 3. Dynamic Homepage Sections (Managed from Admin) */}
       {(() => {
-        let hasRenderedTrending = false;
+        const hasNewInSection = activeSections.some(
+          (sec) => sec.type === "new_in" && getSectionProducts(sec).length > 0
+        );
+
         const rendered = activeSections.map((sec, idx) => {
           const secProducts = getSectionProducts(sec);
           if (secProducts.length === 0) return null;
 
           const isNewIn = sec.type === "new_in";
-          if (isNewIn) hasRenderedTrending = true;
 
           return (
             <React.Fragment key={sec.id}>
@@ -129,7 +131,7 @@ export default async function HomePage() {
           <>
             {rendered}
             {/* If New In section was not present in dynamic sections, ensure Trending Now still renders */}
-            {!hasRenderedTrending && <TrendingNowSection items={trendingItems} />}
+            {!hasNewInSection && <TrendingNowSection items={trendingItems} />}
           </>
         );
       })()}

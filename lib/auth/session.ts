@@ -125,8 +125,8 @@ export async function verifyAdminSession(): Promise<AdminSession | null> {
     }
   }
 
-  // In development, fallback to demo admin session for frictionless local testing
-  if (process.env.NODE_ENV !== "production") {
+  // In development, only fallback to demo admin if explicit bypass is enabled in .env
+  if (process.env.NODE_ENV !== "production" && process.env.ENABLE_DEV_ADMIN_AUTOLOGIN === "true") {
     return {
       email: DEMO_ADMIN_EMAIL,
       role: "admin",
