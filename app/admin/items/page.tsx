@@ -18,6 +18,7 @@ import {
   Trash2,
   X,
   Tag,
+  Upload,
 } from "lucide-react";
 import { Product, ProductCategory } from "@/types";
 import { formatPrice, slugify } from "@/lib/utils";
@@ -156,6 +157,48 @@ export default function AdminAllItemsPage() {
     const prefix = newProdName.trim() ? newProdName.slice(0, 3).toUpperCase().replace(/[^A-Z]/g, "DN") : "DN";
     const rand = Math.floor(100 + Math.random() * 900);
     setNewProdSku(`DN-${prefix}-${rand}`);
+  };
+
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const modalFileInputRef = React.useRef<HTMLInputElement>(null);
+
+  // Upload Image File directly
+  const handleUploadImageFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingImage(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("folder", "dnora/products");
+
+      const res = await fetch("/api/media/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || "Upload failed");
+      }
+
+      const url = data.secure_url || data.url;
+      setNewProdImages((prev) => [
+        ...prev,
+        {
+          secure_url: url,
+          alt_text: newProdName || "DNORA Luxury Silhouette",
+        },
+      ]);
+      showStatus("success", "Image uploaded successfully");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Error uploading file";
+      showStatus("error", msg);
+    } finally {
+      setUploadingImage(false);
+      if (modalFileInputRef.current) modalFileInputRef.current.value = "";
+    }
   };
 
   // Add Image URL to List
@@ -365,17 +408,13 @@ export default function AdminAllItemsPage() {
             <ExternalLink className="w-3.5 h-3.5 text-neutral-400" />
           </Link>
 
-          <button
-            type="button"
-            onClick={() => {
-              if (!newProdSku) handleGenerateSku();
-              setAddModalOpen(true);
-            }}
+          <Link
+            href="/admin/products/new"
             className="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-white bg-neutral-950 hover:bg-neutral-800 rounded-xl shadow-xs transition cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>Add Product</span>
-          </button>
+          </Link>
         </div>
       </div>
 
@@ -839,13 +878,42 @@ export default function AdminAllItemsPage() {
 
               {/* Product Images */}
               <div>
-                <label className="block text-[10.5px] font-bold uppercase tracking-wider text-neutral-700 mb-1">
-                  Product Image URLs *
-                </label>
+                <input
+                  type="file"
+                  ref={modalFileInputRef}
+                  onChange={handleUploadImageFile}
+                  accept="image/jpeg,image/png,image/webp,image/avif"
+                  className="hidden"
+                />
+
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-[10.5px] font-bold uppercase tracking-wider text-neutral-700">
+                    Product Imagery (Photos) *
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => modalFileInputRef.current?.click()}
+                    disabled={uploadingImage}
+                    className="inline-flex items-center gap-1.5 px-3 py-1 bg-black text-white hover:bg-neutral-800 text-[11px] font-bold uppercase tracking-wider rounded-lg shadow-2xs transition cursor-pointer"
+                  >
+                    {uploadingImage ? (
+                      <>
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                        <span>Uploading...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="w-3 h-3" />
+                        <span>Upload Image File</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+
                 <div className="flex gap-2">
                   <input
                     type="url"
-                    placeholder="https://images.unsplash.com/..."
+                    placeholder="Or enter image URL (https://...)"
                     value={newProdImageUrl}
                     onChange={(e) => setNewProdImageUrl(e.target.value)}
                     className="flex-1 px-3.5 py-2 bg-neutral-50 border border-neutral-200 rounded-xl text-xs text-neutral-900 focus:bg-white font-mono"
@@ -855,7 +923,7 @@ export default function AdminAllItemsPage() {
                     onClick={handleAddImage}
                     className="px-4 py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-800 text-xs font-bold uppercase tracking-wider rounded-xl transition cursor-pointer"
                   >
-                    Add
+                    Add URL
                   </button>
                 </div>
 

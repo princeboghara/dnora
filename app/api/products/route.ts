@@ -40,13 +40,35 @@ export async function POST(req: NextRequest) {
     const validated = productSchema.parse(body);
 
     const categories = await store.getCategories();
-    const matchedCategory = categories.find((c) => c.id === validated.category_id);
+    let matchedCategory = categories.find((c) => c.id === validated.category_id);
+    if (!matchedCategory && categories.length > 0) {
+      matchedCategory = categories[0];
+    }
+
+    const finalSku =
+      validated.sku && validated.sku.trim()
+        ? validated.sku.trim()
+        : `DNR-${Date.now().toString(36).toUpperCase()}`;
+
+    let finalImages = validated.images;
+    if (!finalImages || finalImages.length === 0) {
+      finalImages = [
+        {
+          secure_url: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=800&q=80",
+          cloudinary_public_id: "default_cover",
+          alt_text: validated.name,
+          sort_order: 1,
+        },
+      ];
+    }
 
     const newProduct = await store.createProduct({
       ...validated,
+      sku: finalSku,
       slug: validated.slug || slugify(validated.name),
       categories: matchedCategory ? [matchedCategory] : [],
       compare_at_price: validated.compare_at_price || null,
+      images: finalImages,
       color_variants: validated.color_variants || [],
     });
 
@@ -57,8 +79,13 @@ export async function POST(req: NextRequest) {
   } catch (error: unknown) {
     console.error("Failed to create product:", error);
     if (error instanceof ZodError) {
-      return NextResponse.json({ error: "Validation error", details: error.issues }, { status: 400 });
+      const issueMsgs = error.issues.map((i) => `${i.path.join(".") || "field"}: ${i.message}`).join(", ");
+      return NextResponse.json(
+        { error: `Validation error: ${issueMsgs}`, details: error.issues },
+        { status: 400 }
+      );
     }
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    const errText = error instanceof Error ? error.message : "Internal server error";
+    return NextResponse.json({ error: errText }, { status: 500 });
   }
 }

@@ -41,7 +41,7 @@ export interface ProductFlag {
 }
 
 export interface ProductColorVariant {
-  id: string;
+  id?: string;
   name: string; // e.g., "Noir Black", "Caramel Tan", "Ivory Cream"
   color_hex: string; // e.g., "#1A1A1A", "#8B5A2B"
   hex?: string; // convenient alias
@@ -359,8 +359,30 @@ export interface HomepageConfig {
     headquarters?: string;
     instagram_url?: string;
     facebook_url?: string;
+    whatsapp_number?: string;
+    whatsapp_url?: string;
     pinterest_url?: string;
   };
+  sections?: HomepageSection[];
+}
+
+export type HomepageSectionType = "best_sellers" | "new_in" | "category" | "custom_products";
+
+export interface HomepageSection {
+  id: string;
+  title: string;
+  subtitle?: string;
+  type: HomepageSectionType;
+  category_id?: string;
+  category_slug?: string;
+  product_ids?: string[];
+  view_all_link?: string;
+  view_all_text?: string;
+  display_style?: "grid" | "carousel";
+  limit?: number;
+  is_active: boolean;
+  sort_order: number;
+  created_at?: string;
 }
 
 export interface CircularCollectionItem {
@@ -374,4 +396,14 @@ export interface CircularCollectionItem {
   is_active?: boolean;
   created_at?: string;
   updated_at?: string;
+}
+
+export interface TrendingNowItem {
+  id: string;
+  title?: string;
+  image_url: string;
+  alt_text?: string;
+  sort_order: number;
+  is_active: boolean;
+  created_at?: string;
 }

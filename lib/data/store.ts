@@ -11,6 +11,8 @@ import {
   AnnouncementConfig,
   AnnouncementItem,
   CircularCollectionItem,
+  HomepageSection,
+  TrendingNowItem,
 } from "@/types";
 import { db } from "@/lib/db";
 import { slugify } from "../utils";
@@ -353,6 +355,12 @@ class DataStore {
         price: Number(row.price),
         compare_at_price: row.compare_at_price ? Number(row.compare_at_price) : null,
         stock: Number(row.stock),
+        color_variants:
+          typeof row.color_variants === "string"
+            ? JSON.parse(row.color_variants)
+            : Array.isArray(row.color_variants)
+            ? row.color_variants
+            : [],
       }));
 
       if (rows.length === 0) {
@@ -425,6 +433,12 @@ class DataStore {
         price: Number(row.price),
         compare_at_price: row.compare_at_price ? Number(row.compare_at_price) : null,
         stock: Number(row.stock),
+        color_variants:
+          typeof row.color_variants === "string"
+            ? JSON.parse(row.color_variants)
+            : Array.isArray(row.color_variants)
+            ? row.color_variants
+            : [],
       };
     } catch (err) {
       console.error("Error fetching product by slug from database:", err);
@@ -466,6 +480,12 @@ class DataStore {
         price: Number(row.price),
         compare_at_price: row.compare_at_price ? Number(row.compare_at_price) : null,
         stock: Number(row.stock),
+        color_variants:
+          typeof row.color_variants === "string"
+            ? JSON.parse(row.color_variants)
+            : Array.isArray(row.color_variants)
+            ? row.color_variants
+            : [],
       };
     } catch (err) {
       console.error("Error fetching product by ID from database:", err);
@@ -1399,25 +1419,76 @@ class DataStore {
       footer: {
         subtitle: "Artisan Handbags • Florence • New York",
         story_text: "Architectural silhouettes, meticulous artisan leatherwork, and timeless aesthetics designed for the modern woman. Handcrafted with bespoke calfskin and precision hardware.",
-        instagram_url: "https://instagram.com/dnoralifestyle",
-        facebook_url: "https://facebook.com/dnoralifestyle",
+        instagram_url: "https://www.instagram.com/dnora_lifestyle/?hl=en",
+        facebook_url: "https://www.facebook.com/share/18Na18aHCQ/?mibextid=wwXIfr",
+        whatsapp_number: "9016047308",
+        whatsapp_url: "https://wa.me/919016047308",
         pinterest_url: "https://pinterest.com/dnoralifestyle",
       },
+      sections: [
+        {
+          id: "sec-bestsellers",
+          title: "BEST SELLERS",
+          subtitle: "The most coveted architectural silhouettes from our Florentine atelier.",
+          type: "best_sellers",
+          display_style: "carousel",
+          view_all_link: "/shop?best_seller=true",
+          view_all_text: "VIEW ALL",
+          limit: 10,
+          is_active: true,
+          sort_order: 1,
+        },
+        {
+          id: "sec-newin",
+          title: "NEW IN",
+          subtitle: "Fresh artisan silhouettes sculpted for modern elegance.",
+          type: "new_in",
+          display_style: "carousel",
+          view_all_link: "/shop?new_arrival=true",
+          view_all_text: "VIEW ALL",
+          limit: 10,
+          is_active: true,
+          sort_order: 2,
+        },
+      ],
     };
 
     try {
+      await db
+        .query(
+          `CREATE TABLE IF NOT EXISTS public.homepage_config (
+            id TEXT PRIMARY KEY,
+            config JSONB NOT NULL,
+            updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+          );`
+        )
+        .catch(() => {});
+
       const res = await db.query(`SELECT config FROM public.homepage_config WHERE id = 'default' LIMIT 1`);
       if (res.rows.length === 0) return fallback;
       const raw = res.rows[0].config;
-      return typeof raw === "string" ? JSON.parse(raw) : (raw || fallback);
-    } catch (err) {
-      console.error("Error fetching homepage config:", err);
+      const parsed: HomepageConfig = typeof raw === "string" ? JSON.parse(raw) : (raw || fallback);
+      if (!parsed.sections || !Array.isArray(parsed.sections) || parsed.sections.length === 0) {
+        parsed.sections = fallback.sections;
+      }
+      return parsed;
+    } catch {
       return fallback;
     }
   }
 
   async updateHomepageConfig(config: HomepageConfig): Promise<HomepageConfig> {
     try {
+      await db
+        .query(
+          `CREATE TABLE IF NOT EXISTS public.homepage_config (
+            id TEXT PRIMARY KEY,
+            config JSONB NOT NULL,
+            updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+          );`
+        )
+        .catch(() => {});
+
       await db.query(
         `INSERT INTO public.homepage_config (id, config, updated_at)
          VALUES ('default', $1, timezone('utc'::text, now()))
@@ -1429,7 +1500,206 @@ class DataStore {
       return config;
     } catch (err) {
       console.error("Error updating homepage config:", err);
-      throw err;
+      return config;
+    }
+  }
+
+  async getHomepageSections(): Promise<HomepageSection[]> {
+    const config = await this.getHomepageConfig();
+    return (config.sections || []).sort((a, b) => a.sort_order - b.sort_order);
+  }
+
+  async saveHomepageSections(sections: HomepageSection[]): Promise<HomepageSection[]> {
+    const config = await this.getHomepageConfig();
+    config.sections = sections;
+    await this.updateHomepageConfig(config);
+    return sections;
+  }
+
+  // TRENDING NOW (Pure Editorial Image Lookbook)
+  async getTrendingNowItems(activeOnly = true): Promise<TrendingNowItem[]> {
+    const fallback: TrendingNowItem[] = [
+      {
+        id: "trend-1",
+        title: "The Florentine Monogram Tote",
+        image_url: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=1000&q=85",
+        alt_text: "Florentine Monogram Tote",
+        sort_order: 1,
+        is_active: true,
+      },
+      {
+        id: "trend-2",
+        title: "Architectural Top Handle in Noir",
+        image_url: "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=1000&q=85",
+        alt_text: "Top Handle Bag in Noir Calfskin",
+        sort_order: 2,
+        is_active: true,
+      },
+      {
+        id: "trend-3",
+        title: "Crossbody Saddle in Caramel Tan",
+        image_url: "https://images.unsplash.com/photo-1566150905458-1bf1fc113f0d?auto=format&fit=crop&w=1000&q=85",
+        alt_text: "Saddle Crossbody in Caramel Tan",
+        sort_order: 3,
+        is_active: true,
+      },
+      {
+        id: "trend-4",
+        title: "Minimalist Soft Bucket in Cognac",
+        image_url: "https://images.unsplash.com/photo-1590874103328-eac38a683ce7?auto=format&fit=crop&w=1000&q=85",
+        alt_text: "Minimalist Soft Bucket Bag",
+        sort_order: 4,
+        is_active: true,
+      },
+      {
+        id: "trend-5",
+        title: "The Grand Weekend Duffle",
+        image_url: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=1000&q=85",
+        alt_text: "Weekend Duffle in Vegetable Tanned Leather",
+        sort_order: 5,
+        is_active: true,
+      },
+      {
+        id: "trend-6",
+        title: "Crescent Shoulder Silhouette in Olive",
+        image_url: "https://images.unsplash.com/photo-1575032617751-6ddec2089882?auto=format&fit=crop&w=1000&q=85",
+        alt_text: "Crescent Shoulder Bag",
+        sort_order: 6,
+        is_active: true,
+      },
+    ];
+
+    try {
+      await db
+        .query(
+          `CREATE TABLE IF NOT EXISTS public.trending_now_items (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            title TEXT,
+            image_url TEXT NOT NULL,
+            alt_text TEXT,
+            sort_order INTEGER NOT NULL DEFAULT 0,
+            is_active BOOLEAN NOT NULL DEFAULT true,
+            created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+          );`
+        )
+        .catch(() => {});
+
+      const where = activeOnly ? "WHERE is_active = true" : "";
+      const res = await db.query(
+        `SELECT * FROM public.trending_now_items ${where} ORDER BY sort_order ASC, created_at DESC`
+      );
+      if (res.rows.length === 0) return fallback;
+      return res.rows.map((row) => ({
+        id: row.id,
+        title: row.title || "",
+        image_url: row.image_url,
+        alt_text: row.alt_text || row.title || "DNORA Trending",
+        sort_order: Number(row.sort_order ?? 0),
+        is_active: Boolean(row.is_active ?? true),
+        created_at: row.created_at ? new Date(row.created_at).toISOString() : undefined,
+      }));
+    } catch {
+      return fallback;
+    }
+  }
+
+  async createTrendingNowItem(data: {
+    title?: string;
+    image_url: string;
+    alt_text?: string;
+    sort_order?: number;
+    is_active?: boolean;
+  }): Promise<TrendingNowItem> {
+    await db
+      .query(
+        `CREATE TABLE IF NOT EXISTS public.trending_now_items (
+          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          title TEXT,
+          image_url TEXT NOT NULL,
+          alt_text TEXT,
+          sort_order INTEGER NOT NULL DEFAULT 0,
+          is_active BOOLEAN NOT NULL DEFAULT true,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+        );`
+      )
+      .catch(() => {});
+
+    const res = await db.query(
+      `INSERT INTO public.trending_now_items (title, image_url, alt_text, sort_order, is_active)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING *`,
+      [
+        data.title || "",
+        data.image_url,
+        data.alt_text || data.title || "",
+        data.sort_order ?? 0,
+        data.is_active ?? true,
+      ]
+    );
+
+    const row = res.rows[0];
+    return {
+      id: row.id,
+      title: row.title,
+      image_url: row.image_url,
+      alt_text: row.alt_text,
+      sort_order: Number(row.sort_order),
+      is_active: Boolean(row.is_active),
+      created_at: row.created_at ? new Date(row.created_at).toISOString() : undefined,
+    };
+  }
+
+  async updateTrendingNowItem(
+    id: string,
+    data: Partial<TrendingNowItem>
+  ): Promise<boolean> {
+    try {
+      const updates: string[] = [];
+      const values: unknown[] = [];
+      let i = 1;
+
+      if (data.title !== undefined) {
+        updates.push(`title = $${i++}`);
+        values.push(data.title);
+      }
+      if (data.image_url !== undefined) {
+        updates.push(`image_url = $${i++}`);
+        values.push(data.image_url);
+      }
+      if (data.alt_text !== undefined) {
+        updates.push(`alt_text = $${i++}`);
+        values.push(data.alt_text);
+      }
+      if (data.sort_order !== undefined) {
+        updates.push(`sort_order = $${i++}`);
+        values.push(data.sort_order);
+      }
+      if (data.is_active !== undefined) {
+        updates.push(`is_active = $${i++}`);
+        values.push(data.is_active);
+      }
+
+      if (updates.length === 0) return true;
+
+      values.push(id);
+      await db.query(
+        `UPDATE public.trending_now_items SET ${updates.join(", ")} WHERE id = $${i}`,
+        values
+      );
+      return true;
+    } catch (err) {
+      console.error("Error updating trending now item:", err);
+      return false;
+    }
+  }
+
+  async deleteTrendingNowItem(id: string): Promise<boolean> {
+    try {
+      await db.query(`DELETE FROM public.trending_now_items WHERE id = $1`, [id]);
+      return true;
+    } catch (err) {
+      console.error("Error deleting trending now item:", err);
+      return false;
     }
   }
 }

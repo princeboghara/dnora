@@ -18,10 +18,25 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
   const { addItem } = useCart();
   const { isInWishlist, toggleWishlist } = useWishlist();
   const [added, setAdded] = useState(false);
+  const [selectedVariantIndex, setSelectedVariantIndex] = useState<number | null>(null);
 
   const isFavorited = isInWishlist(product.id);
   const primaryImage = product.images?.[0]?.secure_url || "";
   const hoverImage = product.images?.[1]?.secure_url || primaryImage;
+
+  // Active image based on selected color variant
+  const activeVariant =
+    selectedVariantIndex !== null && product.color_variants && product.color_variants[selectedVariantIndex]
+      ? product.color_variants[selectedVariantIndex]
+      : null;
+
+  const currentDisplayImage =
+    activeVariant?.images?.[0]?.secure_url || primaryImage;
+
+  const currentHoverImage =
+    activeVariant && activeVariant.images?.[1]?.secure_url
+      ? activeVariant.images[1].secure_url
+      : hoverImage;
 
   const discountPercent =
     product.compare_at_price && product.compare_at_price > product.price
@@ -47,15 +62,15 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
       {/* Product Image Frame with Smooth Rounded Edges */}
       <div className="relative aspect-3/4 rounded-xl overflow-hidden bg-[#FAF8F5] border border-neutral-200/70">
         <Link href={`/product/${product.slug}`} className="block relative w-full h-full">
-          {primaryImage ? (
+          {currentDisplayImage ? (
             <Image
-              src={primaryImage}
+              src={currentDisplayImage}
               alt={product.name}
               fill
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
               priority={priority}
               className={`object-cover transition-opacity duration-500 ${
-                hoverImage !== primaryImage ? "group-hover:opacity-0" : ""
+                currentHoverImage && currentHoverImage !== currentDisplayImage ? "group-hover:opacity-0" : ""
               }`}
             />
           ) : (
@@ -64,9 +79,9 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
             </div>
           )}
 
-          {hoverImage && hoverImage !== primaryImage && (
+          {currentHoverImage && currentHoverImage !== currentDisplayImage && (
             <Image
-              src={hoverImage}
+              src={currentHoverImage}
               alt={`${product.name} alternate`}
               fill
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
@@ -75,12 +90,17 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
           )}
         </Link>
 
-        {/* Optional Sale Discount Badge Overlay */}
+        {/* Aesthetic Refined Luxury Discount Badge */}
         {discountPercent && discountPercent > 0 && (
-          <div className="absolute top-2.5 left-2.5 z-10 pointer-events-none">
-            <span className="px-2 py-0.5 text-[8.5px] font-bold uppercase tracking-widest bg-rose-600 text-white rounded-md shadow-xs">
-              -{discountPercent}%
-            </span>
+          <div className="absolute top-2 left-2 sm:top-2.5 sm:left-2.5 z-10 pointer-events-none">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-rose-600/95 text-white flex flex-col items-center justify-center shadow-xs border border-white/30 select-none backdrop-blur-xs">
+              <span className="text-[9px] sm:text-[10px] font-bold tracking-tight leading-none">
+                -{discountPercent}%
+              </span>
+              <span className="text-[6px] sm:text-[6.5px] font-semibold uppercase tracking-wider leading-none mt-0.5 opacity-90">
+                OFF
+              </span>
+            </div>
           </div>
         )}
 
@@ -89,17 +109,17 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
           type="button"
           onClick={handleToggleWishlist}
           aria-label={isFavorited ? "Remove from wishlist" : "Add to wishlist"}
-          className={`absolute top-2.5 right-2.5 z-10 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 shadow-xs cursor-pointer ${
+          className={`absolute top-2 right-2 sm:top-2.5 sm:right-2.5 z-10 w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center transition-all duration-200 shadow-xs cursor-pointer ${
             isFavorited
               ? "bg-rose-50 text-rose-600"
               : "bg-white/90 text-neutral-700 hover:text-black hover:bg-white hover:scale-105 opacity-90 group-hover:opacity-100"
           }`}
         >
-          <Heart className={`w-4 h-4 ${isFavorited ? "fill-current" : ""}`} />
+          <Heart className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isFavorited ? "fill-current" : ""}`} />
         </button>
 
         {/* Quick Add To Bag Overlay (Desktop Hover Slide Up) */}
-        <div className="absolute inset-x-2 bottom-2 z-10 transition-all duration-300 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0">
+        <div className="hidden md:block absolute inset-x-2 bottom-2 z-10 transition-all duration-300 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0">
           <button
             type="button"
             onClick={handleAddToCart}
@@ -121,7 +141,44 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
       </div>
 
       {/* Product Details */}
-      <div className="pt-3 space-y-1">
+      <div className="pt-2 sm:pt-3 space-y-1">
+        {/* Color Variants Small Circles */}
+        {product.color_variants && product.color_variants.length > 0 && (
+          <div className="flex items-center gap-1.5 py-0.5 overflow-x-auto scrollbar-none">
+            {product.color_variants.map((variant, idx) => {
+              const hex = variant.color_hex || variant.hex || "#1A1A1A";
+              const isSelected = selectedVariantIndex === idx;
+              return (
+                <button
+                  key={variant.id || idx}
+                  type="button"
+                  title={variant.name}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setSelectedVariantIndex(isSelected ? null : idx);
+                  }}
+                  className={`w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full transition-all duration-200 relative cursor-pointer shrink-0 ${
+                    isSelected
+                      ? "ring-2 ring-black ring-offset-1 scale-110 shadow-xs"
+                      : "hover:scale-115 opacity-85 hover:opacity-100"
+                  }`}
+                  style={{
+                    backgroundColor: hex,
+                    boxShadow: "inset 0 0 0 1px rgba(0,0,0,0.15)",
+                  }}
+                  aria-label={`Select color ${variant.name}`}
+                />
+              );
+            })}
+            {activeVariant && (
+              <span className="text-[10px] text-neutral-500 font-medium pl-1 truncate">
+                {activeVariant.name}
+              </span>
+            )}
+          </div>
+        )}
+
         <Link
           href={`/product/${product.slug}`}
           className="block text-xs sm:text-[13px] font-semibold tracking-wider uppercase text-neutral-900 hover:text-black line-clamp-1 transition-colors"
@@ -140,7 +197,7 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
             {formatPrice(product.price)}
           </span>
           {product.compare_at_price && product.compare_at_price > product.price && (
-            <span className="text-[11px] text-neutral-400 line-through">
+            <span className="text-[10px] sm:text-[11px] text-neutral-400 line-through">
               {formatPrice(product.compare_at_price)}
             </span>
           )}
@@ -150,7 +207,7 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
         <button
           type="button"
           onClick={handleAddToCart}
-          className="md:hidden mt-2 w-full py-2 bg-neutral-900 text-white text-[10px] font-bold uppercase tracking-wider rounded-md flex items-center justify-center gap-1.5 active:bg-black"
+          className="md:hidden mt-2 w-full py-1.5 sm:py-2 bg-neutral-900 text-white text-[10px] font-bold uppercase tracking-wider rounded-md flex items-center justify-center gap-1.5 active:bg-black cursor-pointer shadow-xs"
         >
           {added ? (
             <>

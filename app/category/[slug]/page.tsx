@@ -6,6 +6,7 @@ import { Metadata } from "next";
 import { store } from "@/lib/data/store";
 import { formatPrice } from "@/lib/utils";
 import { ChevronRight, ArrowLeft, Sparkles, ShoppingBag } from "lucide-react";
+import { ProductCard } from "@/components/ProductCard";
 
 export const dynamic = "force-dynamic";
 
@@ -212,87 +213,12 @@ export default async function CategoryPage({
             </div>
           </div>
         ) : (
-          <div className="mt-8 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 sm:gap-x-6 gap-y-10">
-            {products.map((product) => {
-              const primaryImage = product.images?.[0]?.secure_url || "";
-              const hoverImage = product.images?.[1]?.secure_url || primaryImage;
-
-              return (
-                <div key={product.id} className="group flex flex-col justify-between">
-                  <Link
-                    href={`/product/${product.slug}`}
-                    className="block relative aspect-3/4 rounded-xs overflow-hidden bg-[#FAF8F5] border border-neutral-200/70"
-                  >
-                    {/* Primary Image */}
-                    {primaryImage ? (
-                      <Image
-                        src={primaryImage}
-                        alt={product.name}
-                        fill
-                        sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                        className="object-cover transition-opacity duration-500 group-hover:opacity-0"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-neutral-300">
-                        <ShoppingBag className="w-8 h-8" />
-                      </div>
-                    )}
-
-                    {/* Secondary Hover Image */}
-                    {hoverImage && (
-                      <Image
-                        src={hoverImage}
-                        alt={`${product.name} alternate view`}
-                        fill
-                        sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                        className="object-cover absolute inset-0 opacity-0 transition-all duration-500 group-hover:opacity-100 group-hover:scale-105"
-                      />
-                    )}
-
-                    {/* Badges */}
-                    <div className="absolute top-2.5 left-2.5 flex flex-col gap-1 z-10">
-                      {product.is_best_seller && (
-                        <span className="px-2 py-0.5 text-[8.5px] font-bold uppercase tracking-widest bg-black text-white rounded-xs shadow-xs">
-                          Best Seller
-                        </span>
-                      )}
-                      {product.is_new_arrival && (
-                        <span className="px-2 py-0.5 text-[8.5px] font-bold uppercase tracking-widest bg-amber-500 text-black rounded-xs shadow-xs">
-                          New
-                        </span>
-                      )}
-                    </div>
-                  </Link>
-
-                  {/* Product Details */}
-                  <div className="pt-3.5 space-y-1">
-                    <Link
-                      href={`/product/${product.slug}`}
-                      className="block text-xs sm:text-sm font-semibold tracking-wider uppercase text-neutral-900 hover:text-black line-clamp-1"
-                    >
-                      {product.name}
-                    </Link>
-
-                    {product.short_description && (
-                      <p className="text-[11px] text-neutral-500 line-clamp-1 font-light">
-                        {product.short_description}
-                      </p>
-                    )}
-
-                    <div className="flex items-center gap-2 pt-0.5">
-                      <span className="text-xs sm:text-sm font-bold text-neutral-950 font-mono">
-                        {formatPrice(product.price)}
-                      </span>
-                      {product.compare_at_price && product.compare_at_price > product.price && (
-                        <span className="text-[11px] text-neutral-400 line-through font-mono">
-                          {formatPrice(product.compare_at_price)}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+          <div className="mt-8 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
+            {products.map((product, idx) => (
+              <div key={product.id} className="flex flex-col justify-between">
+                <ProductCard product={product} priority={idx < 4} />
+              </div>
+            ))}
           </div>
         )}
       </div>

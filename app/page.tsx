@@ -1,22 +1,25 @@
 import { store } from "@/lib/data/store";
 import { HeroBanner, HeroSlide } from "@/components/HeroBanner";
 import { CircularCollections, CircularCollectionItem } from "@/components/CircularCollections";
-import { BestSellersSection } from "@/components/BestSellersSection";
 import { PromoBanner } from "@/components/PromoBanner";
-import { NewArrivalsSection } from "@/components/NewArrivalsSection";
 import { SeenOnYouSection } from "@/components/SeenOnYouSection";
 import { CustomerReviewsSection } from "@/components/CustomerReviewsSection";
+import { DynamicHomeSection } from "@/components/DynamicHomeSection";
+import { TrendingNowSection } from "@/components/TrendingNowSection";
+import { HomepageSection, Product } from "@/types";
+import React from "react";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const [banners, categories, bestSellers, newArrivals, videos, reviews] = await Promise.all([
+  const [banners, categories, allProducts, videos, reviews, sections, trendingItems] = await Promise.all([
     store.getHeroBanners(false),
     store.getCategories(),
-    store.getProducts({ is_best_seller: true }),
-    store.getProducts({ is_new_arrival: true }),
+    store.getProducts(),
     store.getSeenOnYou(),
     store.getReviews(true),
+    store.getHomepageSections(),
+    store.getTrendingNowItems(true),
   ]);
 
   const slides: HeroSlide[] = banners.map((b) => ({
@@ -55,30 +58,79 @@ export default async function HomePage() {
     isViewAll: true,
   });
 
+  // Filter and sort active sections
+  const activeSections = sections.filter((s) => s.is_active);
+
+  // Helper to extract products for each section
+  const getSectionProducts = (sec: HomepageSection): Product[] => {
+    if (sec.type === "best_sellers") {
+      const filtered = allProducts.filter((p) => !!p.is_best_seller);
+      return filtered.length > 0 ? filtered : allProducts.slice(0, 8);
+    }
+    if (sec.type === "new_in") {
+      const filtered = allProducts.filter((p) => !!p.is_new_arrival);
+      return filtered.length > 0 ? filtered : allProducts.slice(0, 8);
+    }
+    if (sec.type === "category" && sec.category_slug) {
+      return allProducts.filter((p) =>
+        p.categories?.some((c: { slug?: string }) => c.slug === sec.category_slug)
+      );
+    }
+    if (sec.type === "custom_products" && sec.product_ids && sec.product_ids.length > 0) {
+      return allProducts.filter((p) => sec.product_ids?.includes(p.id));
+    }
+    return allProducts;
+  };
+
   return (
     <main className="w-full min-h-screen bg-white text-neutral-900 overflow-x-clip">
       {/* 1. Hero Banner */}
       <HeroBanner initialSlides={slides} />
-      
+
       {/* 2. Our Collections (Circular Category Browser) */}
       <div className="mt-1 sm:mt-2 md:mt-3">
         <CircularCollections items={collectionItems} />
       </div>
 
-      {/* 3. Best Sellers Section */}
-      <BestSellersSection products={bestSellers} />
+      {/* 3. Dynamic Homepage Sections (Managed from Admin) */}
+      {(() => {
+        let hasRenderedTrending = false;
+        const rendered = activeSections.map((sec, idx) => {
+          const secProducts = getSectionProducts(sec);
+          if (secProducts.length === 0) return null;
 
-      {/* 4. Mid-page Campaign Editorial Banner */}
-      <PromoBanner />
+          const isNewIn = sec.type === "new_in";
+          if (isNewIn) hasRenderedTrending = true;
 
-      {/* 5. New Arrivals Section */}
-      <NewArrivalsSection products={newArrivals} />
+          return (
+            <React.Fragment key={sec.id}>
+              {/* Promo banner placed seamlessly after the first section */}
+              {idx === 1 && <PromoBanner />}
+              {/* "TRENDING NOW NEW IN NI UPER LY LE" - Render Trending Now ABOVE New In */}
+              {isNewIn && <TrendingNowSection items={trendingItems} />}
+              <DynamicHomeSection section={sec} products={secProducts} />
+            </React.Fragment>
+          );
+        });
 
-      {/* 6. Seen On You (Videos / Reels Section) */}
+        return (
+          <>
+            {rendered}
+            {/* If New In section was not present in dynamic sections, ensure Trending Now still renders */}
+            {!hasRenderedTrending && <TrendingNowSection items={trendingItems} />}
+          </>
+        );
+      })()}
+
+      {/* If only 0 or 1 section was rendered, ensure PromoBanner still displays */}
+      {activeSections.length <= 1 && <PromoBanner />}
+
+      {/* 4. Seen On You (Videos / Reels Section) */}
       <SeenOnYouSection videos={videos} />
 
-      {/* 7. Customer Reviews Section */}
+      {/* 5. Customer Reviews Section */}
       <CustomerReviewsSection reviews={reviews} />
     </main>
   );
 }
+

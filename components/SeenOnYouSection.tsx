@@ -140,17 +140,6 @@ export function SeenOnYouSection({ videos }: SeenOnYouSectionProps) {
             ))}
           </div>
         </div>
-
-        {/* Small Black Button with White Text */}
-        <div className="mt-8 sm:mt-10 text-center">
-          <Link
-            href="/shop"
-            className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-black text-white hover:bg-neutral-800 text-[11px] font-semibold tracking-[0.2em] uppercase rounded-md shadow-xs transition-all active:scale-95 group"
-          >
-            <span>VIEW ALL</span>
-            <ArrowRight className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-1" />
-          </Link>
-        </div>
       </div>
 
       {/* Fullscreen Video Modal Lightbox */}

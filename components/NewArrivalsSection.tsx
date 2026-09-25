@@ -39,14 +39,14 @@ export function NewArrivalsSection({ products }: NewArrivalsSectionProps) {
 
         {/* Swipeable Carousel */}
         <div className="relative group/carousel">
-          {/* Scroll Navigation Buttons for Desktop (Only when items overflow) */}
+          {/* Scroll Navigation Buttons for Desktop */}
           {!isFew && (
             <>
               <button
                 type="button"
                 onClick={() => handleScroll("left")}
-                aria-label="Scroll new in left"
-                className="hidden md:flex absolute left-1 sm:left-2 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white/95 border border-neutral-200/90 shadow-md items-center justify-center text-neutral-800 hover:text-black hover:border-black hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                aria-label="Scroll new arrivals left"
+                className="hidden md:flex absolute -left-3 lg:-left-5 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white/95 border border-neutral-200/90 shadow-md items-center justify-center text-neutral-800 hover:text-black hover:border-black hover:scale-105 active:scale-95 transition-all cursor-pointer"
               >
                 <ChevronLeft className="w-5 h-5" />
               </button>
@@ -54,8 +54,8 @@ export function NewArrivalsSection({ products }: NewArrivalsSectionProps) {
               <button
                 type="button"
                 onClick={() => handleScroll("right")}
-                aria-label="Scroll new in right"
-                className="hidden md:flex absolute right-1 sm:right-2 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white/95 border border-neutral-200/90 shadow-md items-center justify-center text-neutral-800 hover:text-black hover:border-black hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                aria-label="Scroll new arrivals right"
+                className="hidden md:flex absolute -right-3 lg:-right-5 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white/95 border border-neutral-200/90 shadow-md items-center justify-center text-neutral-800 hover:text-black hover:border-black hover:scale-105 active:scale-95 transition-all cursor-pointer"
               >
                 <ChevronRight className="w-5 h-5" />
               </button>
@@ -65,19 +65,18 @@ export function NewArrivalsSection({ products }: NewArrivalsSectionProps) {
           {/* Horizontal Swipeable Track */}
           <div
             ref={scrollRef}
-            className={`flex items-stretch gap-2 sm:gap-3 md:gap-3.5 overflow-x-auto scrollbar-none scroll-smooth snap-x snap-mandatory py-2 px-1 -mx-1 ${
-              isFew ? "justify-center" : "justify-start 2xl:justify-center"
+            className={`flex items-stretch gap-2.5 sm:gap-3.5 md:gap-4 overflow-x-auto scrollbar-none scroll-smooth snap-x snap-mandatory py-2 px-1 -mx-1 ${
+              isFew ? "justify-start 2xl:justify-center" : "justify-start"
             }`}
             style={{
               scrollbarWidth: "none",
               msOverflowStyle: "none",
-              justifyContent: isFew ? "center" : "safe center",
             }}
           >
             {displayProducts.map((product) => (
               <div
                 key={product.id}
-                className="w-[200px] sm:w-[240px] md:w-[280px] shrink-0 snap-start flex flex-col justify-between"
+                className="w-[190px] sm:w-[230px] md:w-[270px] lg:w-[285px] shrink-0 snap-start flex flex-col justify-between"
               >
                 <ProductCard product={product} />
               </div>

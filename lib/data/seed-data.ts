@@ -72,6 +72,47 @@ export const SEED_PRODUCTS: Product[] = [
         sort_order: 2,
       },
     ],
+    color_variants: [
+      {
+        id: "var-1-1",
+        name: "Noir Black",
+        color_hex: "#1A1A1A",
+        images: [
+          {
+            cloudinary_public_id: "dnora/products/marais-1",
+            secure_url: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=1200&q=85",
+            alt_text: "The Marais in Noir Black",
+            sort_order: 1,
+          },
+        ],
+      },
+      {
+        id: "var-1-2",
+        name: "Caramel Tan",
+        color_hex: "#9E6740",
+        images: [
+          {
+            cloudinary_public_id: "dnora/products/marais-2",
+            secure_url: "https://images.unsplash.com/photo-1590874103328-eac38a683ce7?auto=format&fit=crop&w=1200&q=85",
+            alt_text: "The Marais in Caramel Tan",
+            sort_order: 1,
+          },
+        ],
+      },
+      {
+        id: "var-1-3",
+        name: "Ivory Cream",
+        color_hex: "#E8E2D5",
+        images: [
+          {
+            cloudinary_public_id: "dnora/products/marais-3",
+            secure_url: "https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=1200&q=85",
+            alt_text: "The Marais in Ivory Cream",
+            sort_order: 1,
+          },
+        ],
+      },
+    ],
     categories: [SEED_CATEGORIES[3]], // Handbags
     created_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
     updated_at: new Date().toISOString(),
@@ -107,6 +148,34 @@ export const SEED_PRODUCTS: Product[] = [
         secure_url: "https://images.unsplash.com/photo-1566150905458-1bf1fc113f0d?auto=format&fit=crop&w=1200&q=85",
         alt_text: "The Sienne Shoulder Bag worn angle",
         sort_order: 2,
+      },
+    ],
+    color_variants: [
+      {
+        id: "var-2-1",
+        name: "Warm Caramel",
+        color_hex: "#B87333",
+        images: [
+          {
+            cloudinary_public_id: "dnora/products/sienne-1",
+            secure_url: "https://images.unsplash.com/photo-1591561954557-26941169b49e?auto=format&fit=crop&w=1200&q=85",
+            alt_text: "The Sienne in Warm Caramel",
+            sort_order: 1,
+          },
+        ],
+      },
+      {
+        id: "var-2-2",
+        name: "Espresso Noir",
+        color_hex: "#2B1E16",
+        images: [
+          {
+            cloudinary_public_id: "dnora/products/sienne-2",
+            secure_url: "https://images.unsplash.com/photo-1566150905458-1bf1fc113f0d?auto=format&fit=crop&w=1200&q=85",
+            alt_text: "The Sienne in Espresso",
+            sort_order: 1,
+          },
+        ],
       },
     ],
     categories: [SEED_CATEGORIES[0]], // Shoulder Bags
@@ -146,6 +215,34 @@ export const SEED_PRODUCTS: Product[] = [
         sort_order: 2,
       },
     ],
+    color_variants: [
+      {
+        id: "var-3-1",
+        name: "Cream Alabaster",
+        color_hex: "#F5F2EB",
+        images: [
+          {
+            cloudinary_public_id: "dnora/products/atelier-1",
+            secure_url: "https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=1200&q=85",
+            alt_text: "The Atelier in Cream Alabaster",
+            sort_order: 1,
+          },
+        ],
+      },
+      {
+        id: "var-3-2",
+        name: "Midnight Noir",
+        color_hex: "#161616",
+        images: [
+          {
+            cloudinary_public_id: "dnora/products/atelier-2",
+            secure_url: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=1200&q=85",
+            alt_text: "The Atelier in Midnight Noir",
+            sort_order: 1,
+          },
+        ],
+      },
+    ],
     categories: [SEED_CATEGORIES[1]], // Tote Bags
     created_at: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString(),
     updated_at: new Date().toISOString(),
@@ -181,6 +278,34 @@ export const SEED_PRODUCTS: Product[] = [
         secure_url: "https://images.unsplash.com/photo-1591561954557-26941169b49e?auto=format&fit=crop&w=1200&q=85",
         alt_text: "The Lune Crescent Crossbody side profile",
         sort_order: 2,
+      },
+    ],
+    color_variants: [
+      {
+        id: "var-4-1",
+        name: "Espresso",
+        color_hex: "#3D2B1F",
+        images: [
+          {
+            cloudinary_public_id: "dnora/products/lune-1",
+            secure_url: "https://images.unsplash.com/photo-1566150905458-1bf1fc113f0d?auto=format&fit=crop&w=1200&q=85",
+            alt_text: "The Lune in Espresso",
+            sort_order: 1,
+          },
+        ],
+      },
+      {
+        id: "var-4-2",
+        name: "Cognac Amber",
+        color_hex: "#9A4E24",
+        images: [
+          {
+            cloudinary_public_id: "dnora/products/lune-2",
+            secure_url: "https://images.unsplash.com/photo-1591561954557-26941169b49e?auto=format&fit=crop&w=1200&q=85",
+            alt_text: "The Lune in Cognac Amber",
+            sort_order: 1,
+          },
+        ],
       },
     ],
     categories: [SEED_CATEGORIES[2]], // Crossbody Bags
