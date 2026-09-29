@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
-import { destroyAdminSession } from "@/lib/auth/session";
 import { destroyUserSession } from "@/lib/auth/user-session";
 
+export const dynamic = "force-dynamic";
+
 export async function POST() {
-  await Promise.all([destroyAdminSession(), destroyUserSession()]);
+  // Completely isolated member storefront session logout - never touches admin session
+  await destroyUserSession();
   return NextResponse.json({ success: true });
 }

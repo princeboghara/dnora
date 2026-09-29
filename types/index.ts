@@ -30,6 +30,7 @@ export interface ProductCategory {
   image_url?: string;
   description?: string;
   banner_image_url?: string;
+  banner_mobile_image_url?: string;
   banner_heading?: string;
   banner_subtitle?: string;
   banner_media_type?: "image" | "video";
@@ -414,5 +415,7 @@ export interface TrendingNowItem {
   target_link?: string;
   product_id?: string;
   product_slug?: string;
+  price?: number;
+  compare_at_price?: number | null;
   created_at?: string;
 }

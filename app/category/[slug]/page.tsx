@@ -95,12 +95,12 @@ export default async function CategoryPage({
         </div>
       </div>
 
-      {/* Category Hero Banner (Image or Video) */}
-      {category?.banner_image_url ? (
+      {/* Category Hero Banner (Desktop & Mobile Images or Video) */}
+      {(category?.banner_image_url || category?.banner_mobile_image_url) ? (
         <section className="relative w-full h-[320px] sm:h-[400px] md:h-[480px] lg:h-[540px] bg-neutral-950 overflow-hidden flex items-end">
           {category.banner_media_type === "video" ? (
             <video
-              src={category.banner_image_url}
+              src={category.banner_image_url || category.banner_mobile_image_url}
               autoPlay
               loop
               muted
@@ -108,14 +108,35 @@ export default async function CategoryPage({
               className="absolute inset-0 w-full h-full object-cover"
             />
           ) : (
-            <Image
-              src={category.banner_image_url}
-              alt={title}
-              fill
-              priority
-              className="object-cover"
-              sizes="100vw"
-            />
+            <>
+              {/* Desktop / Laptop Banner */}
+              {category.banner_image_url && (
+                <Image
+                  src={category.banner_image_url}
+                  alt={title}
+                  fill
+                  priority
+                  className={`object-cover ${
+                    category.banner_mobile_image_url ? "hidden sm:block" : "block"
+                  }`}
+                  sizes="100vw"
+                />
+              )}
+
+              {/* Mobile Banner (for smartphones) */}
+              {category.banner_mobile_image_url && (
+                <Image
+                  src={category.banner_mobile_image_url}
+                  alt={title}
+                  fill
+                  priority
+                  className={`object-cover ${
+                    category.banner_image_url ? "block sm:hidden" : "block"
+                  }`}
+                  sizes="100vw"
+                />
+              )}
+            </>
           )}
 
           {/* Only render text & gradient overlay if the admin explicitly provided headline or subtitle */}

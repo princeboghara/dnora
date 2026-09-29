@@ -17,7 +17,7 @@ export default function AdminLayout({
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   // If on login page, render standalone clean view without sidebar or layout restrictions
-  const isLoginPage = pathname === "/admin/login";
+  const isLoginPage = pathname?.startsWith("/admin/login") ?? false;
   const [isVerifying, setIsVerifying] = useState(!isLoginPage);
 
   useEffect(() => {
@@ -69,7 +69,15 @@ export default function AdminLayout({
           sidebarCollapsed ? "md:pl-20" : "md:pl-64"
         }`}
       >
-        <AdminHeader onOpenMobileSidebar={() => setMobileSidebarOpen(true)} />
+        <AdminHeader
+          onOpenMobileSidebar={() => {
+            if (typeof window !== "undefined" && window.innerWidth >= 768) {
+              setSidebarCollapsed((prev) => !prev);
+            } else {
+              setMobileSidebarOpen(true);
+            }
+          }}
+        />
         <main className="flex-1 p-4 sm:p-6 lg:p-8 w-full min-w-0">
           {children}
         </main>

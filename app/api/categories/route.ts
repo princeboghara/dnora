@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { store } from "@/lib/data/store";
 import { verifyAdminSession } from "@/lib/auth/session";
+import { revalidatePath } from "next/cache";
 
 export const dynamic = "force-dynamic";
 
@@ -31,6 +32,7 @@ export async function POST(req: NextRequest) {
       description,
       image_url,
       banner_image_url,
+      banner_mobile_image_url,
       banner_heading,
       banner_subtitle,
       banner_media_type,
@@ -49,10 +51,19 @@ export async function POST(req: NextRequest) {
       description: typeof description === "string" ? description.trim() : undefined,
       image_url: typeof image_url === "string" ? image_url.trim() : undefined,
       banner_image_url: typeof banner_image_url === "string" ? banner_image_url.trim() : undefined,
+      banner_mobile_image_url: typeof banner_mobile_image_url === "string" ? banner_mobile_image_url.trim() : undefined,
       banner_heading: typeof banner_heading === "string" ? banner_heading.trim() : undefined,
       banner_subtitle: typeof banner_subtitle === "string" ? banner_subtitle.trim() : undefined,
       banner_media_type: banner_media_type === "video" ? "video" : "image",
     });
+
+    try {
+      revalidatePath("/");
+      revalidatePath("/shop");
+      revalidatePath("/admin/categories");
+    } catch {
+      // ignore
+    }
 
     return NextResponse.json({ success: true, data: category });
   } catch (error: unknown) {

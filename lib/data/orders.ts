@@ -100,6 +100,23 @@ export async function createNewOrder(input: CreateOrderInput): Promise<Order> {
         ...inserted,
         price: Number(inserted.price),
       });
+
+      // Automatically deduct product stock when order is placed
+      if (validProductId) {
+        await client.query(
+          `UPDATE public.products 
+           SET stock = GREATEST(0, stock - $1), updated_at = NOW() 
+           WHERE id = $2`,
+          [item.quantity, validProductId]
+        );
+      } else if (item.productSlug) {
+        await client.query(
+          `UPDATE public.products 
+           SET stock = GREATEST(0, stock - $1), updated_at = NOW() 
+           WHERE slug = $2`,
+          [item.quantity, item.productSlug]
+        );
+      }
     }
 
     await client.query("COMMIT");
@@ -231,6 +248,39 @@ export async function updateOrderAdmin(
 
     const query = `UPDATE public.orders SET ${setClauses.join(", ")} WHERE ${whereClause}`;
     const res = await db.query(query, params);
+
+    // If order was marked cancelled, restore product stock
+    if (updates.status === "cancelled" && (res.rowCount ?? 0) > 0) {
+      try {
+        const orderLookup = await db.query(
+          hasValidUuid ? `SELECT id FROM public.orders WHERE id = $1::uuid` : `SELECT id FROM public.orders WHERE order_number = $1`,
+          [orderId]
+        );
+        if (orderLookup.rows.length > 0) {
+          const dbOrderId = orderLookup.rows[0].id;
+          const itemsRes = await db.query(
+            `SELECT product_id, product_slug, quantity FROM public.order_items WHERE order_id = $1`,
+            [dbOrderId]
+          );
+          for (const item of itemsRes.rows) {
+            if (item.product_id) {
+              await db.query(
+                `UPDATE public.products SET stock = stock + $1, updated_at = NOW() WHERE id = $2`,
+                [item.quantity, item.product_id]
+              );
+            } else if (item.product_slug) {
+              await db.query(
+                `UPDATE public.products SET stock = stock + $1, updated_at = NOW() WHERE slug = $2`,
+                [item.quantity, item.product_slug]
+              );
+            }
+          }
+        }
+      } catch (stockErr) {
+        console.error("Failed to restore stock on cancellation:", stockErr);
+      }
+    }
+
     return (res.rowCount ?? 0) > 0;
   } catch (err) {
     console.error("Error in updateOrderAdmin DB query:", err);

@@ -30,8 +30,20 @@ export function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Protect /admin routes (except /admin/login)
-  if (pathname.startsWith("/admin") && pathname !== "/admin/login") {
+  // If already authenticated as admin and visiting /admin/login, redirect to /admin
+  if (pathname.startsWith("/admin/login")) {
+    const adminSessionCookie = request.cookies.get(ADMIN_COOKIE_NAME);
+    if (adminSessionCookie?.value) {
+      const payload = verifySessionToken<AdminCookiePayload>(adminSessionCookie.value);
+      if (payload && payload.role === "admin") {
+        return NextResponse.redirect(new URL("/admin", request.url));
+      }
+    }
+    return NextResponse.next();
+  }
+
+  // Protect /admin routes
+  if (pathname.startsWith("/admin")) {
     const adminSessionCookie = request.cookies.get(ADMIN_COOKIE_NAME);
 
     let isValidAdmin = false;

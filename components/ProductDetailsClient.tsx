@@ -15,8 +15,10 @@ import {
   Check,
   ChevronDown,
   ChevronRight,
+  ChevronLeft,
   Minus,
   Plus,
+  Star,
 } from "lucide-react";
 import { Product } from "@/types";
 import { formatPrice } from "@/lib/utils";
@@ -147,64 +149,42 @@ export function ProductDetailsClient({ product, relatedProducts }: ProductDetail
       </div>
 
       {/* Main Product Showcase Section */}
-      <div className="max-w-[1820px] 2xl:max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 pt-8 sm:pt-12">
+      <div className="max-w-[1820px] 2xl:max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 pt-6 sm:pt-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-start">
           
-          {/* LEFT: Image Gallery (7 Cols on LG) */}
-          <div className="lg:col-span-7 flex flex-col-reverse sm:flex-row gap-4">
-            {/* Thumbnail Strip */}
-            {displayImages.length > 1 && (
-              <div className="flex sm:flex-col gap-3 overflow-x-auto sm:overflow-y-auto max-h-[640px] pb-2 sm:pb-0 scrollbar-none shrink-0">
-                {displayImages.map((img, idx) => (
-                  <button
-                    key={`${img.id || idx}-${idx}`}
-                    type="button"
-                    onClick={() => setActiveImageIndex(idx)}
-                    className={`relative w-16 h-20 sm:w-20 sm:h-24 rounded-lg overflow-hidden border cursor-pointer transition-all shrink-0 bg-[#FAF8F5] group/thumb ${
-                      activeImageIndex === idx
-                        ? "border-neutral-950 ring-1 ring-neutral-950 scale-102"
-                        : "border-neutral-200 hover:border-neutral-400 opacity-80 hover:opacity-100"
-                    }`}
-                  >
-                    <Image
-                      src={img.secure_url}
-                      alt={img.alt_text || `${product.name} thumbnail ${idx + 1}`}
-                      fill
-                      sizes="80px"
-                      className="object-cover"
-                    />
-                    <span className="absolute bottom-1 right-1 px-1 py-0.2 rounded-xs bg-black/60 text-white text-[8px] font-mono opacity-80 group-hover/thumb:opacity-100">
-                      {idx === 0 ? "Main" : idx === 1 ? "Hover" : `#${idx + 1}`}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {/* Main Stage Image Frame with Hover Reveal */}
-            <div className="group/stage relative flex-1 aspect-3/4 rounded-2xl overflow-hidden bg-[#FAF8F5] border border-neutral-200/80 shadow-2xs">
+          {/* LEFT: Image Gallery (7 Cols on LG) - Main Image with Horizontal Thumbnails Below */}
+          <div className="lg:col-span-7 flex flex-col gap-3">
+            {/* Main Stage Image Frame */}
+            <div className="group/stage relative w-full aspect-[4/5] sm:aspect-[4/5] max-h-[620px] rounded-2xl overflow-hidden bg-white border border-neutral-200/80 shadow-xs flex items-center justify-center">
               <Image
                 src={currentImage.secure_url}
                 alt={currentImage.alt_text || product.name}
                 fill
                 priority
                 sizes="(max-width: 1024px) 100vw, 55vw"
-                className={`object-cover transition-opacity duration-500 ${
-                  activeImageIndex === 0 && hoverImage !== currentImage.secure_url
-                    ? "group-hover/stage:opacity-0"
-                    : ""
-                }`}
+                className="object-contain p-3 sm:p-5 transition-all duration-300"
               />
 
-              {/* Hover Image Reveal when hovering over primary image */}
-              {activeImageIndex === 0 && hoverImage !== currentImage.secure_url && (
-                <Image
-                  src={hoverImage}
-                  alt={`${product.name} alternate hover`}
-                  fill
-                  sizes="(max-width: 1024px) 100vw, 55vw"
-                  className="object-cover absolute inset-0 opacity-0 transition-all duration-500 group-hover/stage:opacity-100 group-hover/stage:scale-103"
-                />
+              {/* Previous / Next Arrow Controls on Main Image */}
+              {displayImages.length > 1 && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setActiveImageIndex((prev) => (prev > 0 ? prev - 1 : displayImages.length - 1))}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white/95 shadow-md text-neutral-800 hover:text-black flex items-center justify-center transition-all hover:scale-105 active:scale-95 cursor-pointer border border-neutral-200/70"
+                    aria-label="Previous image"
+                  >
+                    <ChevronLeft className="w-5 h-5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveImageIndex((prev) => (prev < displayImages.length - 1 ? prev + 1 : 0))}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white/95 shadow-md text-neutral-800 hover:text-black flex items-center justify-center transition-all hover:scale-105 active:scale-95 cursor-pointer border border-neutral-200/70"
+                    aria-label="Next image"
+                  >
+                    <ChevronRight className="w-5 h-5" />
+                  </button>
+                </>
               )}
 
               {/* Luxury Discount Pill */}
@@ -231,40 +211,86 @@ export function ProductDetailsClient({ product, relatedProducts }: ProductDetail
                 <Heart className={`w-5 h-5 ${isFavorited ? "fill-current" : ""}`} />
               </button>
             </div>
+
+            {/* Horizontal Thumbnail Strip directly below the main image (exact Lino Perros layout) */}
+            {displayImages.length > 1 && (
+              <div className="flex items-center gap-2.5 sm:gap-3 overflow-x-auto py-2 px-1 scrollbar-none">
+                {displayImages.map((img, idx) => (
+                  <button
+                    key={`${img.id || idx}-${idx}`}
+                    type="button"
+                    onClick={() => setActiveImageIndex(idx)}
+                    className={`relative w-14 h-16 sm:w-16 sm:h-20 rounded-md overflow-hidden transition-all shrink-0 bg-white cursor-pointer ${
+                      activeImageIndex === idx
+                        ? "border-2 border-black ring-1 ring-black shadow-xs scale-102"
+                        : "border border-neutral-200 hover:border-neutral-400 opacity-70 hover:opacity-100"
+                    }`}
+                  >
+                    <Image
+                      src={img.secure_url}
+                      alt={img.alt_text || `${product.name} thumbnail ${idx + 1}`}
+                      fill
+                      sizes="80px"
+                      className="object-contain p-1"
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* RIGHT: Product Information & Purchase Controls (5 Cols on LG) */}
-          <div className="lg:col-span-5 space-y-6 lg:sticky lg:top-24">
+          <div className="lg:col-span-5 space-y-5 lg:sticky lg:top-24">
             {/* Header Titles */}
-            <div className="space-y-2 border-b border-neutral-100 pb-5">
+            <div className="space-y-2.5 border-b border-neutral-100 pb-5">
               <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-neutral-500">
-                <span>Handcrafted in Florence</span>
+                <span>Handcrafted Luxury</span>
                 <span>•</span>
                 <span className="font-mono text-neutral-400">{product.sku}</span>
               </div>
-              <h1 className="text-2xl sm:text-3xl font-serif text-neutral-950 font-normal leading-tight">
+
+              {/* Product Title in Bold Uppercase like screenshot */}
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold uppercase tracking-tight text-neutral-900 leading-tight">
                 {product.name}
               </h1>
 
-              {/* Price & Savings */}
-              <div className="flex items-baseline gap-3 pt-1">
-                <span className="text-xl sm:text-2xl font-bold text-neutral-950 font-mono tracking-tight">
-                  {formatPrice(product.price)}
-                </span>
-                {product.compare_at_price && product.compare_at_price > product.price && (
-                  <>
-                    <span className="text-sm text-neutral-400 line-through font-mono">
-                      {formatPrice(product.compare_at_price)}
-                    </span>
-                    <span className="text-xs font-semibold text-rose-600 tracking-wide uppercase">
-                      Save {formatPrice(product.compare_at_price - product.price)}
-                    </span>
-                  </>
-                )}
+              {/* Highlight Pill / Tag (Matching screenshot: A Fashion-Forward Tote Bag for Every Moment) */}
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-emerald-50/90 border border-emerald-200/80 text-emerald-800 text-xs font-semibold">
+                <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                <span>A Fashion-Forward Luxury Silhouette for Every Moment</span>
               </div>
-              <p className="text-[11px] text-neutral-500 font-light">
-                Price includes Florentine artisan tailoring, export duties, and luxury presentation box.
-              </p>
+
+              {/* Star Rating & Reviews (Matching screenshot: 4.7 | 19 Reviews) */}
+              <div className="flex items-center gap-2 text-xs text-neutral-600 font-medium pt-1">
+                <div className="flex items-center text-amber-500">
+                  <Star className="w-3.5 h-3.5 fill-amber-400 stroke-amber-400 mr-1" />
+                  <span className="font-bold text-neutral-900">4.8</span>
+                </div>
+                <span className="text-neutral-300">|</span>
+                <span className="text-neutral-500 underline underline-offset-2">24 Verified Reviews</span>
+              </div>
+
+              {/* Price & Savings (Matching screenshot: Current Price + MRP + Saved % + Incl of all taxes) */}
+              <div className="space-y-1 pt-2">
+                <div className="flex flex-wrap items-baseline gap-3">
+                  <span className="text-2xl sm:text-3xl font-extrabold text-neutral-950 font-mono tracking-tight">
+                    {formatPrice(product.price)}
+                  </span>
+                  {product.compare_at_price && product.compare_at_price > product.price && (
+                    <>
+                      <span className="text-sm text-neutral-400 font-mono line-through">
+                        MRP: {formatPrice(product.compare_at_price)}
+                      </span>
+                      <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold uppercase tracking-wide">
+                        Saved {discountPercent}%
+                      </span>
+                    </>
+                  )}
+                </div>
+                <div className="text-[11px] text-neutral-500 font-light">
+                  Inclusive of all taxes & luxury packaging
+                </div>
+              </div>
             </div>
 
             {/* Color Variant Selector */}

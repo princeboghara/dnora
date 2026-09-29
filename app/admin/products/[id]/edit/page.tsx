@@ -176,7 +176,7 @@ export default function AdminEditProductPage({ params }: EditPageProps) {
         } else {
           next.push(newImg);
         }
-        return next.slice(0, 2);
+        return next;
       });
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Error uploading file";
@@ -193,6 +193,11 @@ export default function AdminEditProductPage({ params }: EditPageProps) {
     fileInputRef.current?.click();
   };
 
+  const triggerAddExtraImage = () => {
+    setTargetSlotToUpload(images.length);
+    fileInputRef.current?.click();
+  };
+
   const handleAddManualUrl = () => {
     if (!manualUrlInput.trim()) return;
     try {
@@ -203,7 +208,7 @@ export default function AdminEditProductPage({ params }: EditPageProps) {
         alt_text: name || "DNORA Silhouette",
         sort_order: images.length + 1,
       };
-      setImages((prev) => [...prev, newImg].slice(0, 2));
+      setImages((prev) => [...prev, newImg]);
       setManualUrlInput("");
     } catch {
       setErrorMsg("Please enter a valid HTTP/HTTPS URL");
@@ -592,6 +597,66 @@ export default function AdminEditProductPage({ params }: EditPageProps) {
                 )}
               </div>
             </div>
+          </div>
+
+          {/* Slot 3+ Additional Gallery Images */}
+          <div className="pt-4 border-t border-neutral-100 space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="text-xs font-bold uppercase tracking-wider text-neutral-800 flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-600" />
+                  Additional Gallery Images (Side, Back, Top, Interior, On Model)
+                </span>
+                <p className="text-[11px] text-neutral-500 font-light mt-0.5">
+                  These photos appear in the horizontal thumbnail strip on the live product page.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={triggerAddExtraImage}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-neutral-900 hover:bg-black text-white rounded-lg shadow-xs transition cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Add Gallery Photo</span>
+              </button>
+            </div>
+
+            {images.length > 2 ? (
+              <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3 pt-2">
+                {images.slice(2).map((img, idx) => {
+                  const actualIndex = idx + 2;
+                  return (
+                    <div
+                      key={`${img.secure_url}-${actualIndex}`}
+                      className="group relative aspect-[3/4] rounded-lg overflow-hidden border border-neutral-200 bg-neutral-50 shadow-2xs"
+                    >
+                      <Image
+                        src={img.secure_url}
+                        alt={`Gallery ${actualIndex + 1}`}
+                        fill
+                        className="object-cover"
+                        unoptimized
+                      />
+                      <div className="absolute top-1 left-1 px-1.5 py-0.5 rounded bg-black/70 text-white text-[9px] font-mono">
+                        #{actualIndex + 1}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveImage(actualIndex)}
+                        className="absolute top-1 right-1 p-1 rounded-full bg-red-600 text-white opacity-0 group-hover:opacity-100 transition shadow-sm cursor-pointer"
+                        title="Delete image"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="text-xs text-neutral-400 italic py-2">
+                No additional gallery images added yet. Click &quot;Add Gallery Photo&quot; or paste a URL below to add side, back, or interior views.
+              </div>
+            )}
           </div>
 
           {/* Quick URL Input */}

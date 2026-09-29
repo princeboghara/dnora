@@ -33,4 +33,23 @@ export const productSchema = z.object({
   color_variants: z.array(productColorVariantSchema).optional().default([]),
 });
 
+export const productUpdateSchema = z.object({
+  name: z.string().min(1, "Product name cannot be empty").max(200).optional(),
+  slug: z.string().optional(),
+  short_description: z.string().optional(),
+  description: z.string().optional(),
+  price: z.coerce.number().positive("Price must be greater than 0").optional(),
+  compare_at_price: z.coerce.number().optional().nullable(),
+  sku: z.string().optional(),
+  stock: z.coerce.number().int().min(0).optional(),
+  category_id: z.string().optional(),
+  is_best_seller: z.boolean().optional(),
+  is_new_arrival: z.boolean().optional(),
+  status: z.enum(["draft", "active", "archived"]).optional(),
+  images: z.array(productImageSchema).optional(),
+  color_variants: z.array(productColorVariantSchema).optional(),
+});
+
 export type ProductInput = z.infer<typeof productSchema>;
+export type ProductUpdateInput = z.infer<typeof productUpdateSchema>;
+

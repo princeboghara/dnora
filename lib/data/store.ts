@@ -622,6 +622,9 @@ class DataStore {
     for (const col of prodCols) {
       const val = updates[col];
       if (val !== undefined) {
+        if (col === "sku" && (!val || !String(val).trim())) {
+          continue;
+        }
         fields.push(`${col} = $${i}`);
         values.push(val as string | number | null);
         i++;
@@ -714,6 +717,7 @@ class DataStore {
     try {
       await db.query(`
         ALTER TABLE public.product_categories ADD COLUMN IF NOT EXISTS banner_image_url TEXT;
+        ALTER TABLE public.product_categories ADD COLUMN IF NOT EXISTS banner_mobile_image_url TEXT;
         ALTER TABLE public.product_categories ADD COLUMN IF NOT EXISTS banner_heading TEXT;
         ALTER TABLE public.product_categories ADD COLUMN IF NOT EXISTS banner_subtitle TEXT;
         ALTER TABLE public.product_categories ADD COLUMN IF NOT EXISTS banner_media_type TEXT DEFAULT 'image';
@@ -762,6 +766,7 @@ class DataStore {
     description?: string;
     image_url?: string;
     banner_image_url?: string;
+    banner_mobile_image_url?: string;
     banner_heading?: string;
     banner_subtitle?: string;
     banner_media_type?: "image" | "video";
@@ -770,8 +775,8 @@ class DataStore {
     const slug = data.slug?.trim() ? slugify(data.slug) : slugify(data.name);
     const res = await db.query(
       `INSERT INTO public.product_categories 
-        (name, slug, description, image_url, banner_image_url, banner_heading, banner_subtitle, banner_media_type)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        (name, slug, description, image_url, banner_image_url, banner_mobile_image_url, banner_heading, banner_subtitle, banner_media_type)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
        RETURNING *`,
       [
         data.name.trim(),
@@ -779,6 +784,7 @@ class DataStore {
         data.description || null,
         data.image_url || null,
         data.banner_image_url || null,
+        data.banner_mobile_image_url || null,
         data.banner_heading || null,
         data.banner_subtitle || null,
         data.banner_media_type || "image",
@@ -795,6 +801,7 @@ class DataStore {
       description: string;
       image_url: string;
       banner_image_url: string;
+      banner_mobile_image_url: string;
       banner_heading: string;
       banner_subtitle: string;
       banner_media_type: "image" | "video";
@@ -825,6 +832,10 @@ class DataStore {
       updates.push(`banner_image_url = $${idx++}`);
       params.push(data.banner_image_url || null);
     }
+    if (data.banner_mobile_image_url !== undefined) {
+      updates.push(`banner_mobile_image_url = $${idx++}`);
+      params.push(data.banner_mobile_image_url || null);
+    }
     if (data.banner_heading !== undefined) {
       updates.push(`banner_heading = $${idx++}`);
       params.push(data.banner_heading || null);
@@ -845,7 +856,26 @@ class DataStore {
       `UPDATE public.product_categories SET ${updates.join(", ")} WHERE id = $${idx} RETURNING *`,
       params
     );
-    return res.rows[0] || null;
+    const updated = res.rows[0] || null;
+
+    // Keep circular_collections in sync if label or image was updated
+    if (updated && (data.image_url !== undefined || data.name !== undefined)) {
+      try {
+        const newImg = data.image_url !== undefined ? (data.image_url ? String(data.image_url).trim() : null) : null;
+        if (newImg) {
+          await db.query(
+            `UPDATE public.circular_collections 
+             SET image = $1 
+             WHERE href ILIKE $2 OR label ILIKE $3`,
+            [newImg, `%/category/${updated.slug}%`, updated.name]
+          );
+        }
+      } catch (circErr) {
+        console.warn("Circular collection sync warning:", circErr);
+      }
+    }
+
+    return updated;
   }
 
   async deleteCategory(id: string): Promise<boolean> {
@@ -1702,11 +1732,57 @@ class DataStore {
         )
         .catch(() => {});
 
-      const where = activeOnly ? "WHERE is_active = true" : "";
+      const where = activeOnly ? "WHERE t.is_active = true" : "";
       const res = await db.query(
-        `SELECT * FROM public.trending_now_items ${where} ORDER BY sort_order ASC, created_at DESC`
+        `SELECT 
+          t.id,
+          COALESCE(p.name, t.title, '') as title,
+          COALESCE(
+            (SELECT pi.secure_url FROM public.product_images pi WHERE pi.product_id = p.id ORDER BY pi.sort_order ASC LIMIT 1),
+            t.image_url
+          ) as image_url,
+          COALESCE(t.alt_text, p.name, 'DNORA Trending') as alt_text,
+          t.sort_order,
+          t.is_active,
+          t.target_link,
+          COALESCE(t.product_id, p.id) as product_id,
+          COALESCE(t.product_slug, p.slug) as product_slug,
+          p.price,
+          p.compare_at_price,
+          t.created_at
+        FROM public.trending_now_items t
+        LEFT JOIN public.products p 
+          ON p.id = t.product_id OR (t.product_slug IS NOT NULL AND p.slug = t.product_slug)
+        ${where} 
+        ORDER BY t.sort_order ASC, t.created_at DESC`
       );
-      if (res.rows.length === 0) return fallback;
+      if (res.rows.length === 0) {
+        // Fallback to active catalog products
+        const catProds = await db.query(`
+          SELECT p.id, p.name as title, p.slug as product_slug, p.price, p.compare_at_price,
+                 (SELECT pi.secure_url FROM public.product_images pi WHERE pi.product_id = p.id ORDER BY pi.sort_order ASC LIMIT 1) as image_url
+          FROM public.products p
+          WHERE p.status = 'active'
+          ORDER BY p.is_best_seller DESC, p.created_at DESC
+          LIMIT 8
+        `).catch(() => ({ rows: [] }));
+
+        if (catProds.rows.length > 0) {
+          return catProds.rows.map((p, i) => ({
+            id: p.id,
+            title: p.title || "DNORA Luxury Handbag",
+            image_url: p.image_url || fallback[i % fallback.length].image_url,
+            alt_text: p.title,
+            sort_order: i + 1,
+            is_active: true,
+            product_id: p.id,
+            product_slug: p.product_slug,
+            price: Number(p.price || 1999),
+            compare_at_price: p.compare_at_price ? Number(p.compare_at_price) : null,
+          }));
+        }
+        return fallback;
+      }
       return res.rows.map((row) => ({
         id: row.id,
         title: row.title || "",
@@ -1717,6 +1793,8 @@ class DataStore {
         target_link: row.target_link || undefined,
         product_id: row.product_id || undefined,
         product_slug: row.product_slug || undefined,
+        price: row.price !== null && row.price !== undefined ? Number(row.price) : undefined,
+        compare_at_price: row.compare_at_price !== null && row.compare_at_price !== undefined ? Number(row.compare_at_price) : null,
         created_at: row.created_at ? new Date(row.created_at).toISOString() : undefined,
       }));
     } catch {

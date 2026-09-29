@@ -19,6 +19,9 @@ import {
   Sparkles,
   Film,
   Image as ImageIcon,
+  Smartphone,
+  Monitor,
+  X,
 } from "lucide-react";
 import { ProductCategory } from "@/types";
 import { CircularImageCropperModal } from "@/components/admin/CircularImageCropperModal";
@@ -28,7 +31,9 @@ export default function AdminCategoriesPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [uploading, setUploading] = useState(false);
+  const [uploadingRoundImage, setUploadingRoundImage] = useState(false);
+  const [uploadingBannerDesktop, setUploadingBannerDesktop] = useState(false);
+  const [uploadingBannerMobile, setUploadingBannerMobile] = useState(false);
   const [statusMsg, setStatusMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   // Modal / Form state
@@ -42,14 +47,14 @@ export default function AdminCategoriesPage() {
   const [formDescription, setFormDescription] = useState("");
   const [formImageUrl, setFormImageUrl] = useState("");
 
-  // Category Hero Banner Fields
+  // Category Hero Banner Fields (Desktop + Mobile, No Fixed Size)
   const [formBannerImageUrl, setFormBannerImageUrl] = useState("");
+  const [formBannerMobileImageUrl, setFormBannerMobileImageUrl] = useState("");
   const [formBannerHeading, setFormBannerHeading] = useState("");
   const [formBannerSubtitle, setFormBannerSubtitle] = useState("");
   const [formBannerMediaType, setFormBannerMediaType] = useState<"image" | "video">("image");
-  const [uploadingBanner, setUploadingBanner] = useState(false);
 
-  // Circular Cropper state (Instagram PFP Style)
+  // Circular Cropper state (Optional fine-tune tool)
   const [cropperOpen, setCropperOpen] = useState(false);
   const [cropperSourceUrl, setCropperSourceUrl] = useState("");
 
@@ -107,6 +112,7 @@ export default function AdminCategoriesPage() {
     setFormDescription("");
     setFormImageUrl("");
     setFormBannerImageUrl("");
+    setFormBannerMobileImageUrl("");
     setFormBannerHeading("");
     setFormBannerSubtitle("");
     setFormBannerMediaType("image");
@@ -120,6 +126,7 @@ export default function AdminCategoriesPage() {
     setFormDescription(cat.description || "");
     setFormImageUrl(cat.image_url || "");
     setFormBannerImageUrl(cat.banner_image_url || "");
+    setFormBannerMobileImageUrl(cat.banner_mobile_image_url || "");
     setFormBannerHeading(cat.banner_heading || "");
     setFormBannerSubtitle(cat.banner_subtitle || "");
     setFormBannerMediaType(cat.banner_media_type || "image");
@@ -141,11 +148,24 @@ export default function AdminCategoriesPage() {
     }
   };
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Direct Round Image Upload (Cloudinary, Any size up to 15MB, NO forced cropper)
+  const handleRoundImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    setUploading(true);
+    const allowed = ["image/jpeg", "image/png", "image/webp", "image/avif"];
+    if (!allowed.includes(file.type)) {
+      showStatus("error", "Please upload a valid image (JPG, PNG, WEBP, or AVIF).");
+      return;
+    }
+
+    const maxSize = 15 * 1024 * 1024;
+    if (file.size > maxSize) {
+      showStatus("error", "Image file exceeds 15MB limit.");
+      return;
+    }
+
+    setUploadingRoundImage(true);
     try {
       const formData = new FormData();
       formData.append("file", file);
@@ -156,47 +176,95 @@ export default function AdminCategoriesPage() {
         body: formData,
       });
 
-      if (!res.ok) throw new Error("Upload failed");
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => ({}));
+        throw new Error(errJson.error || "Upload failed");
+      }
       const data = await res.json();
-      setFormImageUrl(data.secure_url || data.url);
-      showStatus("success", "Category image uploaded");
+      const newUrl = data.secure_url || data.url || data.media?.secure_url;
+      if (!newUrl) throw new Error("No image URL returned from upload server");
+
+      setFormImageUrl(newUrl);
+      showStatus("success", "Category round image uploaded and set!");
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Image upload failed";
       showStatus("error", message);
     } finally {
-      setUploading(false);
+      setUploadingRoundImage(false);
+      e.target.value = "";
     }
   };
 
-  const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Category Hero Banner Upload (Desktop or Mobile, Images or Videos, No Fixed Size restriction)
+  const handleBannerUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+    target: "desktop" | "mobile"
+  ) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    setUploadingBanner(true);
+    const allowed = [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+      "image/avif",
+      "video/mp4",
+      "video/webm",
+      "video/quicktime",
+    ];
+
+    if (!allowed.includes(file.type)) {
+      showStatus("error", "Invalid file format. Please upload JPG, PNG, WEBP, AVIF, or MP4/WebM video.");
+      return;
+    }
+
+    const isVideo = file.type.startsWith("video");
+    const maxSize = isVideo ? 50 * 1024 * 1024 : 15 * 1024 * 1024;
+    if (file.size > maxSize) {
+      showStatus("error", `File size exceeds the limit of ${maxSize / (1024 * 1024)}MB.`);
+      return;
+    }
+
+    if (target === "desktop") setUploadingBannerDesktop(true);
+    else setUploadingBannerMobile(true);
+
     try {
       const formData = new FormData();
       formData.append("file", file);
       formData.append("folder", "dnora/categories/banners");
-
-      const isVideo = file.type.startsWith("video");
-      if (isVideo) {
-        setFormBannerMediaType("video");
-      }
+      formData.append("resource_type", isVideo ? "video" : "image");
 
       const res = await fetch("/api/upload", {
         method: "POST",
         body: formData,
       });
 
-      if (!res.ok) throw new Error("Upload failed");
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => ({}));
+        throw new Error(errJson.error || "Banner upload failed");
+      }
+
       const data = await res.json();
-      setFormBannerImageUrl(data.secure_url || data.url);
-      showStatus("success", "Category hero banner uploaded successfully!");
+      const url = data.secure_url || data.url || data.media?.secure_url;
+      if (!url) throw new Error("No URL returned from upload server");
+
+      if (isVideo) {
+        setFormBannerMediaType("video");
+      }
+
+      if (target === "desktop") {
+        setFormBannerImageUrl(url);
+        showStatus("success", "Desktop/Laptop banner uploaded successfully!");
+      } else {
+        setFormBannerMobileImageUrl(url);
+        showStatus("success", "Mobile banner uploaded successfully!");
+      }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Banner upload failed";
       showStatus("error", message);
     } finally {
-      setUploadingBanner(false);
+      if (target === "desktop") setUploadingBannerDesktop(false);
+      else setUploadingBannerMobile(false);
       e.target.value = "";
     }
   };
@@ -210,21 +278,24 @@ export default function AdminCategoriesPage() {
 
     setSaving(true);
     try {
+      const payload = {
+        name: formName.trim(),
+        slug: formSlug.trim() || undefined,
+        description: formDescription.trim(),
+        image_url: formImageUrl.trim(),
+        banner_image_url: formBannerImageUrl.trim(),
+        banner_mobile_image_url: formBannerMobileImageUrl.trim(),
+        banner_heading: formBannerHeading.trim(),
+        banner_subtitle: formBannerSubtitle.trim(),
+        banner_media_type: formBannerMediaType,
+      };
+
       if (editingCategory) {
         // Update
         const res = await fetch(`/api/categories/${editingCategory.id}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name: formName.trim(),
-            slug: formSlug.trim() || undefined,
-            description: formDescription.trim() || undefined,
-            image_url: formImageUrl.trim() || undefined,
-            banner_image_url: formBannerImageUrl.trim() || undefined,
-            banner_heading: formBannerHeading.trim(),
-            banner_subtitle: formBannerSubtitle.trim(),
-            banner_media_type: formBannerMediaType,
-          }),
+          body: JSON.stringify(payload),
         });
 
         if (res.ok) {
@@ -232,10 +303,10 @@ export default function AdminCategoriesPage() {
           setCategories((prev) =>
             prev.map((c) => (c.id === editingCategory.id ? json.data : c))
           );
-          showStatus("success", "Category updated successfully");
+          showStatus("success", "Category updated successfully!");
           setModalOpen(false);
         } else {
-          const json = await res.json();
+          const json = await res.json().catch(() => ({}));
           showStatus("error", json.error || "Failed to update category");
         }
       } else {
@@ -243,16 +314,7 @@ export default function AdminCategoriesPage() {
         const res = await fetch("/api/categories", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name: formName.trim(),
-            slug: formSlug.trim() || undefined,
-            description: formDescription.trim() || undefined,
-            image_url: formImageUrl.trim() || undefined,
-            banner_image_url: formBannerImageUrl.trim() || undefined,
-            banner_heading: formBannerHeading.trim(),
-            banner_subtitle: formBannerSubtitle.trim(),
-            banner_media_type: formBannerMediaType,
-          }),
+          body: JSON.stringify(payload),
         });
 
         if (res.ok) {
@@ -261,7 +323,7 @@ export default function AdminCategoriesPage() {
           showStatus("success", `Category "${json.data.name}" created! Live page is ready at /category/${json.data.slug}`);
           setModalOpen(false);
         } else {
-          const json = await res.json();
+          const json = await res.json().catch(() => ({}));
           showStatus("error", json.error || "Failed to create category");
         }
       }
@@ -417,18 +479,32 @@ export default function AdminCategoriesPage() {
                   </p>
                 )}
 
-                {cat.banner_image_url && (
-                  <div className="flex items-center gap-1.5 px-2.5 py-1 bg-amber-50 border border-amber-200/80 rounded-md w-fit">
-                    {cat.banner_media_type === "video" ? (
-                      <Film className="w-3 h-3 text-amber-700" />
-                    ) : (
-                      <ImageIcon className="w-3 h-3 text-amber-700" />
-                    )}
-                    <span className="text-[10px] font-semibold text-amber-900 uppercase tracking-wider">
-                      Hero Banner Set ({cat.banner_media_type || "image"})
-                    </span>
-                  </div>
-                )}
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  {cat.image_url && (
+                    <div className="flex items-center gap-1 px-2 py-0.5 bg-emerald-50 border border-emerald-200/80 rounded-md">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                      <span className="text-[10px] font-semibold text-emerald-800 uppercase tracking-wider">
+                        Round Image
+                      </span>
+                    </div>
+                  )}
+                  {cat.banner_image_url && (
+                    <div className="flex items-center gap-1 px-2 py-0.5 bg-amber-50 border border-amber-200/80 rounded-md">
+                      <Monitor className="w-2.5 h-2.5 text-amber-700" />
+                      <span className="text-[10px] font-semibold text-amber-800 uppercase tracking-wider">
+                        Desktop Banner
+                      </span>
+                    </div>
+                  )}
+                  {cat.banner_mobile_image_url && (
+                    <div className="flex items-center gap-1 px-2 py-0.5 bg-sky-50 border border-sky-200/80 rounded-md">
+                      <Smartphone className="w-2.5 h-2.5 text-sky-700" />
+                      <span className="text-[10px] font-semibold text-sky-800 uppercase tracking-wider">
+                        Mobile Banner
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Actions */}
@@ -561,53 +637,71 @@ export default function AdminCategoriesPage() {
                       type="url"
                       value={formImageUrl || ""}
                       onChange={(e) => setFormImageUrl(e.target.value)}
-                      placeholder="https://images.unsplash.com/... or upload below"
-                      className="w-full px-3 py-1.5 text-xs bg-white border border-neutral-300 rounded-lg focus:outline-none focus:border-black"
+                      placeholder="https://... image URL or click Upload below"
+                      className="w-full px-3 py-1.5 text-xs bg-white border border-neutral-300 rounded-lg focus:outline-none focus:border-black font-mono"
                     />
 
                     <div className="flex flex-wrap items-center gap-2">
-                      <label className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold bg-black hover:bg-neutral-800 text-white rounded-lg cursor-pointer transition shadow-xs">
-                        <Upload className="w-3.5 h-3.5" />
-                        <span>Upload Round Image</span>
+                      <label className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-black hover:bg-neutral-800 text-white rounded-lg cursor-pointer transition shadow-xs">
+                        {uploadingRoundImage ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                          <Upload className="w-3.5 h-3.5" />
+                        )}
+                        <span>{uploadingRoundImage ? "Uploading..." : "Upload Round Image"}</span>
                         <input
                           type="file"
                           accept="image/*"
-                          onChange={handleFileForCropper}
+                          onChange={handleRoundImageUpload}
+                          disabled={uploadingRoundImage}
                           className="hidden"
                         />
                       </label>
 
                       {formImageUrl && (
-                        <button
-                          type="button"
-                          onClick={handleOpenCropperForExisting}
-                          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold bg-white border border-neutral-300 hover:bg-neutral-100 text-neutral-800 rounded-lg cursor-pointer transition"
-                        >
-                          <Crop className="w-3.5 h-3.5 text-neutral-700" />
-                          <span>Adjust Circle</span>
-                        </button>
+                        <>
+                          <button
+                            type="button"
+                            onClick={handleOpenCropperForExisting}
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold bg-white border border-neutral-300 hover:bg-neutral-100 text-neutral-800 rounded-lg cursor-pointer transition"
+                            title="Fine-tune circular framing"
+                          >
+                            <Crop className="w-3.5 h-3.5 text-neutral-700" />
+                            <span>Crop / Center</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => setFormImageUrl("")}
+                            className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-red-600 hover:text-red-800 hover:bg-red-50 border border-transparent rounded-lg transition cursor-pointer"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            <span>Remove</span>
+                          </button>
+                        </>
                       )}
                     </div>
                   </div>
                 </div>
                 <p className="text-[11px] text-neutral-500 mt-1">
-                  Shown in the round &quot;Our Collections&quot; row on the storefront.
+                  Shown in the round &quot;Our Collections&quot; row on the storefront. No strict dimension limits (auto-centered).
                 </p>
               </div>
 
-              {/* NEW: Category Hero Banner Section */}
+              {/* Category Hero Banner Section (Desktop & Mobile, No Fixed Size Restrictions) */}
               <div className="pt-4 border-t border-neutral-200">
-                <div className="flex items-center justify-between mb-2">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
                   <div>
                     <label className="block text-xs font-bold uppercase tracking-wider text-neutral-900">
-                      Top Category Hero Banner (Page Header)
+                      Category Hero Banner (Storefront Header)
                     </label>
                     <p className="text-[11px] text-neutral-500">
-                      Displayed across the top of <span className="font-mono text-neutral-700">/category/{formSlug || "[slug]"}</span> with cinematic background & typography.
+                      Cinematic header on <span className="font-mono text-neutral-700">/category/{formSlug || "[slug]"}</span> with separate desktop and mobile banners.
                     </p>
                   </div>
+
                   {/* Media Type Toggle */}
-                  <div className="flex items-center bg-neutral-100 p-0.5 rounded-lg border border-neutral-200">
+                  <div className="flex items-center bg-neutral-100 p-0.5 rounded-lg border border-neutral-200 self-start sm:self-auto">
                     <button
                       type="button"
                       onClick={() => setFormBannerMediaType("image")}
@@ -635,11 +729,11 @@ export default function AdminCategoriesPage() {
                   </div>
                 </div>
 
-                <div className="space-y-3 bg-neutral-50 p-3.5 rounded-xl border border-neutral-200">
+                <div className="space-y-4 bg-neutral-50 p-4 rounded-xl border border-neutral-200">
                   {/* Banner Heading & Subtitle */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-[11px] font-medium text-neutral-700 mb-1">
+                      <label className="block text-[11px] font-semibold text-neutral-700 mb-1">
                         Banner Headline (Optional)
                       </label>
                       <input
@@ -651,7 +745,7 @@ export default function AdminCategoriesPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-[11px] font-medium text-neutral-700 mb-1">
+                      <label className="block text-[11px] font-semibold text-neutral-700 mb-1">
                         Banner Subtitle / Tagline (Optional)
                       </label>
                       <input
@@ -663,73 +757,161 @@ export default function AdminCategoriesPage() {
                       />
                     </div>
                     <p className="text-[10px] text-neutral-400 col-span-1 sm:col-span-2">
-                      Optional: Leave both empty if you want a clean banner image without any text overlay.
+                      Leave empty if you prefer a clean background banner without text overlay.
                     </p>
                   </div>
 
-                  {/* Banner Media URL & Upload */}
-                  <div>
-                    <label className="block text-[11px] font-medium text-neutral-700 mb-1">
-                      Banner {formBannerMediaType === "video" ? "Video" : "Image"} URL or File Upload
-                    </label>
+                  {/* 1. Desktop / Laptop Banner */}
+                  <div className="p-3 bg-white rounded-lg border border-neutral-200 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5 text-xs font-semibold text-neutral-800">
+                        <Monitor className="w-3.5 h-3.5 text-neutral-600" />
+                        <span>Desktop / Laptop Banner ({formBannerMediaType === "video" ? "Video" : "Image"})</span>
+                      </div>
+                      <span className="text-[10px] text-neutral-400">Wide screens (no fixed size limits)</span>
+                    </div>
+
                     <div className="flex gap-2">
                       <input
                         type="url"
                         value={formBannerImageUrl}
                         onChange={(e) => setFormBannerImageUrl(e.target.value)}
-                        placeholder={`https://... (${formBannerMediaType === "video" ? "MP4 video URL" : "High-res Image URL"})`}
-                        className="flex-1 px-3 py-1.5 text-xs bg-white border border-neutral-300 rounded-lg focus:outline-none focus:border-black"
+                        placeholder={`https://... (${formBannerMediaType === "video" ? "MP4 video URL" : "Desktop Banner Image URL"})`}
+                        className="flex-1 px-3 py-1.5 text-xs bg-white border border-neutral-300 rounded-lg focus:outline-none focus:border-black font-mono"
                       />
                       <label className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-neutral-900 hover:bg-black text-white rounded-lg cursor-pointer transition shrink-0">
-                        {uploadingBanner ? (
+                        {uploadingBannerDesktop ? (
                           <Loader2 className="w-3.5 h-3.5 animate-spin" />
                         ) : formBannerMediaType === "video" ? (
                           <Film className="w-3.5 h-3.5" />
                         ) : (
                           <Upload className="w-3.5 h-3.5" />
                         )}
-                        <span>{uploadingBanner ? "Uploading..." : "Upload File"}</span>
+                        <span>{uploadingBannerDesktop ? "Uploading..." : "Upload Desktop"}</span>
                         <input
                           type="file"
                           accept={formBannerMediaType === "video" ? "video/mp4,video/webm" : "image/*"}
-                          onChange={handleBannerUpload}
-                          disabled={uploadingBanner}
+                          onChange={(e) => handleBannerUpload(e, "desktop")}
+                          disabled={uploadingBannerDesktop}
                           className="hidden"
                         />
                       </label>
+                      {formBannerImageUrl && (
+                        <button
+                          type="button"
+                          onClick={() => setFormBannerImageUrl("")}
+                          className="p-1.5 text-neutral-400 hover:text-red-600 rounded-lg transition"
+                          title="Clear Desktop Banner"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
+
+                    {/* Desktop Preview */}
+                    {formBannerImageUrl && (
+                      <div className="relative w-full h-28 rounded-lg overflow-hidden border border-neutral-300 shadow-inner bg-black flex items-center justify-center mt-2">
+                        {formBannerMediaType === "video" ? (
+                          <video
+                            src={formBannerImageUrl}
+                            autoPlay
+                            loop
+                            muted
+                            playsInline
+                            className="w-full h-full object-cover opacity-75"
+                          />
+                        ) : (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={formBannerImageUrl}
+                            alt="Desktop Banner Preview"
+                            className="w-full h-full object-cover opacity-75"
+                          />
+                        )}
+                        <div className="absolute top-2 left-2 px-2 py-0.5 bg-black/60 backdrop-blur-xs rounded text-[9px] uppercase font-bold text-white tracking-wider flex items-center gap-1">
+                          <Monitor className="w-2.5 h-2.5" /> Desktop Preview
+                        </div>
+                      </div>
+                    )}
                   </div>
 
-                  {/* Banner Preview Card */}
-                  {formBannerImageUrl && (
-                    <div className="relative w-full h-36 rounded-lg overflow-hidden border border-neutral-300 shadow-inner bg-black flex items-center justify-center">
-                      {formBannerMediaType === "video" ? (
-                        <video
-                          src={formBannerImageUrl}
-                          autoPlay
-                          loop
-                          muted
-                          playsInline
-                          className="w-full h-full object-cover opacity-60"
-                        />
-                      ) : (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={formBannerImageUrl}
-                          alt="Banner Preview"
-                          className="w-full h-full object-cover opacity-60"
-                        />
-                      )}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex flex-col justify-end p-4 text-white">
-                        <span className="text-[9px] font-bold uppercase tracking-widest text-[#B39359] mb-0.5">
-                          {formBannerSubtitle || "Luxury Silhouettes"}
-                        </span>
-                        <h4 className="text-sm font-light tracking-widest uppercase">
-                          {formBannerHeading || formName || "Category Banner"}
-                        </h4>
+                  {/* 2. Mobile Banner */}
+                  <div className="p-3 bg-white rounded-lg border border-neutral-200 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5 text-xs font-semibold text-neutral-800">
+                        <Smartphone className="w-3.5 h-3.5 text-neutral-600" />
+                        <span>Mobile Banner ({formBannerMediaType === "video" ? "Video" : "Image"})</span>
                       </div>
+                      <span className="text-[10px] text-neutral-400">Smartphones (no fixed size limits)</span>
                     </div>
-                  )}
+
+                    <div className="flex gap-2">
+                      <input
+                        type="url"
+                        value={formBannerMobileImageUrl}
+                        onChange={(e) => setFormBannerMobileImageUrl(e.target.value)}
+                        placeholder={`https://... (${formBannerMediaType === "video" ? "MP4 video URL" : "Mobile Banner Image URL"})`}
+                        className="flex-1 px-3 py-1.5 text-xs bg-white border border-neutral-300 rounded-lg focus:outline-none focus:border-black font-mono"
+                      />
+                      <label className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-neutral-900 hover:bg-black text-white rounded-lg cursor-pointer transition shrink-0">
+                        {uploadingBannerMobile ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : formBannerMediaType === "video" ? (
+                          <Film className="w-3.5 h-3.5" />
+                        ) : (
+                          <Upload className="w-3.5 h-3.5" />
+                        )}
+                        <span>{uploadingBannerMobile ? "Uploading..." : "Upload Mobile"}</span>
+                        <input
+                          type="file"
+                          accept={formBannerMediaType === "video" ? "video/mp4,video/webm" : "image/*"}
+                          onChange={(e) => handleBannerUpload(e, "mobile")}
+                          disabled={uploadingBannerMobile}
+                          className="hidden"
+                        />
+                      </label>
+                      {formBannerMobileImageUrl && (
+                        <button
+                          type="button"
+                          onClick={() => setFormBannerMobileImageUrl("")}
+                          className="p-1.5 text-neutral-400 hover:text-red-600 rounded-lg transition"
+                          title="Clear Mobile Banner"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Mobile Preview */}
+                    {formBannerMobileImageUrl && (
+                      <div className="relative w-full max-w-[200px] h-32 rounded-lg overflow-hidden border border-neutral-300 shadow-inner bg-black flex items-center justify-center mt-2">
+                        {formBannerMediaType === "video" ? (
+                          <video
+                            src={formBannerMobileImageUrl}
+                            autoPlay
+                            loop
+                            muted
+                            playsInline
+                            className="w-full h-full object-cover opacity-75"
+                          />
+                        ) : (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={formBannerMobileImageUrl}
+                            alt="Mobile Banner Preview"
+                            className="w-full h-full object-cover opacity-75"
+                          />
+                        )}
+                        <div className="absolute top-2 left-2 px-2 py-0.5 bg-black/60 backdrop-blur-xs rounded text-[9px] uppercase font-bold text-white tracking-wider flex items-center gap-1">
+                          <Smartphone className="w-2.5 h-2.5" /> Mobile Preview
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <p className="text-[10px] text-neutral-400">
+                    💡 Tip: If you only upload a desktop banner, it will automatically adapt responsively for mobile screens as well.
+                  </p>
                 </div>
               </div>
 
@@ -743,7 +925,7 @@ export default function AdminCategoriesPage() {
                 </button>
                 <button
                   type="submit"
-                  disabled={saving || uploading}
+                  disabled={saving || uploadingRoundImage || uploadingBannerDesktop || uploadingBannerMobile}
                   className="px-5 py-2 text-xs font-bold uppercase tracking-wider text-white bg-black hover:bg-neutral-800 rounded-lg shadow-sm transition disabled:opacity-50 cursor-pointer"
                 >
                   {saving ? "Saving..." : editingCategory ? "Update Category" : "Create Category & Live Page"}

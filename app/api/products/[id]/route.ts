@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { store } from "@/lib/data/store";
 import { verifyAdminSession } from "@/lib/auth/session";
-import { productSchema } from "@/lib/validation/product";
+import { productSchema, productUpdateSchema } from "@/lib/validation/product";
 import { revalidatePath } from "next/cache";
 import { ProductImage } from "@/types";
 import { ZodError } from "zod";
@@ -32,7 +32,7 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
 
   try {
     const body = await req.json();
-    const validated = productSchema.partial().parse(body);
+    const validated = productUpdateSchema.parse(body);
 
     let categories = undefined;
     if (validated.category_id) {
@@ -58,10 +58,12 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json({ success: true, product: updated });
   } catch (error: unknown) {
+    console.error("PUT /api/products/[id] error:", error);
     if (error instanceof ZodError) {
       return NextResponse.json({ error: "Validation error", details: error.issues }, { status: 400 });
     }
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    const message = error instanceof Error ? error.message : "Internal server error";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 

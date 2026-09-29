@@ -181,19 +181,31 @@ export function CircularImageCropperModal({
       ctx.drawImage(img, drawX, drawY, renderedImgWidth, renderedImgHeight);
       ctx.restore();
 
-      // Convert canvas to blob
-      const blob = await new Promise<Blob | null>((resolve) =>
-        canvas.toBlob((b) => resolve(b), "image/jpeg", 0.92)
-      );
+      let blob: Blob | null = null;
+      try {
+        blob = await new Promise<Blob | null>((resolve) =>
+          canvas.toBlob((b) => resolve(b), "image/jpeg", 0.92)
+        );
+      } catch (taintErr) {
+        console.warn("Canvas export tainted, using fallback:", taintErr);
+      }
 
-      if (!blob) throw new Error("Failed to export cropped image");
+      if (!blob) {
+        // If imageSrc is already an online URL, pass it back directly so user is never blocked
+        if (imageSrc && (imageSrc.startsWith("http://") || imageSrc.startsWith("https://"))) {
+          onCropComplete(imageSrc);
+          onClose();
+          return;
+        }
+        throw new Error("Failed to export image preview. Please try uploading the image directly.");
+      }
 
       // Upload blob to media upload API
       const formData = new FormData();
       formData.append("file", blob, `category-crop-${Date.now()}.jpg`);
       formData.append("folder", "dnora/categories");
 
-      const uploadRes = await fetch("/api/media/upload", {
+      const uploadRes = await fetch("/api/upload", {
         method: "POST",
         body: formData,
       });
@@ -213,7 +225,7 @@ export function CircularImageCropperModal({
       onClose();
     } catch (err: unknown) {
       console.error("Crop & upload error:", err);
-      const msg = err instanceof Error ? err.message : "Failed to apply cropped image";
+      const msg = err instanceof Error ? err.message : "Failed to apply image";
       alert(msg);
     } finally {
       setProcessing(false);

@@ -23,6 +23,7 @@ export async function PUT(
       description,
       image_url,
       banner_image_url,
+      banner_mobile_image_url,
       banner_heading,
       banner_subtitle,
       banner_media_type,
@@ -42,6 +43,12 @@ export async function PUT(
         banner_image_url !== undefined
           ? banner_image_url
             ? String(banner_image_url).trim()
+            : ""
+          : undefined,
+      banner_mobile_image_url:
+        banner_mobile_image_url !== undefined
+          ? banner_mobile_image_url
+            ? String(banner_mobile_image_url).trim()
             : ""
           : undefined,
       banner_heading:

@@ -1,7 +1,12 @@
-export default function GlobalLoading() {
+import React from "react";
+import { DnoraLoadingScreen } from "@/components/ui/DnoraLoadingScreen";
+
+export default function Loading() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white text-slate-800">
-      <div className="w-8 h-8 border-2 border-slate-200 border-t-slate-800 rounded-full animate-spin" />
-    </div>
+    <DnoraLoadingScreen
+      fullScreen
+      text="D'NORA LUXURY ESSENTIALS"
+      subtitle="RETRIEVING ATELIER CREATIONS..."
+    />
   );
 }

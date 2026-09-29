@@ -1,180 +1,176 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowLeft,
-  Upload,
+  Sparkles,
+  Search,
+  Check,
   Plus,
   Trash2,
-  Sparkles,
-  Loader2,
-  CheckCircle,
-  AlertCircle,
+  RefreshCw,
   ExternalLink,
   Eye,
   EyeOff,
   ShoppingBag,
-  ImageIcon,
+  Package,
 } from "lucide-react";
 import { TrendingNowItem } from "@/types";
+import { formatPrice } from "@/lib/utils";
 
-interface ProductOption {
+interface CatalogProduct {
   id: string;
-  title: string;
+  name: string;
   slug: string;
-  thumbnail?: string;
+  sku: string;
+  price: number;
+  compare_at_price?: number | null;
+  image_url: string;
+  category_name?: string;
+  stock: number;
 }
 
 export default function AdminTrendingNowPage() {
-  const [items, setItems] = useState<TrendingNowItem[]>([]);
-  const [products, setProducts] = useState<ProductOption[]>([]);
+  const [trendingItems, setTrendingItems] = useState<TrendingNowItem[]>([]);
+  const [catalogProducts, setCatalogProducts] = useState<CatalogProduct[]>([]);
   const [loading, setLoading] = useState(true);
-  const [uploading, setUploading] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
+  const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [feedbackMsg, setFeedbackMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
-  // New Item State
-  const [title, setTitle] = useState("");
-  const [imageUrl, setImageUrl] = useState("");
-  const [selectedProductId, setSelectedProductId] = useState("");
-  const [targetLink, setTargetLink] = useState("");
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const showFeedback = (type: "success" | "error", text: string) => {
+    setFeedbackMsg({ type, text });
+    setTimeout(() => setFeedbackMsg(null), 3500);
+  };
 
-  // Status Alerts
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [successMsg, setSuccessMsg] = useState<string | null>(null);
-
-  const fetchItems = async () => {
+  const loadData = async () => {
     try {
       setLoading(true);
-      const res = await fetch("/api/admin/trending-now");
-      if (res.ok) {
-        const json = await res.json();
-        setItems(json.data || []);
+      const [trendRes, prodRes] = await Promise.all([
+        fetch("/api/admin/trending-now").then((r) => r.json()),
+        fetch("/api/products").then((r) => r.json()),
+      ]);
+
+      if (trendRes.success) {
+        setTrendingItems(trendRes.data || []);
       }
+
+      const rawProds = Array.isArray(prodRes) ? prodRes : prodRes.products || [];
+      const formatted: CatalogProduct[] = rawProds.map((p: any) => {
+        const rawImg = p.images?.[0];
+        const imgUrl =
+          typeof rawImg === "string"
+            ? rawImg
+            : rawImg?.secure_url || p.thumbnail || "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=400&q=80";
+
+        return {
+          id: p.id,
+          name: p.name || "Untitled Handbag",
+          slug: p.slug || "",
+          sku: p.sku || "DN-000",
+          price: Number(p.price || 0),
+          compare_at_price: p.compare_at_price ? Number(p.compare_at_price) : null,
+          image_url: imgUrl,
+          category_name: p.categories?.[0]?.name,
+          stock: Number(p.stock || 0),
+        };
+      });
+
+      setCatalogProducts(formatted);
     } catch {
-      setErrorMsg("Failed to load trending items");
+      showFeedback("error", "Failed to load products and trending list.");
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchItems();
-    fetch("/api/products")
-      .then((res) => res.json())
-      .then((data) => {
-        const list = Array.isArray(data) ? data : data.products || data.data || [];
-        setProducts(
-          list.map((p: any) => ({
-            id: p.id,
-            title: p.title,
-            slug: p.slug,
-            thumbnail: p.images?.[0] || p.thumbnail || "",
-          }))
-        );
-      })
-      .catch(() => {});
+    loadData();
   }, []);
 
-  const handleProductSelect = (prodId: string) => {
-    setSelectedProductId(prodId || "");
-    if (!prodId) {
-      setTargetLink("");
-      return;
-    }
-    const found = products.find((p) => p.id === prodId);
-    if (found) {
-      setTargetLink(found.slug ? `/product/${found.slug}` : "");
-      if (!title) {
-        setTitle(found.title || "");
-      }
-    }
+  // Check if a catalog product is in Trending Now
+  const isProductTrending = (productId: string, productSlug: string) => {
+    return trendingItems.some(
+      (item) =>
+        item.product_id === productId ||
+        (item.product_slug && item.product_slug === productSlug) ||
+        (item.target_link && item.target_link.includes(productSlug))
+    );
   };
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  // Get matching Trending Now item
+  const getTrendingItem = (productId: string, productSlug: string) => {
+    return trendingItems.find(
+      (item) =>
+        item.product_id === productId ||
+        (item.product_slug && item.product_slug === productSlug) ||
+        (item.target_link && item.target_link.includes(productSlug))
+    );
+  };
 
-    setErrorMsg(null);
-    setUploading(true);
+  // Toggle Product into Trending Now
+  const handleToggleProduct = async (product: CatalogProduct) => {
+    const existing = getTrendingItem(product.id, product.slug);
 
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("folder", "dnora/trending-now");
+      setActionLoadingId(product.id);
 
-      const res = await fetch("/api/media/upload", {
-        method: "POST",
-        body: formData,
-      });
+      if (existing) {
+        // Remove from Trending Now
+        const res = await fetch(`/api/admin/trending-now?id=${existing.id}`, {
+          method: "DELETE",
+        });
 
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        throw new Error(data.error || "Failed to upload image");
+        if (res.ok) {
+          setTrendingItems((prev) => prev.filter((it) => it.id !== existing.id));
+          showFeedback("success", `Removed "${product.name}" from Trending Now.`);
+        } else {
+          showFeedback("error", "Failed to remove item.");
+        }
+      } else {
+        // Add to Trending Now
+        const nextOrder = trendingItems.length + 1;
+        const res = await fetch("/api/admin/trending-now", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title: product.name,
+            product_id: product.id,
+            product_slug: product.slug,
+            image_url: product.image_url,
+            alt_text: product.name,
+            sort_order: nextOrder,
+            is_active: true,
+            target_link: `/product/${product.slug}`,
+          }),
+        });
+
+        if (res.ok) {
+          const json = await res.json();
+          if (json.data) {
+            setTrendingItems((prev) => [...prev, json.data]);
+          } else {
+            loadData();
+          }
+          showFeedback("success", `Added "${product.name}" to Trending Now!`);
+        } else {
+          showFeedback("error", "Failed to add product to Trending Now.");
+        }
       }
-
-      setImageUrl(data.secure_url || data.url || "");
-      setSuccessMsg("Image uploaded successfully! Fill title and click Add Image.");
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Upload failed";
-      setErrorMsg(msg);
+    } catch {
+      showFeedback("error", "An error occurred while updating Trending Now.");
     } finally {
-      setUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = "";
+      setActionLoadingId(null);
     }
   };
 
-  const handleAddItem = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const cleanImageUrl = (imageUrl || "").trim();
-    if (!cleanImageUrl) {
-      setErrorMsg("Please upload an image or provide an Image URL.");
-      return;
-    }
-
-    setSubmitting(true);
-    setErrorMsg(null);
-    setSuccessMsg(null);
-
-    const selectedProd = products.find((p) => p.id === selectedProductId);
-    const finalTargetLink = (targetLink || "").trim() || (selectedProd?.slug ? `/product/${selectedProd.slug}` : "");
-
-    try {
-      const res = await fetch("/api/admin/trending-now", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: (title || "").trim(),
-          image_url: cleanImageUrl,
-          sort_order: items.length + 1,
-          is_active: true,
-          target_link: finalTargetLink,
-          product_id: selectedProd?.id || null,
-          product_slug: selectedProd?.slug || null,
-        }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to add item");
-
-      setTitle("");
-      setImageUrl("");
-      setSelectedProductId("");
-      setTargetLink("");
-      setSuccessMsg("New lookbook image published successfully!");
-      fetchItems();
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Error adding item";
-      setErrorMsg(msg);
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
+  // Toggle active status for existing item
   const handleToggleActive = async (item: TrendingNowItem) => {
     try {
+      setActionLoadingId(item.id);
       const res = await fetch("/api/admin/trending-now", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -183,353 +179,330 @@ export default function AdminTrendingNowPage() {
           is_active: !item.is_active,
         }),
       });
+
       if (res.ok) {
-        setItems((prev) =>
-          prev.map((i) => (i.id === item.id ? { ...i, is_active: !i.is_active } : i))
+        setTrendingItems((prev) =>
+          prev.map((it) => (it.id === item.id ? { ...it, is_active: !it.is_active } : it))
         );
       }
     } catch {
-      setErrorMsg("Failed to update status");
+      showFeedback("error", "Failed to update item status.");
+    } finally {
+      setActionLoadingId(null);
     }
   };
 
-  const handleDeleteItem = async (id: string) => {
-    if (!confirm("Are you sure you want to remove this lookbook image?")) return;
-
+  // Delete directly from active list
+  const handleDeleteItem = async (itemId: string, itemTitle?: string) => {
     try {
-      const res = await fetch(`/api/admin/trending-now?id=${id}`, {
+      setActionLoadingId(itemId);
+      const res = await fetch(`/api/admin/trending-now?id=${itemId}`, {
         method: "DELETE",
       });
+
       if (res.ok) {
-        setItems((prev) => prev.filter((i) => i.id !== id));
-        setSuccessMsg("Image deleted successfully");
+        setTrendingItems((prev) => prev.filter((it) => it.id !== itemId));
+        showFeedback("success", `Removed "${itemTitle || "Item"}" from Trending Now.`);
       }
     } catch {
-      setErrorMsg("Failed to delete image");
+      showFeedback("error", "Failed to remove item.");
+    } finally {
+      setActionLoadingId(null);
     }
   };
 
-  return (
-    <div className="min-h-screen bg-[#F8F9FA] text-neutral-900 pb-20">
-      {/* Hidden file input */}
-      <input
-        type="file"
-        ref={fileInputRef}
-        onChange={handleFileUpload}
-        accept="image/jpeg,image/png,image/webp,image/avif"
-        className="hidden"
-      />
+  // Categories list
+  const categoriesList = Array.from(
+    new Set(catalogProducts.map((p) => p.category_name).filter(Boolean))
+  );
 
-      {/* Sticky Header */}
-      <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-neutral-200 px-4 sm:px-8 py-3.5 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Link
-            href="/admin"
-            className="p-2 rounded-lg text-neutral-600 hover:text-black hover:bg-neutral-100 transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </Link>
-          <div>
-            <div className="flex items-center gap-2 text-[11px] text-neutral-400 font-medium tracking-wider uppercase">
-              <span>Storefront</span>
-              <span>/</span>
-              <span className="text-neutral-700 font-semibold">Trending Now</span>
-            </div>
-            <h1 className="text-lg sm:text-xl font-bold tracking-tight text-neutral-900 flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-amber-500" />
-              <span>Trending Now (Lookbook Imagery)</span>
-            </h1>
-          </div>
+  // Filtered catalog products
+  const filteredProducts = catalogProducts.filter((p) => {
+    const matchesSearch =
+      searchQuery.trim() === "" ||
+      p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.sku.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCat =
+      categoryFilter === "all" || p.category_name === categoryFilter;
+    return matchesSearch && matchesCat;
+  });
+
+  return (
+    <div className="space-y-6 animate-in fade-in duration-300">
+      {/* Page Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-neutral-200/70">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-bold text-neutral-900 tracking-tight font-heading flex items-center gap-2">
+            <Sparkles className="w-5 h-5 text-amber-500" />
+            <span>Trending Now Section Manager</span>
+          </h1>
+          <p className="text-xs text-neutral-500 font-light mt-0.5">
+            Select products from your catalog to feature directly in the storefront &ldquo;Trending Now&rdquo; marquee and lookbook.
+          </p>
         </div>
 
-        <Link
-          href="/trending-now"
-          target="_blank"
-          className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-800 text-xs font-semibold rounded-lg transition-colors"
-        >
-          <span>View Live Lookbook</span>
-          <ExternalLink className="w-3.5 h-3.5" />
-        </Link>
+        <div className="flex items-center gap-2.5">
+          <button
+            type="button"
+            onClick={loadData}
+            disabled={loading}
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-neutral-200 bg-white text-xs font-semibold text-neutral-700 hover:bg-neutral-50 shadow-2xs transition-colors cursor-pointer disabled:opacity-60"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
+            <span>Refresh</span>
+          </button>
+
+          <Link
+            href="/trending-now"
+            target="_blank"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-neutral-900 hover:bg-black text-white text-xs font-semibold tracking-wide transition-all shadow-xs"
+          >
+            <span>View Live Page</span>
+            <ExternalLink className="w-3.5 h-3.5" />
+          </Link>
+        </div>
       </div>
 
-      <div className="w-full pt-6 space-y-6">
-        {/* Status Alerts */}
-        {errorMsg && (
-          <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 shrink-0 text-rose-600 mt-0.5" />
-            <div className="text-xs sm:text-sm font-medium">{errorMsg}</div>
-          </div>
-        )}
+      {/* Feedback Toast */}
+      {feedbackMsg && (
+        <div
+          className={`p-3 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all ${
+            feedbackMsg.type === "success"
+              ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
+              : "bg-rose-50 text-rose-800 border border-rose-200"
+          }`}
+        >
+          {feedbackMsg.type === "success" ? (
+            <Check className="w-4 h-4 text-emerald-600" />
+          ) : (
+            <Sparkles className="w-4 h-4 text-rose-600" />
+          )}
+          <span>{feedbackMsg.text}</span>
+        </div>
+      )}
 
-        {successMsg && (
-          <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-center gap-3">
-            <CheckCircle className="w-5 h-5 shrink-0 text-emerald-600" />
-            <div className="text-xs sm:text-sm font-semibold">{successMsg}</div>
-          </div>
-        )}
-
-        {/* SECTION 1: UPLOAD NEW IMAGE */}
-        <div className="bg-white rounded-2xl border border-neutral-200/80 p-5 sm:p-7 shadow-xs">
-          <div className="border-b border-neutral-100 pb-3 mb-5">
-            <h2 className="text-base font-bold text-neutral-900 tracking-tight flex items-center gap-2">
-              <Upload className="w-4 h-4 text-neutral-700" />
-              Upload New Lookbook Image
+      {/* Currently Selected in Trending Now Strip */}
+      <div className="bg-white p-5 rounded-2xl border border-neutral-200/80 shadow-2xs space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <h2 className="text-sm font-bold text-neutral-900 uppercase tracking-wide">
+              Featured in Trending Now
             </h2>
-            <p className="text-xs text-neutral-500 mt-0.5">
-              These images appear in the &ldquo;TRENDING NOW&rdquo; section on the homepage and on <code>/trending-now</code>. You can optionally link each image to a specific product.
+            <span className="px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 text-[11px] font-bold">
+              {trendingItems.length} Products Selected
+            </span>
+          </div>
+          <p className="text-[11px] text-neutral-400">
+            These products appear on the storefront homepage and /trending-now page.
+          </p>
+        </div>
+
+        {trendingItems.length === 0 ? (
+          <div className="p-6 text-center border-2 border-dashed border-neutral-200 rounded-xl space-y-1">
+            <ShoppingBag className="w-8 h-8 text-neutral-300 mx-auto" />
+            <p className="text-xs font-semibold text-neutral-700">No products selected yet</p>
+            <p className="text-[11px] text-neutral-400">
+              Browse the catalog below and click &ldquo;Add to Trending&rdquo; to feature silhouettes here.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 pt-1">
+            {trendingItems.map((item, idx) => {
+              const isLoading = actionLoadingId === item.id;
+
+              return (
+                <div
+                  key={item.id}
+                  className="relative group bg-[#FAF9F6] border border-neutral-200 rounded-xl p-2.5 flex flex-col justify-between shadow-2xs hover:shadow-xs transition-all"
+                >
+                  <div className="relative aspect-square rounded-lg overflow-hidden bg-white border border-neutral-100 mb-2">
+                    <Image
+                      src={item.image_url}
+                      alt={item.title || "Trending item"}
+                      fill
+                      className="object-cover"
+                    />
+                    <div className="absolute top-1 left-1 bg-black/75 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-sm">
+                      #{idx + 1}
+                    </div>
+
+                    <div className="absolute top-1 right-1 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button
+                        type="button"
+                        onClick={() => handleToggleActive(item)}
+                        disabled={isLoading}
+                        className="p-1 rounded-md bg-white/90 text-neutral-700 hover:text-black shadow-xs cursor-pointer"
+                        title={item.is_active ? "Hide" : "Show"}
+                      >
+                        {item.is_active ? (
+                          <Eye className="w-3 h-3 text-emerald-600" />
+                        ) : (
+                          <EyeOff className="w-3 h-3 text-neutral-400" />
+                        )}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteItem(item.id, item.title)}
+                        disabled={isLoading}
+                        className="p-1 rounded-md bg-white/90 text-rose-600 hover:bg-rose-50 shadow-xs cursor-pointer"
+                        title="Remove from Trending"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <p className="font-semibold text-neutral-900 text-[11px] truncate" title={item.title}>
+                    {item.title || "DNORA Silhouette"}
+                  </p>
+
+                  <div className="flex items-center justify-between pt-1">
+                    <span
+                      className={`text-[9px] font-bold uppercase px-1.5 py-0.2 rounded-full ${
+                        item.is_active
+                          ? "bg-emerald-50 text-emerald-700"
+                          : "bg-neutral-100 text-neutral-500"
+                      }`}
+                    >
+                      {item.is_active ? "Live" : "Hidden"}
+                    </span>
+
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteItem(item.id, item.title)}
+                      disabled={isLoading}
+                      className="text-[10px] text-rose-600 hover:underline cursor-pointer"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Catalog Product Selector */}
+      <div className="bg-white p-5 rounded-2xl border border-neutral-200/80 shadow-2xs space-y-4">
+        {/* Controls */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <div>
+            <h2 className="text-sm font-bold text-neutral-900 uppercase tracking-wide">
+              Boutique Catalog Silhouettes
+            </h2>
+            <p className="text-[11px] text-neutral-500 font-light">
+              Toggle any product to instantly feature its real photo, title, and price in Trending Now.
             </p>
           </div>
 
-          <form onSubmit={handleAddItem} className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-start">
-              {/* Image Preview & Upload Button */}
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-neutral-700 mb-1.5">
-                  Image (Upload or URL) <span className="text-rose-600">*</span>
-                </label>
-                <div className="relative aspect-3/4 rounded-xl overflow-hidden bg-neutral-50 border-2 border-dashed border-neutral-300 hover:border-black transition-colors flex items-center justify-center">
-                  {imageUrl ? (
-                    <>
+          <div className="flex flex-wrap items-center gap-2.5">
+            {/* Category Filter */}
+            <select
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              className="p-2 text-xs rounded-lg border border-neutral-200 bg-neutral-50 focus:bg-white focus:outline-hidden font-medium text-neutral-700 cursor-pointer"
+            >
+              <option value="all">All Categories</option>
+              {categoriesList.map((cat) => (
+                <option key={cat} value={cat}>
+                  {cat}
+                </option>
+              ))}
+            </select>
+
+            {/* Search Input */}
+            <div className="relative w-56">
+              <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-neutral-400" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search products..."
+                className="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg border border-neutral-200 bg-neutral-50 focus:bg-white focus:outline-hidden focus:border-neutral-900"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Product Grid */}
+        {loading ? (
+          <div className="p-12 text-center">
+            <RefreshCw className="w-6 h-6 text-neutral-800 animate-spin mx-auto mb-2" />
+            <p className="text-xs text-neutral-500 font-light">Loading catalog products...</p>
+          </div>
+        ) : filteredProducts.length === 0 ? (
+          <div className="p-10 text-center space-y-2">
+            <Package className="w-8 h-8 text-neutral-300 mx-auto" />
+            <p className="text-xs font-semibold text-neutral-800">No matching products found</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3.5">
+            {filteredProducts.map((product) => {
+              const isTrending = isProductTrending(product.id, product.slug);
+              const isActionLoading = actionLoadingId === product.id;
+
+              return (
+                <div
+                  key={product.id}
+                  className={`p-3 rounded-xl border transition-all flex items-center justify-between gap-3 ${
+                    isTrending
+                      ? "bg-amber-50/40 border-amber-300 shadow-xs"
+                      : "bg-[#FAF9F6] border-neutral-200 hover:border-neutral-300"
+                  }`}
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="relative w-14 h-15 rounded-lg overflow-hidden bg-white border border-neutral-200 shrink-0">
                       <Image
-                        src={imageUrl}
-                        alt="Preview"
+                        src={product.image_url}
+                        alt={product.name}
                         fill
                         className="object-cover"
                       />
-                      <button
-                        type="button"
-                        onClick={() => fileInputRef.current?.click()}
-                        className="absolute bottom-2 inset-x-2 py-1.5 bg-black/80 hover:bg-black text-white text-[11px] font-semibold rounded-md backdrop-blur-sm transition-colors text-center"
-                      >
-                        Change Photo
-                      </button>
-                    </>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={uploading}
-                      className="w-full h-full flex flex-col items-center justify-center p-4 text-center cursor-pointer hover:bg-neutral-100/60 transition-colors"
-                    >
-                      {uploading ? (
-                        <Loader2 className="w-6 h-6 animate-spin text-neutral-500" />
-                      ) : (
-                        <>
-                          <div className="w-10 h-10 rounded-full bg-black text-white flex items-center justify-center mb-2 shadow-xs">
-                            <Upload className="w-5 h-5" />
-                          </div>
-                          <span className="text-xs font-bold text-neutral-800">Upload Photo</span>
-                          <span className="text-[10px] text-neutral-400 mt-0.5">Direct device upload</span>
-                        </>
-                      )}
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {/* Title & Product details */}
-              <div className="sm:col-span-2 space-y-4">
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-neutral-700 mb-1.5">
-                    Look Title / Caption (Optional)
-                  </label>
-                  <input
-                    type="text"
-                    value={title || ""}
-                    onChange={(e) => setTitle(e.target.value)}
-                    placeholder="e.g. Architectural Silhouette in Noir"
-                    className="w-full text-sm px-3.5 py-2.5 rounded-xl border border-neutral-300 focus:outline-none focus:border-black"
-                  />
-                  <p className="text-[11px] text-neutral-400 mt-1">
-                    Revealed gently on hover overlay. The image itself stays pure and clean.
-                  </p>
-                </div>
-
-                {/* Associate with Product */}
-                <div className="bg-neutral-50/80 rounded-xl p-3.5 border border-neutral-200/80 space-y-3">
-                  <div>
-                    <div className="flex items-center justify-between mb-1.5">
-                      <label className="text-xs font-bold uppercase tracking-wider text-neutral-800 flex items-center gap-1.5">
-                        <ShoppingBag className="w-3.5 h-3.5 text-neutral-700" />
-                        <span>Associate with Product (Optional)</span>
-                      </label>
-                      {selectedProductId && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setSelectedProductId("");
-                            setTargetLink("");
-                          }}
-                          className="text-[10px] text-rose-600 hover:underline font-semibold cursor-pointer"
-                        >
-                          Clear Selection
-                        </button>
-                      )}
                     </div>
-                    <select
-                      value={selectedProductId || ""}
-                      onChange={(e) => handleProductSelect(e.target.value)}
-                      className="w-full text-xs sm:text-sm px-3 py-2 rounded-lg border border-neutral-300 bg-white focus:outline-none focus:border-black cursor-pointer"
-                    >
-                      <option value="">-- No Product (Opens /trending-now page) --</option>
-                      {products.map((p) => (
-                        <option key={p.id} value={p.id}>
-                          {p.title} (/product/{p.slug})
-                        </option>
-                      ))}
-                    </select>
-                    <p className="text-[11px] text-neutral-500 mt-1">
-                      When clicked, users go directly to this product&apos;s details page. If unlinked, it opens the Trending Now page.
-                    </p>
+                    <div className="min-w-0">
+                      <h4 className="font-bold text-neutral-900 text-xs truncate" title={product.name}>
+                        {product.name}
+                      </h4>
+                      <p className="text-[10px] text-neutral-500 font-mono">
+                        {product.sku} {product.category_name ? `• ${product.category_name}` : ""}
+                      </p>
+                      <p className="text-xs font-bold font-mono text-neutral-900 mt-0.5">
+                        {formatPrice(product.price)}
+                      </p>
+                    </div>
                   </div>
 
-                  <div>
-                    <label className="block text-[11px] font-bold uppercase tracking-wider text-neutral-700 mb-1">
-                      Destination Link / Target URL (Optional)
-                    </label>
-                    <input
-                      type="text"
-                      value={targetLink || ""}
-                      onChange={(e) => setTargetLink(e.target.value)}
-                      placeholder="/product/... or /shop or custom URL"
-                      className="w-full text-xs font-mono px-3 py-2 rounded-lg border border-neutral-300 bg-white focus:outline-none focus:border-black"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-neutral-700 mb-1.5">
-                    Or Paste Direct Image URL
-                  </label>
-                  <input
-                    type="url"
-                    value={imageUrl || ""}
-                    onChange={(e) => setImageUrl(e.target.value)}
-                    placeholder="https://images.unsplash.com/..."
-                    className="w-full text-sm px-3.5 py-2 rounded-xl border border-neutral-300 focus:outline-none focus:border-black font-mono text-xs"
-                  />
-                </div>
-
-                <div className="pt-2">
+                  {/* Toggle Button */}
                   <button
-                    type="submit"
-                    disabled={submitting || !imageUrl}
-                    className="inline-flex items-center gap-2 px-6 py-2.5 bg-black text-white hover:bg-neutral-800 text-xs font-bold uppercase tracking-widest rounded-xl shadow-xs transition-all disabled:opacity-50 cursor-pointer"
+                    type="button"
+                    onClick={() => handleToggleProduct(product)}
+                    disabled={isActionLoading}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 cursor-pointer disabled:opacity-50 flex items-center gap-1.5 ${
+                      isTrending
+                        ? "bg-amber-600 hover:bg-amber-700 text-white shadow-2xs"
+                        : "bg-neutral-900 hover:bg-black text-white"
+                    }`}
                   >
-                    {submitting ? (
+                    {isActionLoading ? (
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    ) : isTrending ? (
                       <>
-                        <Loader2 className="w-4 h-4 animate-spin text-white" />
-                        <span>Publishing...</span>
+                        <Check className="w-3.5 h-3.5" />
+                        <span>Trending</span>
                       </>
                     ) : (
                       <>
-                        <Plus className="w-4 h-4" />
-                        <span>Publish to Trending Now</span>
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>Add</span>
                       </>
                     )}
                   </button>
                 </div>
-              </div>
-            </div>
-          </form>
-        </div>
-
-        {/* SECTION 2: EXISTING TRENDING NOW IMAGES */}
-        <div className="bg-white rounded-2xl border border-neutral-200/80 p-5 sm:p-7 shadow-xs">
-          <div className="flex items-center justify-between border-b border-neutral-100 pb-3 mb-4">
-            <div>
-              <h2 className="text-base font-bold text-neutral-900 tracking-tight">
-                Current Lookbook Images ({items.length})
-              </h2>
-              <p className="text-xs text-neutral-500 mt-0.5">
-                Toggle visibility or delete images from the collection.
-              </p>
-            </div>
+              );
+            })}
           </div>
-
-          {loading ? (
-            <div className="py-12 flex justify-center">
-              <Loader2 className="w-6 h-6 animate-spin text-neutral-400" />
-            </div>
-          ) : items.length === 0 ? (
-            <div className="py-12 text-center text-neutral-400 text-xs">
-              No images in Trending Now. Upload above to add your first photo.
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-              {items.map((item) => (
-                <div
-                  key={item.id}
-                  className={`group relative rounded-xl overflow-hidden border transition-all ${
-                    item.is_active ? "border-neutral-200 bg-white" : "border-neutral-200 bg-neutral-100 opacity-60"
-                  }`}
-                >
-                  <div className="relative aspect-3/4 w-full">
-                    <Image
-                      src={item.image_url}
-                      alt={item.title || "Look"}
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
-
-                  <div className="p-3">
-                    <p className="text-xs font-semibold text-neutral-900 truncate">
-                      {item.title || "Untitled Look"}
-                    </p>
-
-                    {/* Associated Product or Target */}
-                    {item.product_slug ? (
-                      <div className="mt-1 flex items-center gap-1 text-[10px] font-medium text-emerald-700 truncate">
-                        <ShoppingBag className="w-3 h-3 shrink-0" />
-                        <span className="truncate">Product: {item.product_slug}</span>
-                      </div>
-                    ) : item.target_link ? (
-                      <div className="mt-1 flex items-center gap-1 text-[10px] font-medium text-neutral-600 truncate">
-                        <ExternalLink className="w-3 h-3 shrink-0" />
-                        <span className="truncate">{item.target_link}</span>
-                      </div>
-                    ) : (
-                      <p className="mt-1 text-[10px] text-neutral-400 italic">
-                        Unlinked (opens /trending-now)
-                      </p>
-                    )}
-
-                    <div className="flex items-center justify-between mt-2 pt-2 border-t border-neutral-100">
-                      <button
-                        type="button"
-                        onClick={() => handleToggleActive(item)}
-                        className={`text-[11px] font-medium flex items-center gap-1 cursor-pointer ${
-                          item.is_active ? "text-emerald-700" : "text-neutral-400"
-                        }`}
-                        title={item.is_active ? "Visible on Store" : "Hidden from Store"}
-                      >
-                        {item.is_active ? (
-                          <>
-                            <Eye className="w-3.5 h-3.5" /> Active
-                          </>
-                        ) : (
-                          <>
-                            <EyeOff className="w-3.5 h-3.5" /> Hidden
-                          </>
-                        )}
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteItem(item.id)}
-                        className="p-1 rounded-md text-neutral-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
-                        title="Delete"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        )}
       </div>
     </div>
   );

@@ -3,7 +3,8 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Heart, ShoppingBag, Check } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Heart, ShoppingBag, Check, Zap } from "lucide-react";
 import { Product } from "@/types";
 import { formatPrice } from "@/lib/utils";
 import { useCart } from "@/lib/store/cart-store";
@@ -12,15 +13,24 @@ import { useWishlist } from "@/lib/store/wishlist-store";
 interface ProductCardProps {
   product: Product;
   priority?: boolean;
+  showBuyNow?: boolean;
 }
 
-export function ProductCard({ product, priority = false }: ProductCardProps) {
+export function ProductCard({ product, priority = false, showBuyNow = false }: ProductCardProps) {
+  const router = useRouter();
   const { addItem } = useCart();
   const { isInWishlist, toggleWishlist } = useWishlist();
   const [added, setAdded] = useState(false);
   const [selectedVariantIndex, setSelectedVariantIndex] = useState<number | null>(null);
 
   const isFavorited = isInWishlist(product.id);
+
+  const handleBuyNow = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    addItem(product, 1, activeVariant || undefined);
+    router.push("/checkout");
+  };
 
   // Fallback chain for primary image
   const primaryImage =
@@ -228,24 +238,55 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
           )}
         </div>
 
-        {/* Mobile Quick Add Button */}
-        <button
-          type="button"
-          onClick={handleAddToCart}
-          className="md:hidden mt-2 w-full py-1.5 sm:py-2 bg-neutral-900 text-white text-[10px] font-bold uppercase tracking-wider rounded-md flex items-center justify-center gap-1.5 active:bg-black cursor-pointer shadow-xs"
-        >
-          {added ? (
-            <>
-              <Check className="w-3 h-3 text-emerald-400" />
-              <span>Added</span>
-            </>
-          ) : (
-            <>
-              <ShoppingBag className="w-3 h-3" />
-              <span>Add to Bag</span>
-            </>
-          )}
-        </button>
+        {/* Mobile / Inline Action Buttons */}
+        {showBuyNow ? (
+          <div className="flex items-center gap-2 pt-2">
+            <button
+              type="button"
+              onClick={handleAddToCart}
+              className="flex-1 py-2 px-2 rounded-lg border border-neutral-300 hover:border-black bg-white text-neutral-900 text-[11px] font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
+            >
+              {added ? (
+                <>
+                  <Check className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>Added</span>
+                </>
+              ) : (
+                <>
+                  <ShoppingBag className="w-3.5 h-3.5" />
+                  <span>Add to Bag</span>
+                </>
+              )}
+            </button>
+
+            <button
+              type="button"
+              onClick={handleBuyNow}
+              className="flex-1 py-2 px-2 rounded-lg bg-neutral-900 hover:bg-black text-white text-[11px] font-bold uppercase tracking-wider flex items-center justify-center gap-1 transition-all cursor-pointer shadow-xs"
+            >
+              <span>Buy Now</span>
+            </button>
+          </div>
+        ) : (
+          /* Mobile Quick Add Button */
+          <button
+            type="button"
+            onClick={handleAddToCart}
+            className="md:hidden mt-2 w-full py-1.5 sm:py-2 bg-neutral-900 text-white text-[10px] font-bold uppercase tracking-wider rounded-md flex items-center justify-center gap-1.5 active:bg-black cursor-pointer shadow-xs"
+          >
+            {added ? (
+              <>
+                <Check className="w-3 h-3 text-emerald-400" />
+                <span>Added</span>
+              </>
+            ) : (
+              <>
+                <ShoppingBag className="w-3 h-3" />
+                <span>Add to Bag</span>
+              </>
+            )}
+          </button>
+        )}
       </div>
     </div>
   );

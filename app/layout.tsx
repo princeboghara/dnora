@@ -1,10 +1,12 @@
 import type { Metadata, Viewport } from "next";
+import { Suspense } from "react";
 import { Plus_Jakarta_Sans, Inter, Montserrat } from "next/font/google";
 import "./globals.css";
 import { AnnouncementBar } from "@/components/AnnouncementBar";
 import { TopBar, NavCategory } from "@/components/TopBar";
 import { CartDrawer } from "@/components/CartDrawer";
 import { Footer } from "@/components/Footer";
+import { GlobalPreloader } from "@/components/ui/GlobalPreloader";
 import { CartProvider } from "@/lib/store/cart-store";
 import { WishlistProvider } from "@/lib/store/wishlist-store";
 import { store } from "@/lib/data/store";
@@ -162,6 +164,9 @@ export default async function RootLayout({
         />
       </head>
       <body suppressHydrationWarning className="min-h-full flex flex-col font-sans bg-white text-[#0E0E0E] antialiased selection:bg-[#0E0E0E] selection:text-white">
+        <Suspense fallback={null}>
+          <GlobalPreloader />
+        </Suspense>
         <WishlistProvider>
           <CartProvider>
             <AnnouncementBar initialConfig={announcementConfig} />

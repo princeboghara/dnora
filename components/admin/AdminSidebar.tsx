@@ -24,6 +24,8 @@ import {
   Sparkles,
   Package,
   Sliders,
+  Boxes,
+  BarChart3,
 } from "lucide-react";
 
 interface AdminSidebarProps {
@@ -62,6 +64,13 @@ const NAV_GROUPS: NavGroupItem[] = [
     href: "/admin/orders",
     icon: Package,
     badge: "Live",
+  },
+  {
+    id: "stock",
+    label: "Stock Management",
+    href: "/admin/stock",
+    icon: Boxes,
+    badge: "Inventory",
   },
   {
     id: "products",
@@ -174,7 +183,7 @@ export function AdminSidebar({
 
   const handleLogout = async () => {
     try {
-      await fetch("/api/auth/logout", { method: "POST" });
+      await fetch("/api/auth/admin-logout", { method: "POST" });
     } catch {
       // ignore
     } finally {
@@ -220,7 +229,7 @@ export function AdminSidebar({
           const Icon = group.icon;
           const isGroupOpen = expandedGroups[group.id] ?? false;
 
-          // Case 1: Standalone item (e.g. Dashboard, Orders)
+          // Case 1: Standalone item (e.g. Dashboard, Orders, Stock Management)
           if (!group.subitems || group.subitems.length === 0) {
             const isActive = pathname === group.href;
 
@@ -241,7 +250,13 @@ export function AdminSidebar({
                     <>
                       <span className="flex-1 truncate">{group.label}</span>
                       {group.badge && (
-                        <span className="text-[8.5px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider bg-white/10 text-white/70">
+                        <span
+                          className={`text-[8.5px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider ${
+                            isActive
+                              ? "bg-black/10 text-black"
+                              : "bg-white/10 text-white/70"
+                          }`}
+                        >
                           {group.badge}
                         </span>
                       )}

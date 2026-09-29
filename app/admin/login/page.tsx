@@ -1,13 +1,15 @@
 "use client";
 
-import React, { useState } from "react";
-import { useRouter } from "next/navigation";
+import React, { useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { Lock, ArrowRight, Eye, EyeOff, ShieldCheck, AlertCircle } from "lucide-react";
 
-export default function AdminLoginPage() {
+function AdminLoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectParam = searchParams.get("redirect") || "/admin";
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -31,7 +33,7 @@ export default function AdminLoginPage() {
         throw new Error(data.error || "Incorrect admin password.");
       }
 
-      router.push("/admin");
+      router.push(redirectParam.startsWith("/admin") ? redirectParam : "/admin");
       router.refresh();
     } catch (err: unknown) {
       setErrorMessage(
@@ -130,5 +132,19 @@ export default function AdminLoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function AdminLoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-[#08080A] flex items-center justify-center text-white text-xs font-mono uppercase tracking-widest">
+          Loading Security Suite...
+        </div>
+      }
+    >
+      <AdminLoginForm />
+    </Suspense>
   );
 }

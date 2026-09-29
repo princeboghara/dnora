@@ -1,54 +1,76 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   Menu,
+  Bell,
+  ChevronDown,
   ExternalLink,
   LogOut,
   ShieldCheck,
+  ShoppingBag,
+  AlertTriangle,
 } from "lucide-react";
 
 interface AdminHeaderProps {
   onOpenMobileSidebar: () => void;
 }
 
-const TITLES: Record<string, { title: string; subtitle: string }> = {
-  "/admin": {
-    title: "Executive Dashboard",
-    subtitle: "Overview of all active storefront presentation modules",
-  },
-  "/admin/announcements": {
-    title: "Announcement Bar Customizer",
-    subtitle: "Manage storewide ticker messages, rotation intervals, and active status",
-  },
-  "/admin/heroes": {
-    title: "Hero Banner & Media Studio",
-    subtitle: "Configure video and image showcase slides with mobile-specific crops",
-  },
-  "/admin/categories": {
-    title: "Categories & Our Collections",
-    subtitle: "Manage categories displayed in storefront Our Collections circles and their dynamic live pages",
-  },
-  "/admin/navigation": {
-    title: "Storefront Navigation Manager",
-    subtitle: "Customize categories, mega-menu subcategories, badges, and links",
-  },
+const PAGE_TITLES: Record<string, string> = {
+  "/admin": "Sales Report",
+  "/admin/sales-report": "Sales Report",
+  "/admin/orders": "Orders & Shipments",
+  "/admin/items": "Products & Catalog",
+  "/admin/categories": "Categories & Collections",
+  "/admin/customers": "Customers",
+  "/admin/heroes": "Hero Banners",
+  "/admin/announcements": "Announcement Bar",
+  "/admin/trending-now": "Trending Now",
+  "/admin/campaign-banner": "Campaign Banner",
+  "/admin/navigation": "Navigation Menu",
+  "/admin/topbar": "Header & Top Bar",
+  "/admin/seen-on-you": "Seen On You (Reels)",
 };
 
 export function AdminHeader({ onOpenMobileSidebar }: AdminHeaderProps) {
   const pathname = usePathname();
   const router = useRouter();
 
-  const currentMeta = TITLES[pathname] || {
-    title: "Executive Control Suite",
-    subtitle: "DNORA Luxury Management",
-  };
+  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [notifications, setNotifications] = useState<{
+    id: string;
+    type: "order" | "low_stock";
+    title: string;
+    description: string;
+    timeAgo: string;
+    link: string;
+  }[]>([]);
+
+  useEffect(() => {
+    async function loadNotifications() {
+      try {
+        const res = await fetch("/api/admin/notifications");
+        if (res.ok) {
+          const json = await res.json();
+          if (Array.isArray(json.notifications)) {
+            setNotifications(json.notifications);
+          }
+        }
+      } catch {
+        // ignore
+      }
+    }
+    loadNotifications();
+  }, []);
+
+  const currentTitle = PAGE_TITLES[pathname] || "Sales Report";
 
   const handleLogout = async () => {
     try {
-      await fetch("/api/auth/logout", { method: "POST" });
+      await fetch("/api/auth/admin-logout", { method: "POST" });
     } catch {
       // ignore
     } finally {
@@ -58,57 +80,148 @@ export function AdminHeader({ onOpenMobileSidebar }: AdminHeaderProps) {
   };
 
   return (
-    <header className="sticky top-0 z-20 h-16 bg-white/95 backdrop-blur-md border-b border-neutral-200/80 px-4 sm:px-8 flex items-center justify-between">
-      {/* Left: Mobile hamburger + Page Title */}
-      <div className="flex items-center gap-3">
+    <header className="sticky top-0 z-20 h-16 bg-white border-b border-neutral-200/80 px-4 sm:px-6 lg:px-8 flex items-center justify-between shadow-2xs">
+      {/* Left: Mobile Hamburger & Page Title */}
+      <div className="flex items-center gap-3 sm:gap-4">
         <button
           type="button"
           onClick={onOpenMobileSidebar}
-          className="md:hidden p-2 rounded-md text-neutral-600 hover:text-black hover:bg-neutral-100 transition-colors"
-          aria-label="Open sidebar"
+          className="p-1.5 rounded-lg text-neutral-600 hover:text-black hover:bg-neutral-100 transition-colors"
+          aria-label="Toggle navigation sidebar"
         >
           <Menu className="w-5 h-5" />
         </button>
 
-        <div>
-          <h1 className="text-sm sm:text-base font-bold text-neutral-900 tracking-wide uppercase">
-            {currentMeta.title}
-          </h1>
-          <p className="hidden sm:block text-[11px] text-neutral-500 truncate">
-            {currentMeta.subtitle}
-          </p>
-        </div>
+        <h1 className="text-sm sm:text-base font-bold text-neutral-900 tracking-tight">
+          {currentTitle}
+        </h1>
       </div>
 
-      {/* Right: Quick actions */}
-      <div className="flex items-center gap-2 sm:gap-4">
-        {/* Admin Badge */}
-        <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-[10.5px] font-bold tracking-wider uppercase">
-          <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-          <span>Admin Authenticated</span>
+      {/* Right: Notifications, Avatar, Admin Dropdown */}
+      <div className="flex items-center gap-3 sm:gap-4">
+        {/* Notification Bell with Red Badge */}
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => {
+              setNotificationsOpen(!notificationsOpen);
+              setUserDropdownOpen(false);
+            }}
+            className="p-2 rounded-full text-neutral-500 hover:text-black hover:bg-neutral-100 transition-colors relative cursor-pointer"
+            title="Notifications"
+            aria-label="View notifications"
+          >
+            <Bell className="w-4 h-4" />
+            {/* Red Notification Dot with Count */}
+            <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-white" />
+          </button>
+
+          {/* Notifications Dropdown Popup */}
+          {notificationsOpen && (
+            <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-xl border border-neutral-200 p-2 z-50 animate-in fade-in duration-150">
+              <div className="px-3 py-2 border-b border-neutral-100 flex items-center justify-between">
+                <span className="text-xs font-bold text-neutral-900">Notifications</span>
+                {notifications.length > 0 && (
+                  <span className="text-[10px] text-rose-600 font-semibold bg-rose-50 px-2 py-0.5 rounded-full">
+                    {notifications.length} Active
+                  </span>
+                )}
+              </div>
+              <div className="divide-y divide-neutral-100 text-xs py-1 max-h-72 overflow-y-auto">
+                {notifications.length === 0 ? (
+                  <div className="p-4 text-center text-neutral-400 text-xs">
+                    No new alerts or pending notices
+                  </div>
+                ) : (
+                  notifications.map((n) => (
+                    <Link
+                      key={n.id}
+                      href={n.link}
+                      onClick={() => setNotificationsOpen(false)}
+                      className="block p-2.5 hover:bg-neutral-50 rounded-lg transition-colors cursor-pointer"
+                    >
+                      <p className="font-semibold text-neutral-900 flex items-center gap-1.5">
+                        {n.type === "order" ? (
+                          <ShoppingBag className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                        ) : (
+                          <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                        )}
+                        <span className="truncate">{n.title}</span>
+                      </p>
+                      <p className="text-neutral-500 text-[11px] mt-0.5 line-clamp-2">
+                        {n.description}
+                      </p>
+                      <p className="text-[10px] text-neutral-400 mt-1 font-mono">
+                        {n.timeAgo}
+                      </p>
+                    </Link>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* View Live Storefront */}
-        <Link
-          href="/"
-          target="_blank"
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-neutral-100 hover:bg-neutral-900 text-neutral-700 hover:text-white transition-all text-xs font-semibold tracking-wider uppercase"
-        >
-          <span>Live Store</span>
-          <ExternalLink className="w-3.5 h-3.5" />
-        </Link>
+        {/* User Avatar Circle "A" and Admin Dropdown */}
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => {
+              setUserDropdownOpen(!userDropdownOpen);
+              setNotificationsOpen(false);
+            }}
+            className="flex items-center gap-2 py-1 pl-1 pr-2 rounded-full hover:bg-neutral-100 transition-colors cursor-pointer"
+          >
+            {/* Dark Circle with white letter 'A' */}
+            <div className="w-8 h-8 rounded-full bg-[#111827] text-white flex items-center justify-center font-bold text-xs tracking-wider shadow-2xs">
+              A
+            </div>
+            <span className="text-xs font-semibold text-neutral-800 hidden sm:inline-block">
+              Admin
+            </span>
+            <ChevronDown className="w-3.5 h-3.5 text-neutral-400" />
+          </button>
 
-        {/* Sign Out */}
-        <button
-          type="button"
-          onClick={handleLogout}
-          className="p-1.5 text-neutral-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors cursor-pointer"
-          title="Sign Out of Admin Suite"
-          aria-label="Sign Out"
-        >
-          <LogOut className="w-4 h-4" />
-        </button>
+          {/* Admin User Menu Dropdown */}
+          {userDropdownOpen && (
+            <div className="absolute right-0 mt-2 w-52 bg-white rounded-xl shadow-xl border border-neutral-200 py-1.5 z-50 animate-in fade-in duration-150 text-xs">
+              <div className="px-3.5 py-2 border-b border-neutral-100">
+                <p className="font-semibold text-neutral-900">Administrator</p>
+                <p className="text-[11px] text-neutral-500 font-mono">admin@dnoralifestyle.com</p>
+              </div>
+
+              <div className="p-1 space-y-0.5">
+                <Link
+                  href="/"
+                  target="_blank"
+                  className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-neutral-700 hover:text-black hover:bg-neutral-100 transition-colors"
+                >
+                  <ExternalLink className="w-3.5 h-3.5 text-neutral-500" />
+                  <span>View Live Storefront</span>
+                </Link>
+
+                <div className="px-3 py-1.5 flex items-center gap-1.5 text-emerald-700 text-[11px] font-semibold bg-emerald-50 rounded-lg mx-1">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>Authenticated Session</span>
+                </div>
+              </div>
+
+              <div className="pt-1 mt-1 border-t border-neutral-100 p-1">
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-rose-600 hover:bg-rose-50 font-medium transition-colors cursor-pointer"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                  <span>Sign Out</span>
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </header>
   );
 }
+
+export default AdminHeader;
