@@ -36,6 +36,40 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async redirects() {
+    return [
+      {
+        source: "/admin/home",
+        destination: "/admin",
+        permanent: true,
+      },
+      {
+        source: "/admin/HOME",
+        destination: "/admin",
+        permanent: true,
+      },
+      {
+        source: "/admin/Home",
+        destination: "/admin",
+        permanent: true,
+      },
+      {
+        source: "/admin/dashboard",
+        destination: "/admin",
+        permanent: true,
+      },
+      {
+        source: "/admin/DASHBOARD",
+        destination: "/admin",
+        permanent: true,
+      },
+      {
+        source: "/admin/Dashboard",
+        destination: "/admin",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

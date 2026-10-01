@@ -54,10 +54,21 @@ export function proxy(request: NextRequest) {
       }
     }
 
+    const normalizedPath = pathname.toLowerCase().replace(/\/+$/, "");
+
     if (!isValidAdmin) {
       const loginUrl = new URL("/admin/login", request.url);
-      loginUrl.searchParams.set("redirect", pathname);
+      const redirectTarget =
+        normalizedPath === "/admin/home" || normalizedPath === "/admin/dashboard"
+          ? "/admin"
+          : pathname;
+      loginUrl.searchParams.set("redirect", redirectTarget);
       return NextResponse.redirect(loginUrl);
+    }
+
+    // Seamlessly redirect /admin/home, /admin/HOME, /admin/dashboard to /admin
+    if (normalizedPath === "/admin/home" || normalizedPath === "/admin/dashboard") {
+      return NextResponse.redirect(new URL("/admin", request.url));
     }
   }
 
