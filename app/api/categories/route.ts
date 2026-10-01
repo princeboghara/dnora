@@ -5,9 +5,11 @@ import { revalidatePath } from "next/cache";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    const categories = await store.getCategories();
+    const { searchParams } = new URL(req.url);
+    const includeUncategorized = searchParams.get("include_uncategorized") === "true";
+    const categories = await store.getCategories(includeUncategorized);
     return NextResponse.json({ success: true, data: categories });
   } catch (error: unknown) {
     console.error("Error fetching categories:", error);
@@ -36,6 +38,8 @@ export async function POST(req: NextRequest) {
       banner_heading,
       banner_subtitle,
       banner_media_type,
+      is_in_nav,
+      is_in_collections,
     } = body;
 
     if (!name || typeof name !== "string" || !name.trim()) {
@@ -55,6 +59,8 @@ export async function POST(req: NextRequest) {
       banner_heading: typeof banner_heading === "string" ? banner_heading.trim() : undefined,
       banner_subtitle: typeof banner_subtitle === "string" ? banner_subtitle.trim() : undefined,
       banner_media_type: banner_media_type === "video" ? "video" : "image",
+      is_in_nav: is_in_nav !== undefined ? Boolean(is_in_nav) : true,
+      is_in_collections: is_in_collections !== undefined ? Boolean(is_in_collections) : true,
     });
 
     try {

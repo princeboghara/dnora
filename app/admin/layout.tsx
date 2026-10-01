@@ -14,7 +14,8 @@ export default function AdminLayout({
   const router = useRouter();
 
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  // Admin sidebar defaults to collapsed/closed as requested
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
 
   // If on login page, render standalone clean view without sidebar or layout restrictions
   const isLoginPage = pathname?.startsWith("/admin/login") ?? false;

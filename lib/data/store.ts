@@ -13,6 +13,7 @@ import {
   CircularCollectionItem,
   HomepageSection,
   TrendingNowItem,
+  ShippingConfig,
 } from "@/types";
 import { db } from "@/lib/db";
 import { slugify } from "../utils";
@@ -713,7 +714,7 @@ class DataStore {
   }
 
   // CATEGORIES
-  async ensureCategoryBannerColumns(): Promise<void> {
+  async ensureCategoryColumns(): Promise<void> {
     try {
       await db.query(`
         ALTER TABLE public.product_categories ADD COLUMN IF NOT EXISTS banner_image_url TEXT;
@@ -721,17 +722,44 @@ class DataStore {
         ALTER TABLE public.product_categories ADD COLUMN IF NOT EXISTS banner_heading TEXT;
         ALTER TABLE public.product_categories ADD COLUMN IF NOT EXISTS banner_subtitle TEXT;
         ALTER TABLE public.product_categories ADD COLUMN IF NOT EXISTS banner_media_type TEXT DEFAULT 'image';
+        ALTER TABLE public.product_categories ADD COLUMN IF NOT EXISTS banner_fit TEXT DEFAULT 'cover';
+        ALTER TABLE public.product_categories ADD COLUMN IF NOT EXISTS banner_position TEXT DEFAULT 'center';
+        ALTER TABLE public.product_categories ADD COLUMN IF NOT EXISTS banner_aspect_ratio TEXT DEFAULT 'storefront';
+        ALTER TABLE public.product_categories ADD COLUMN IF NOT EXISTS is_in_nav BOOLEAN DEFAULT true;
+        ALTER TABLE public.product_categories ADD COLUMN IF NOT EXISTS is_in_collections BOOLEAN DEFAULT true;
       `);
     } catch {
       // non-blocking
     }
   }
 
-  async getCategories(): Promise<ProductCategory[]> {
+  async ensureCategoryBannerColumns(): Promise<void> {
+    return this.ensureCategoryColumns();
+  }
+
+  async getCategories(includeUncategorized: boolean = false): Promise<ProductCategory[]> {
     try {
-      await this.ensureCategoryBannerColumns();
-      const res = await db.query(`SELECT * FROM public.product_categories ORDER BY created_at ASC`);
-      return res.rows;
+      await this.ensureCategoryColumns();
+      const whereClause = !includeUncategorized ? "WHERE cat.slug != 'uncategorized'" : "";
+      const res = await db.query(`
+        SELECT cat.*,
+          COUNT(DISTINCT CASE WHEN p.status = 'active' THEN p.id END)::int AS live_products_count,
+          COUNT(DISTINCT p.id)::int AS total_products_count
+        FROM public.product_categories cat
+        LEFT JOIN public.product_category_relations pcr ON pcr.category_id = cat.id
+        LEFT JOIN public.products p ON p.id = pcr.product_id
+        ${whereClause}
+        GROUP BY cat.id
+        ORDER BY cat.created_at ASC
+      `);
+      return res.rows.map((row) => ({
+        ...row,
+        is_in_nav: row.is_in_nav ?? true,
+        is_in_collections: row.is_in_collections ?? true,
+        live_products_count: Number(row.live_products_count || 0),
+        total_products_count: Number(row.total_products_count || 0),
+        product_count: Number(row.live_products_count || 0),
+      }));
     } catch (err) {
       console.error("Error fetching categories from database:", err);
       return [];
@@ -740,9 +768,29 @@ class DataStore {
 
   async getCategoryBySlug(slug: string): Promise<ProductCategory | null> {
     try {
-      await this.ensureCategoryBannerColumns();
-      const res = await db.query(`SELECT * FROM public.product_categories WHERE slug = $1 LIMIT 1`, [slug]);
-      return res.rows[0] || null;
+      await this.ensureCategoryColumns();
+      const res = await db.query(
+        `SELECT cat.*,
+          COUNT(DISTINCT CASE WHEN p.status = 'active' THEN p.id END)::int AS live_products_count,
+          COUNT(DISTINCT p.id)::int AS total_products_count
+        FROM public.product_categories cat
+        LEFT JOIN public.product_category_relations pcr ON pcr.category_id = cat.id
+        LEFT JOIN public.products p ON p.id = pcr.product_id
+        WHERE cat.slug = $1
+        GROUP BY cat.id
+        LIMIT 1`,
+        [slug]
+      );
+      if (res.rows.length === 0) return null;
+      const row = res.rows[0];
+      return {
+        ...row,
+        is_in_nav: row.is_in_nav ?? true,
+        is_in_collections: row.is_in_collections ?? true,
+        live_products_count: Number(row.live_products_count || 0),
+        total_products_count: Number(row.total_products_count || 0),
+        product_count: Number(row.live_products_count || 0),
+      };
     } catch (err) {
       console.error("Error fetching category by slug:", err);
       return null;
@@ -751,9 +799,29 @@ class DataStore {
 
   async getCategoryById(id: string): Promise<ProductCategory | null> {
     try {
-      await this.ensureCategoryBannerColumns();
-      const res = await db.query(`SELECT * FROM public.product_categories WHERE id = $1 LIMIT 1`, [id]);
-      return res.rows[0] || null;
+      await this.ensureCategoryColumns();
+      const res = await db.query(
+        `SELECT cat.*,
+          COUNT(DISTINCT CASE WHEN p.status = 'active' THEN p.id END)::int AS live_products_count,
+          COUNT(DISTINCT p.id)::int AS total_products_count
+        FROM public.product_categories cat
+        LEFT JOIN public.product_category_relations pcr ON pcr.category_id = cat.id
+        LEFT JOIN public.products p ON p.id = pcr.product_id
+        WHERE cat.id = $1
+        GROUP BY cat.id
+        LIMIT 1`,
+        [id]
+      );
+      if (res.rows.length === 0) return null;
+      const row = res.rows[0];
+      return {
+        ...row,
+        is_in_nav: row.is_in_nav ?? true,
+        is_in_collections: row.is_in_collections ?? true,
+        live_products_count: Number(row.live_products_count || 0),
+        total_products_count: Number(row.total_products_count || 0),
+        product_count: Number(row.live_products_count || 0),
+      };
     } catch (err) {
       console.error("Error fetching category by id:", err);
       return null;
@@ -770,13 +838,15 @@ class DataStore {
     banner_heading?: string;
     banner_subtitle?: string;
     banner_media_type?: "image" | "video";
+    is_in_nav?: boolean;
+    is_in_collections?: boolean;
   }): Promise<ProductCategory> {
-    await this.ensureCategoryBannerColumns();
+    await this.ensureCategoryColumns();
     const slug = data.slug?.trim() ? slugify(data.slug) : slugify(data.name);
     const res = await db.query(
       `INSERT INTO public.product_categories 
-        (name, slug, description, image_url, banner_image_url, banner_mobile_image_url, banner_heading, banner_subtitle, banner_media_type)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        (name, slug, description, image_url, banner_image_url, banner_mobile_image_url, banner_heading, banner_subtitle, banner_media_type, is_in_nav, is_in_collections)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
        RETURNING *`,
       [
         data.name.trim(),
@@ -788,9 +858,20 @@ class DataStore {
         data.banner_heading || null,
         data.banner_subtitle || null,
         data.banner_media_type || "image",
+        data.is_in_nav ?? true,
+        data.is_in_collections ?? true,
       ]
     );
-    return res.rows[0];
+    const cat = res.rows[0];
+    await this.syncNavigationCategories();
+    return {
+      ...cat,
+      is_in_nav: cat.is_in_nav ?? true,
+      is_in_collections: cat.is_in_collections ?? true,
+      live_products_count: 0,
+      total_products_count: 0,
+      product_count: 0,
+    };
   }
 
   async updateCategory(
@@ -805,11 +886,16 @@ class DataStore {
       banner_heading: string;
       banner_subtitle: string;
       banner_media_type: "image" | "video";
+      banner_fit: "cover" | "contain";
+      banner_position: string;
+      banner_aspect_ratio: "storefront" | "natural" | "ultrawide" | "video";
+      is_in_nav: boolean;
+      is_in_collections: boolean;
     }>
   ): Promise<ProductCategory | null> {
-    await this.ensureCategoryBannerColumns();
+    await this.ensureCategoryColumns();
     const updates: string[] = [];
-    const params: (string | null)[] = [];
+    const params: (string | boolean | null)[] = [];
     let idx = 1;
 
     if (data.name !== undefined) {
@@ -848,6 +934,26 @@ class DataStore {
       updates.push(`banner_media_type = $${idx++}`);
       params.push(data.banner_media_type || "image");
     }
+    if (data.banner_fit !== undefined) {
+      updates.push(`banner_fit = $${idx++}`);
+      params.push(data.banner_fit || "cover");
+    }
+    if (data.banner_position !== undefined) {
+      updates.push(`banner_position = $${idx++}`);
+      params.push(data.banner_position || "center");
+    }
+    if (data.banner_aspect_ratio !== undefined) {
+      updates.push(`banner_aspect_ratio = $${idx++}`);
+      params.push(data.banner_aspect_ratio || "storefront");
+    }
+    if (data.is_in_nav !== undefined) {
+      updates.push(`is_in_nav = $${idx++}`);
+      params.push(Boolean(data.is_in_nav));
+    }
+    if (data.is_in_collections !== undefined) {
+      updates.push(`is_in_collections = $${idx++}`);
+      params.push(Boolean(data.is_in_collections));
+    }
 
     if (updates.length === 0) return this.getCategoryById(id);
 
@@ -858,7 +964,6 @@ class DataStore {
     );
     const updated = res.rows[0] || null;
 
-    // Keep circular_collections in sync if label or image was updated
     if (updated && (data.image_url !== undefined || data.name !== undefined)) {
       try {
         const newImg = data.image_url !== undefined ? (data.image_url ? String(data.image_url).trim() : null) : null;
@@ -875,16 +980,245 @@ class DataStore {
       }
     }
 
-    return updated;
+    await this.syncNavigationCategories();
+    return this.getCategoryById(id);
   }
 
-  async deleteCategory(id: string): Promise<boolean> {
+  async deleteCategory(id: string): Promise<{ success: boolean; movedToUncategorizedCount?: number; error?: string }> {
     try {
+      const existing = await this.getCategoryById(id);
+      if (!existing) return { success: false, error: "Category not found" };
+
+      if (existing.slug === "uncategorized") {
+        return { success: false, error: "The 'Uncategorized' category is the system fallback category and cannot be deleted." };
+      }
+
+      // 1. Find all products associated with this category
+      const prodsRes = await db.query(
+        `SELECT product_id FROM public.product_category_relations WHERE category_id = $1`,
+        [id]
+      );
+      const affectedProductIds = prodsRes.rows.map((r: { product_id: string }) => r.product_id);
+
+      // 2. Delete the relations for this category
       await db.query(`DELETE FROM public.product_category_relations WHERE category_id = $1`, [id]).catch(() => {});
+
+      let movedCount = 0;
+      if (affectedProductIds.length > 0) {
+        // 3. Ensure 'Uncategorized' category exists
+        let uncatRes = await db.query(
+          `SELECT id FROM public.product_categories WHERE slug = 'uncategorized' LIMIT 1`
+        );
+        let uncatId: string;
+        if (uncatRes.rows.length === 0) {
+          const insertUncat = await db.query(
+            `INSERT INTO public.product_categories (name, slug, description, is_in_nav)
+             VALUES ('Uncategorized', 'uncategorized', 'Default collection for unassigned products', false)
+             RETURNING id`
+          );
+          uncatId = insertUncat.rows[0].id;
+        } else {
+          uncatId = uncatRes.rows[0].id;
+        }
+
+        // 4. Find which affected products now have 0 remaining categories
+        const orphansRes = await db.query(
+          `SELECT p.id FROM public.products p
+           WHERE p.id = ANY($1::uuid[])
+           AND NOT EXISTS (
+             SELECT 1 FROM public.product_category_relations pcr WHERE pcr.product_id = p.id
+           )`,
+          [affectedProductIds]
+        );
+
+        for (const orphan of orphansRes.rows) {
+          await db.query(
+            `INSERT INTO public.product_category_relations (product_id, category_id)
+             VALUES ($1, $2)
+             ON CONFLICT DO NOTHING`,
+            [orphan.id, uncatId]
+          );
+          movedCount++;
+        }
+      }
+
+      // 5. Delete category itself
       const res = await db.query(`DELETE FROM public.product_categories WHERE id = $1`, [id]);
-      return (res.rowCount ?? 0) > 0;
+
+      // 6. Synchronize navigation
+      await this.syncNavigationCategories();
+
+      return { success: (res.rowCount ?? 0) > 0, movedToUncategorizedCount: movedCount };
     } catch (err) {
       console.error("Error deleting category:", err);
+      return { success: false, error: "Database error while deleting category" };
+    }
+  }
+
+  async syncNavigationCategories(): Promise<void> {
+    try {
+      const catsRes = await db.query(`
+        SELECT id, name, slug 
+        FROM public.product_categories 
+        WHERE (is_in_nav IS NULL OR is_in_nav = true) AND slug != 'uncategorized'
+        ORDER BY created_at ASC
+      `);
+      const activeCats = catsRes.rows;
+
+      const navRes = await db.query(
+        `SELECT items FROM public.site_navigation_config WHERE id = 'storefront' LIMIT 1`
+      );
+      if (navRes.rows.length === 0) return;
+
+      const items = navRes.rows[0].items;
+      if (!Array.isArray(items)) return;
+
+      const categorySubmenus = activeCats.map((cat: { id: string; name: string; slug: string }) => ({
+        id: `sf-cat-${cat.id}`,
+        label: cat.name,
+        href: `/category/${cat.slug}`,
+        is_active: true,
+      }));
+
+      let found = false;
+      const updatedItems = items.map((item: any) => {
+        if (item.id === "sf-categories" || item.label?.toLowerCase() === "categories") {
+          found = true;
+          return {
+            ...item,
+            submenus: categorySubmenus,
+          };
+        }
+        return item;
+      });
+
+      if (!found) {
+        updatedItems.splice(2, 0, {
+          id: "sf-categories",
+          label: "Categories",
+          href: "/#categories",
+          icon: "Box",
+          is_active: true,
+          submenus: categorySubmenus,
+        });
+      }
+
+      await db.query(
+        `UPDATE public.site_navigation_config 
+         SET items = $1, updated_at = timezone('utc'::text, now()) 
+         WHERE id = 'storefront'`,
+        [JSON.stringify(updatedItems)]
+      );
+    } catch (err) {
+      console.error("Error synchronizing navigation categories:", err);
+    }
+  }
+
+  // CATEGORY PRODUCT MANAGEMENT
+  async getCategoryProducts(categoryId: string): Promise<Product[]> {
+    try {
+      const sql = `
+        SELECT p.*,
+          COALESCE(pf.is_best_seller, false) as is_best_seller,
+          COALESCE(pf.is_new_arrival, false) as is_new_arrival,
+          COALESCE(pf.sort_order, 0) as sort_order,
+          COALESCE(
+            json_agg(
+              json_build_object(
+                'id', pi.id,
+                'secure_url', pi.secure_url,
+                'cloudinary_public_id', pi.cloudinary_public_id,
+                'alt_text', pi.alt_text,
+                'sort_order', pi.sort_order
+              ) ORDER BY pi.sort_order ASC
+            ) FILTER (WHERE pi.id IS NOT NULL),
+            '[]'::json
+          ) as images
+        FROM public.products p
+        JOIN public.product_category_relations pcr ON pcr.product_id = p.id
+        LEFT JOIN public.product_flags pf ON pf.product_id = p.id
+        LEFT JOIN public.product_images pi ON pi.product_id = p.id
+        WHERE pcr.category_id = $1
+        GROUP BY p.id, pf.is_best_seller, pf.is_new_arrival, pf.sort_order
+        ORDER BY p.name ASC
+      `;
+      const res = await db.query(sql, [categoryId]);
+      return res.rows.map((row) => ({
+        ...row,
+        price: Number(row.price),
+        compare_at_price: row.compare_at_price ? Number(row.compare_at_price) : null,
+        stock: Number(row.stock),
+      }));
+    } catch (err) {
+      console.error("Error fetching category products:", err);
+      return [];
+    }
+  }
+
+  async addProductToCategory(categoryId: string, productId: string): Promise<boolean> {
+    try {
+      await db.query(
+        `INSERT INTO public.product_category_relations (product_id, category_id)
+         VALUES ($1, $2)
+         ON CONFLICT DO NOTHING`,
+        [productId, categoryId]
+      );
+
+      // If category is not "uncategorized", remove any "uncategorized" relation
+      const uncatRes = await db.query(`SELECT id FROM public.product_categories WHERE slug = 'uncategorized' LIMIT 1`);
+      if (uncatRes.rows.length > 0 && uncatRes.rows[0].id !== categoryId) {
+        await db.query(
+          `DELETE FROM public.product_category_relations 
+           WHERE product_id = $1 AND category_id = $2`,
+          [productId, uncatRes.rows[0].id]
+        );
+      }
+
+      return true;
+    } catch (err) {
+      console.error("Error adding product to category:", err);
+      return false;
+    }
+  }
+
+  async removeProductFromCategory(categoryId: string, productId: string): Promise<boolean> {
+    try {
+      await db.query(
+        `DELETE FROM public.product_category_relations 
+         WHERE product_id = $1 AND category_id = $2`,
+        [productId, categoryId]
+      );
+
+      // Check if product now has 0 categories; if so, assign to uncategorized
+      const remaining = await db.query(
+        `SELECT 1 FROM public.product_category_relations WHERE product_id = $1 LIMIT 1`,
+        [productId]
+      );
+      if (remaining.rows.length === 0) {
+        let uncatRes = await db.query(`SELECT id FROM public.product_categories WHERE slug = 'uncategorized' LIMIT 1`);
+        let uncatId: string;
+        if (uncatRes.rows.length === 0) {
+          const insertUncat = await db.query(
+            `INSERT INTO public.product_categories (name, slug, description, is_in_nav)
+             VALUES ('Uncategorized', 'uncategorized', 'Default collection for unassigned products', false)
+             RETURNING id`
+          );
+          uncatId = insertUncat.rows[0].id;
+        } else {
+          uncatId = uncatRes.rows[0].id;
+        }
+
+        await db.query(
+          `INSERT INTO public.product_category_relations (product_id, category_id)
+           VALUES ($1, $2)
+           ON CONFLICT DO NOTHING`,
+          [productId, uncatId]
+        );
+      }
+
+      return true;
+    } catch (err) {
+      console.error("Error removing product from category:", err);
       return false;
     }
   }
@@ -2086,6 +2420,142 @@ class DataStore {
     }
 
     return this.getPromoBannerConfig();
+  }
+
+  // SHIPPING CONFIG
+  async getShippingConfig(): Promise<ShippingConfig> {
+    try {
+      await db.query(`
+        CREATE TABLE IF NOT EXISTS public.shipping_config (
+          id TEXT PRIMARY KEY DEFAULT 'default',
+          is_standard_enabled BOOLEAN DEFAULT true,
+          standard_title TEXT DEFAULT 'Complimentary Insured Courier',
+          standard_rate NUMERIC(10, 2) DEFAULT 0,
+          free_shipping_threshold NUMERIC(10, 2) DEFAULT 0,
+          standard_estimated_days TEXT DEFAULT '3-5 business days',
+          is_express_enabled BOOLEAN DEFAULT true,
+          express_title TEXT DEFAULT 'VIP Express Air Courier',
+          express_rate NUMERIC(10, 2) DEFAULT 150,
+          express_estimated_days TEXT DEFAULT '1-2 business days',
+          is_cod_enabled BOOLEAN DEFAULT true,
+          cod_charge NUMERIC(10, 2) DEFAULT 0,
+          updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
+        );
+        INSERT INTO public.shipping_config (id) VALUES ('default') ON CONFLICT (id) DO NOTHING;
+      `);
+
+      const res = await db.query(`SELECT * FROM public.shipping_config WHERE id = 'default' LIMIT 1`);
+      if (res.rows.length === 0) {
+        return {
+          id: "default",
+          is_standard_enabled: true,
+          standard_title: "Complimentary Insured Courier",
+          standard_rate: 0,
+          free_shipping_threshold: 0,
+          standard_estimated_days: "3-5 business days",
+          is_express_enabled: true,
+          express_title: "VIP Express Air Courier",
+          express_rate: 150,
+          express_estimated_days: "1-2 business days",
+          is_cod_enabled: true,
+          cod_charge: 0,
+        };
+      }
+      const r = res.rows[0];
+      return {
+        id: r.id,
+        is_standard_enabled: Boolean(r.is_standard_enabled),
+        standard_title: r.standard_title || "Complimentary Insured Courier",
+        standard_rate: Number(r.standard_rate || 0),
+        free_shipping_threshold: Number(r.free_shipping_threshold || 0),
+        standard_estimated_days: r.standard_estimated_days || "3-5 business days",
+        is_express_enabled: Boolean(r.is_express_enabled),
+        express_title: r.express_title || "VIP Express Air Courier",
+        express_rate: Number(r.express_rate || 150),
+        express_estimated_days: r.express_estimated_days || "1-2 business days",
+        is_cod_enabled: Boolean(r.is_cod_enabled),
+        cod_charge: Number(r.cod_charge || 0),
+        updated_at: r.updated_at,
+      };
+    } catch (err) {
+      console.error("Error fetching shipping config:", err);
+      return {
+        id: "default",
+        is_standard_enabled: true,
+        standard_title: "Complimentary Insured Courier",
+        standard_rate: 0,
+        free_shipping_threshold: 0,
+        standard_estimated_days: "3-5 business days",
+        is_express_enabled: true,
+        express_title: "VIP Express Air Courier",
+        express_rate: 150,
+        express_estimated_days: "1-2 business days",
+        is_cod_enabled: true,
+        cod_charge: 0,
+      };
+    }
+  }
+
+  async updateShippingConfig(data: Partial<ShippingConfig>): Promise<ShippingConfig> {
+    await this.getShippingConfig(); // ensure table exists
+    const fields: string[] = [];
+    const values: unknown[] = [];
+    let idx = 1;
+
+    if (data.is_standard_enabled !== undefined) {
+      fields.push(`is_standard_enabled = $${idx++}`);
+      values.push(Boolean(data.is_standard_enabled));
+    }
+    if (data.standard_title !== undefined) {
+      fields.push(`standard_title = $${idx++}`);
+      values.push(data.standard_title.trim());
+    }
+    if (data.standard_rate !== undefined) {
+      fields.push(`standard_rate = $${idx++}`);
+      values.push(Math.max(0, Number(data.standard_rate)));
+    }
+    if (data.free_shipping_threshold !== undefined) {
+      fields.push(`free_shipping_threshold = $${idx++}`);
+      values.push(Math.max(0, Number(data.free_shipping_threshold)));
+    }
+    if (data.standard_estimated_days !== undefined) {
+      fields.push(`standard_estimated_days = $${idx++}`);
+      values.push(data.standard_estimated_days.trim());
+    }
+    if (data.is_express_enabled !== undefined) {
+      fields.push(`is_express_enabled = $${idx++}`);
+      values.push(Boolean(data.is_express_enabled));
+    }
+    if (data.express_title !== undefined) {
+      fields.push(`express_title = $${idx++}`);
+      values.push(data.express_title.trim());
+    }
+    if (data.express_rate !== undefined) {
+      fields.push(`express_rate = $${idx++}`);
+      values.push(Math.max(0, Number(data.express_rate)));
+    }
+    if (data.express_estimated_days !== undefined) {
+      fields.push(`express_estimated_days = $${idx++}`);
+      values.push(data.express_estimated_days.trim());
+    }
+    if (data.is_cod_enabled !== undefined) {
+      fields.push(`is_cod_enabled = $${idx++}`);
+      values.push(Boolean(data.is_cod_enabled));
+    }
+    if (data.cod_charge !== undefined) {
+      fields.push(`cod_charge = $${idx++}`);
+      values.push(Math.max(0, Number(data.cod_charge)));
+    }
+
+    if (fields.length > 0) {
+      fields.push(`updated_at = timezone('utc'::text, now())`);
+      await db.query(
+        `UPDATE public.shipping_config SET ${fields.join(", ")} WHERE id = 'default'`,
+        values
+      );
+    }
+
+    return this.getShippingConfig();
   }
 }
 

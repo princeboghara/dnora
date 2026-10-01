@@ -27,6 +27,11 @@ export async function PUT(
       banner_heading,
       banner_subtitle,
       banner_media_type,
+      banner_fit,
+      banner_position,
+      banner_aspect_ratio,
+      is_in_nav,
+      is_in_collections,
     } = body;
 
     const existing = await store.getCategoryById(id);
@@ -69,6 +74,26 @@ export async function PUT(
             ? "video"
             : "image"
           : undefined,
+      banner_fit:
+        banner_fit !== undefined
+          ? banner_fit === "contain"
+            ? "contain"
+            : "cover"
+          : undefined,
+      banner_position:
+        banner_position !== undefined
+          ? typeof banner_position === "string" && banner_position.trim().length <= 40
+            ? banner_position.trim()
+            : "center"
+          : undefined,
+      banner_aspect_ratio:
+        banner_aspect_ratio !== undefined
+          ? ["storefront", "natural", "ultrawide", "video"].includes(banner_aspect_ratio)
+            ? banner_aspect_ratio
+            : "storefront"
+          : undefined,
+      is_in_nav: is_in_nav !== undefined ? Boolean(is_in_nav) : undefined,
+      is_in_collections: is_in_collections !== undefined ? Boolean(is_in_collections) : undefined,
     });
 
     try {
@@ -94,6 +119,52 @@ export async function PUT(
   }
 }
 
+export async function PATCH(
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  const session = await verifyAdminSession();
+  if (!session) {
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+  }
+
+  try {
+    const { id } = await context.params;
+    const existing = await store.getCategoryById(id);
+    if (!existing) {
+      return NextResponse.json({ success: false, error: "Category not found" }, { status: 404 });
+    }
+
+    const body = await req.json().catch(() => ({}));
+    const updatePayload: { is_in_nav?: boolean; is_in_collections?: boolean } = {};
+
+    if (body.is_in_nav !== undefined) {
+      updatePayload.is_in_nav = Boolean(body.is_in_nav);
+    }
+    if (body.is_in_collections !== undefined) {
+      updatePayload.is_in_collections = Boolean(body.is_in_collections);
+    }
+    if (Object.keys(updatePayload).length === 0) {
+      updatePayload.is_in_nav = !existing.is_in_nav;
+    }
+
+    const updated = await store.updateCategory(id, updatePayload);
+
+    try {
+      revalidatePath("/");
+      revalidatePath("/shop");
+      revalidatePath("/admin/categories");
+    } catch {
+      // non-blocking
+    }
+
+    return NextResponse.json({ success: true, data: updated });
+  } catch (error: unknown) {
+    console.error("Error toggling category nav:", error);
+    return NextResponse.json({ success: false, error: "Failed to update navigation status" }, { status: 500 });
+  }
+}
+
 export async function DELETE(
   _req: NextRequest,
   context: { params: Promise<{ id: string }> }
@@ -110,9 +181,12 @@ export async function DELETE(
       return NextResponse.json({ success: false, error: "Category not found" }, { status: 404 });
     }
 
-    const success = await store.deleteCategory(id);
-    if (!success) {
-      return NextResponse.json({ success: false, error: "Failed to delete category" }, { status: 500 });
+    const result = await store.deleteCategory(id);
+    if (!result.success) {
+      return NextResponse.json(
+        { success: false, error: result.error || "Failed to delete category" },
+        { status: 400 }
+      );
     }
 
     // Invalidate storefront and admin paths safely
@@ -124,7 +198,11 @@ export async function DELETE(
       console.warn("Path revalidation warning:", revalErr);
     }
 
-    return NextResponse.json({ success: true, message: "Category deleted successfully" });
+    return NextResponse.json({
+      success: true,
+      message: `Category "${existing.name}" deleted successfully.`,
+      movedToUncategorizedCount: result.movedToUncategorizedCount || 0,
+    });
   } catch (error: unknown) {
     console.error("Error deleting category:", error);
     return NextResponse.json({ success: false, error: "Failed to delete category" }, { status: 500 });

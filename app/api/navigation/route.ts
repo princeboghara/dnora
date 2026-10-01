@@ -35,7 +35,10 @@ export async function GET(req: NextRequest) {
       try {
         const categories = await store.getCategories();
         if (categories && categories.length > 0) {
-          const categorySubmenus = categories.map((cat) => ({
+          const activeCategories = categories.filter(
+            (cat) => (cat.is_in_nav ?? true) && cat.slug !== "uncategorized"
+          );
+          const categorySubmenus = activeCategories.map((cat) => ({
             id: `sf-cat-${cat.id}`,
             label: cat.name,
             href: `/category/${cat.slug}`,
@@ -49,10 +52,6 @@ export async function GET(req: NextRequest) {
               item.label?.toLowerCase() === "categories"
             ) {
               found = true;
-              // If the user already saved submenus, preserve them!
-              if (item.submenus && item.submenus.length > 0) {
-                return item;
-              }
               return {
                 ...item,
                 submenus: categorySubmenus,

@@ -66,17 +66,13 @@ export default async function InvoicePage({ params }: InvoicePageProps) {
               <strong className="font-medium text-neutral-800">Order Ref:</strong> {order.order_number}
             </p>
             <div className="pt-1 flex items-center sm:justify-end gap-2">
-              <span
-                className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border ${
-                  order.payment_status === "paid"
-                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                    : "bg-amber-50 text-amber-700 border-amber-200"
-                }`}
-              >
-                Payment: {order.payment_status}
-              </span>
+              {order.payment_status === "paid" && (
+                <span className="text-[10px] font-bold uppercase px-2.5 py-0.5 rounded-full border bg-emerald-50 text-emerald-700 border-emerald-200">
+                  PAID
+                </span>
+              )}
               <span className="text-[10px] uppercase font-mono text-neutral-500">
-                Mode: {order.payment_method}
+                Mode: {order.payment_method === "cod" ? "Cash On Delivery" : order.payment_method || "Online"}
               </span>
             </div>
           </div>
@@ -209,6 +205,33 @@ export default async function InvoicePage({ params }: InvoicePageProps) {
           </div>
         </div>
       </div>
+
+      {/* Strict A4 Print Sheet Styling */}
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+            @media print {
+              @page {
+                size: A4 portrait;
+                margin: 10mm 12mm;
+              }
+              html, body {
+                background: #ffffff !important;
+                color: #000000 !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+              }
+              .min-h-screen {
+                min-height: auto !important;
+                padding: 0 !important;
+                background: #ffffff !important;
+              }
+            }
+          `,
+        }}
+      />
     </div>
   );
 }

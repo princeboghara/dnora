@@ -54,3 +54,40 @@ export async function PATCH(
     return NextResponse.json({ error: "Failed to update order" }, { status: 500 });
   }
 }
+
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const admin = await verifyAdminSession();
+    if (!admin) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { id } = await params;
+    const { deleteOrderAdmin } = await import("@/lib/data/orders");
+    const { revalidatePath } = await import("next/cache");
+
+    const success = await deleteOrderAdmin(id);
+    if (!success) {
+      return NextResponse.json({ error: "Order not found or already deleted" }, { status: 404 });
+    }
+
+    try {
+      revalidatePath("/admin");
+      revalidatePath("/admin/orders");
+      revalidatePath("/admin/sales-report");
+      revalidatePath("/orders");
+      revalidatePath("/account");
+    } catch (e) {
+      console.warn("Revalidation warning:", e);
+    }
+
+    return NextResponse.json({ success: true, message: "Order permanently deleted" });
+  } catch (error) {
+    console.error("Admin order DELETE error:", error);
+    return NextResponse.json({ error: "Failed to delete order" }, { status: 500 });
+  }
+}
+

@@ -118,7 +118,7 @@ export function SalesReportDashboard({ initialData }: SalesReportDashboardProps)
     }
   }, []);
 
-  // Initial load and live background polling every 12 seconds
+  // Initial load and sync
   useEffect(() => {
     // If no initial data passed, fetch immediately
     if (!initialData) {
@@ -132,13 +132,6 @@ export function SalesReportDashboard({ initialData }: SalesReportDashboardProps)
         })
       );
     }
-
-    // Auto-poll so any placed order updates the dashboard automatically!
-    const pollInterval = setInterval(() => {
-      fetchLiveReport(false);
-    }, 12000);
-
-    return () => clearInterval(pollInterval);
   }, [initialData, fetchLiveReport]);
 
   // Format currency in Indian standard ₹

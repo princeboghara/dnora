@@ -12,6 +12,7 @@ import { WishlistProvider } from "@/lib/store/wishlist-store";
 import { store } from "@/lib/data/store";
 import { db } from "@/lib/db";
 import { AnnouncementConfig } from "@/types";
+import { LiveVisitorHeartbeat } from "@/components/LiveVisitorHeartbeat";
 
 const plusJakarta = Plus_Jakarta_Sans({
   variable: "--font-jakarta",
@@ -68,11 +69,12 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/icon.png", type: "image/png" },
       { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/images/logo/dnora-d-icon.png", type: "image/png" },
     ],
-    shortcut: "/favicon.svg",
-    apple: "/icon.svg",
+    shortcut: "/icon.png",
+    apple: "/icon.png",
   },
   openGraph: {
     title: "DNORA | Luxury Handbags & Modern Leather Goods",
@@ -154,7 +156,12 @@ export default async function RootLayout({
   }
 
   return (
-    <html lang="en" suppressHydrationWarning className={`${plusJakarta.variable} ${inter.variable} ${montserrat.variable} h-full`}>
+    <html
+      lang="en"
+      suppressHydrationWarning
+      data-scroll-behavior="smooth"
+      className={`${plusJakarta.variable} ${inter.variable} ${montserrat.variable} h-full`}
+    >
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
@@ -167,6 +174,7 @@ export default async function RootLayout({
         <Suspense fallback={null}>
           <GlobalPreloader />
         </Suspense>
+        <LiveVisitorHeartbeat />
         <WishlistProvider>
           <CartProvider>
             <AnnouncementBar initialConfig={announcementConfig} />

@@ -34,7 +34,14 @@ export interface ProductCategory {
   banner_heading?: string;
   banner_subtitle?: string;
   banner_media_type?: "image" | "video";
+  banner_fit?: "cover" | "contain";
+  banner_position?: string;
+  banner_aspect_ratio?: "storefront" | "natural" | "ultrawide" | "video";
   product_count?: number;
+  live_products_count?: number;
+  total_products_count?: number;
+  is_in_nav?: boolean;
+  is_in_collections?: boolean;
   created_at?: string;
 }
 
@@ -419,3 +426,20 @@ export interface TrendingNowItem {
   compare_at_price?: number | null;
   created_at?: string;
 }
+
+export interface ShippingConfig {
+  id: string;
+  is_standard_enabled: boolean;
+  standard_title: string;
+  standard_rate: number;
+  free_shipping_threshold: number;
+  standard_estimated_days: string;
+  is_express_enabled: boolean;
+  express_title: string;
+  express_rate: number;
+  express_estimated_days: string;
+  is_cod_enabled: boolean;
+  cod_charge: number;
+  updated_at?: string;
+}
+

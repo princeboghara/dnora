@@ -17,10 +17,30 @@ export default async function OrderSuccessPage({ params }: OrderSuccessPageProps
   const shippingAddr = (order?.shipping_address || null) as Record<string, string | undefined> | null;
 
   return (
-    <div className="min-h-screen bg-[#FAF9F6] text-neutral-900 py-12 px-4 sm:px-6">
-      <div className="max-w-2xl mx-auto">
+    <div className="min-h-screen bg-[#FAF9F6] text-neutral-900 py-10 px-4 sm:px-6">
+      <div className="max-w-2xl mx-auto space-y-4">
+        {/* Instant Animated Celebration Notification Alert */}
+        <div className="bg-gradient-to-r from-emerald-950 via-emerald-900 to-teal-950 text-white rounded-2xl p-4 sm:p-5 shadow-xl border border-emerald-700/50 flex items-center justify-between gap-4 animate-in fade-in slide-in-from-top-4 duration-300">
+          <div className="flex items-center gap-3.5">
+            <div className="w-10 h-10 rounded-full bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center shrink-0 text-emerald-300">
+              <CheckCircle2 className="w-5 h-5 text-emerald-300" />
+            </div>
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wider text-emerald-200">
+                Order Confirmed Successfully
+              </p>
+              <p className="text-xs text-emerald-100/90 font-light mt-0.5">
+                Ref: <span className="font-mono font-bold text-white">{order?.order_number || id}</span> — Registered in our Florentine system.
+              </p>
+            </div>
+          </div>
+          <span className="hidden sm:inline-block text-[10px] font-mono uppercase px-2.5 py-1 rounded-full bg-emerald-800/80 text-emerald-200 border border-emerald-600/50 font-semibold">
+            Verified
+          </span>
+        </div>
+
         {/* Confirmation Card */}
-        <div className="bg-white rounded-2xl border border-neutral-200/80 p-6 sm:p-10 shadow-xs text-center space-y-6">
+        <div className="bg-white rounded-2xl border border-neutral-200/80 p-6 sm:p-10 shadow-xs text-center space-y-6 animate-in fade-in duration-300">
           <div className="w-16 h-16 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center mx-auto">
             <CheckCircle2 className="w-8 h-8" />
           </div>

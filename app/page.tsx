@@ -36,16 +36,18 @@ export default async function HomePage() {
     duration_seconds: b.duration_seconds || 5,
   }));
 
-  // Map Admin Categories directly to Our Collections round items
-  const collectionItems: CircularCollectionItem[] = categories.map((cat) => ({
-    id: `cat-${cat.id}`,
-    label: cat.name,
-    href: `/category/${cat.slug}`,
-    image:
-      cat.image_url ||
-      "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=300&q=80",
-    alt: `${cat.name} Luxury Collection`,
-  }));
+  // Map Admin Categories directly to Our Collections round items (only active/unhidden collections)
+  const collectionItems: CircularCollectionItem[] = categories
+    .filter((cat) => cat.is_in_collections ?? true)
+    .map((cat) => ({
+      id: `cat-${cat.id}`,
+      label: cat.name,
+      href: `/category/${cat.slug}`,
+      image:
+        cat.image_url ||
+        "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=300&q=80",
+      alt: `${cat.name} Luxury Collection`,
+    }));
 
   // Always append an extra round circle for "View All" at the end
   collectionItems.push({

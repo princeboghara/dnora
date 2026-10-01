@@ -1,12 +1,12 @@
 import React from "react";
-import { SalesReportDashboard } from "@/components/admin/SalesReportDashboard";
+import { ExecutiveDashboard } from "@/components/admin/ExecutiveDashboard";
 import { getSalesReportData } from "@/lib/data/salesReport";
 
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Sales Report Dashboard | DNORA Lifestyle",
-  description: "Live real-time sales performance, revenue analytics, and customer orders",
+  title: "Dashboard Overview | DNORA Lifestyle",
+  description: "Live real-time boutique metrics, order dispatch pipeline, and revenue trajectory",
 };
 
 export default async function AdminDashboardPage() {
@@ -14,8 +14,8 @@ export default async function AdminDashboardPage() {
   try {
     initialData = await getSalesReportData();
   } catch (err) {
-    console.error("Failed to fetch initial sales report on server:", err);
+    console.error("Failed to fetch initial dashboard data on server:", err);
   }
 
-  return <SalesReportDashboard initialData={initialData} />;
+  return <ExecutiveDashboard initialData={initialData} />;
 }

@@ -35,6 +35,18 @@ export async function generateMetadata({
   };
 }
 
+function getBannerObjectPosition(pos?: string): string {
+  if (!pos || pos === "center") return "50% 50%";
+  if (pos === "top") return "50% 0%";
+  if (pos === "bottom") return "50% 100%";
+  const parsed = parseInt(pos, 10);
+  if (!isNaN(parsed)) {
+    const clamped = Math.max(0, Math.min(100, parsed));
+    return `50% ${clamped}%`;
+  }
+  return pos;
+}
+
 export default async function CategoryPage({
   params,
   searchParams,
@@ -95,9 +107,29 @@ export default async function CategoryPage({
         </div>
       </div>
 
-      {/* Category Hero Banner (Desktop & Mobile Images or Video) */}
+      {/* Category Hero Banner (Matches Main Storefront Hero Banner with no-crop & adjust support) */}
       {(category?.banner_image_url || category?.banner_mobile_image_url) ? (
-        <section className="relative w-full h-[320px] sm:h-[400px] md:h-[480px] lg:h-[540px] bg-neutral-950 overflow-hidden flex items-end">
+        <section
+          className={`relative w-full bg-neutral-950 overflow-hidden flex items-end ${
+            category.banner_aspect_ratio === "natural"
+              ? "aspect-[4/3] sm:aspect-video md:aspect-[16/7] min-h-[260px] max-h-[720px]"
+              : category.banner_aspect_ratio === "video"
+              ? "aspect-video max-h-[640px]"
+              : category.banner_aspect_ratio === "ultrawide"
+              ? "aspect-video md:aspect-[21/9] max-h-[600px]"
+              : "aspect-square sm:aspect-video md:aspect-[1024/346] max-h-[640px]"
+          }`}
+        >
+          {/* Ambient blurred backdrop when in contain mode */}
+          {category.banner_fit === "contain" && (category.banner_image_url || category.banner_mobile_image_url) && (
+            <div
+              className="absolute inset-0 bg-cover bg-center filter blur-3xl opacity-40 scale-110 pointer-events-none"
+              style={{
+                backgroundImage: `url(${category.banner_image_url || category.banner_mobile_image_url})`,
+              }}
+            />
+          )}
+
           {category.banner_media_type === "video" ? (
             <video
               src={category.banner_image_url || category.banner_mobile_image_url}
@@ -105,36 +137,55 @@ export default async function CategoryPage({
               loop
               muted
               playsInline
-              className="absolute inset-0 w-full h-full object-cover"
+              style={{
+                objectPosition: getBannerObjectPosition(category.banner_position),
+              }}
+              className={`absolute inset-0 w-full h-full ${
+                category.banner_fit === "contain" ? "object-contain relative z-1" : "object-cover"
+              }`}
             />
           ) : (
             <>
               {/* Desktop / Laptop Banner */}
               {category.banner_image_url && (
-                <Image
-                  src={category.banner_image_url}
-                  alt={title}
-                  fill
-                  priority
-                  className={`object-cover ${
+                <div
+                  className={`absolute inset-0 w-full h-full ${
                     category.banner_mobile_image_url ? "hidden sm:block" : "block"
-                  }`}
-                  sizes="100vw"
-                />
+                  } ${category.banner_fit === "contain" ? "z-1" : ""}`}
+                >
+                  <Image
+                    src={category.banner_image_url}
+                    alt={title}
+                    fill
+                    priority
+                    style={{
+                      objectPosition: getBannerObjectPosition(category.banner_position),
+                    }}
+                    className={category.banner_fit === "contain" ? "object-contain" : "object-cover"}
+                    sizes="100vw"
+                  />
+                </div>
               )}
 
               {/* Mobile Banner (for smartphones) */}
               {category.banner_mobile_image_url && (
-                <Image
-                  src={category.banner_mobile_image_url}
-                  alt={title}
-                  fill
-                  priority
-                  className={`object-cover ${
+                <div
+                  className={`absolute inset-0 w-full h-full ${
                     category.banner_image_url ? "block sm:hidden" : "block"
-                  }`}
-                  sizes="100vw"
-                />
+                  } ${category.banner_fit === "contain" ? "z-1" : ""}`}
+                >
+                  <Image
+                    src={category.banner_mobile_image_url}
+                    alt={title}
+                    fill
+                    priority
+                    style={{
+                      objectPosition: getBannerObjectPosition(category.banner_position),
+                    }}
+                    className={category.banner_fit === "contain" ? "object-contain" : "object-cover"}
+                    sizes="100vw"
+                  />
+                </div>
               )}
             </>
           )}

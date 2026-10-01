@@ -75,6 +75,29 @@ export default function CheckoutPage() {
   // Step 2: Shipping method
   const [shippingMethod, setShippingMethod] = useState<"complimentary" | "vip">("complimentary");
 
+  // Live Shipping Configuration from Admin
+  const [shippingConfig, setShippingConfig] = useState<{
+    standard_fee: number;
+    standard_free_threshold: number;
+    express_fee: number;
+    cod_fee: number;
+    is_cod_allowed: boolean;
+  }>({
+    standard_fee: 0,
+    standard_free_threshold: 999,
+    express_fee: 150,
+    cod_fee: 0,
+    is_cod_allowed: true,
+  });
+
+  // Confirmed Order Celebration Modal State
+  const [confirmedOrder, setConfirmedOrder] = useState<{
+    orderNumber: string;
+    totalAmount: number;
+    customerName: string;
+    city: string;
+  } | null>(null);
+
   // Step 3: Payment
   const [paymentMethod, setPaymentMethod] = useState<"upi" | "card" | "netbanking" | "cod">("upi");
   const [upiId, setUpiId] = useState("");
@@ -138,6 +161,28 @@ export default function CheckoutPage() {
 
     loadUserData();
   }, [router, applySavedAddress]);
+
+  // Load Live Admin Shipping Settings
+  useEffect(() => {
+    async function loadShippingRules() {
+      try {
+        const res = await fetch("/api/shipping-settings");
+        if (res.ok) {
+          const cfg = await res.json();
+          setShippingConfig({
+            standard_fee: Number(cfg.standard_fee ?? 0),
+            standard_free_threshold: Number(cfg.standard_free_threshold ?? 999),
+            express_fee: Number(cfg.express_fee ?? 150),
+            cod_fee: Number(cfg.cod_fee ?? 0),
+            is_cod_allowed: Boolean(cfg.is_cod_allowed ?? true),
+          });
+        }
+      } catch (err) {
+        console.error("Failed to load shipping settings:", err);
+      }
+    }
+    loadShippingRules();
+  }, []);
 
   // Indian Postal PIN Code API integration
   const handlePincodeChange = async (val: string) => {
@@ -225,8 +270,13 @@ export default function CheckoutPage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // Calculations
-  const shippingCost = shippingMethod === "vip" ? 150 : 0;
+  // Dynamic live shipping calculation based on Admin Rules:
+  const isStandardFree = subtotal >= shippingConfig.standard_free_threshold || shippingConfig.standard_fee === 0;
+  const activeStandardRate = isStandardFree ? 0 : shippingConfig.standard_fee;
+  const activeExpressRate = shippingConfig.express_fee;
+  const activeCodFee = paymentMethod === "cod" ? (shippingConfig.cod_fee || 0) : 0;
+  const baseShippingRate = shippingMethod === "vip" ? activeExpressRate : activeStandardRate;
+  const shippingCost = baseShippingRate + activeCodFee;
   const grandTotal = subtotal + shippingCost;
 
   // Step 3 Fast/Instant Payment & Place Order (No artificial delays & double-click protected)
@@ -271,8 +321,18 @@ export default function CheckoutPage() {
       // Clear the local cart
       clearCart();
 
-      // Immediate redirect to Order Confirmation Page
-      router.push(`/order-success/${data.order.order_number}`);
+      // Show immediate celebration modal with smooth animation and instant confirmation
+      setConfirmedOrder({
+        orderNumber: data.order.order_number,
+        totalAmount: data.order.total_amount || grandTotal,
+        customerName: fullName,
+        city: city,
+      });
+
+      // Smooth transition to /order-success/[order_number] after celebratory animation begins
+      setTimeout(() => {
+        router.push(`/order-success/${data.order.order_number}`);
+      }, 1800);
     } catch (err: unknown) {
       console.error("Payment error:", err);
       if (err instanceof DOMException && err.name === "AbortError") {
@@ -726,7 +786,7 @@ export default function CheckoutPage() {
                     Select Delivery Experience
                   </p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {/* Complimentary */}
+                    {/* Standard / Complimentary */}
                     <div
                       onClick={() => setShippingMethod("complimentary")}
                       className={`p-4 rounded-lg border cursor-pointer transition-all ${
@@ -736,11 +796,19 @@ export default function CheckoutPage() {
                       }`}
                     >
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-xs font-bold text-neutral-900">Complimentary Insured</span>
-                        <span className="text-xs font-semibold text-emerald-600 uppercase">FREE</span>
+                        <span className="text-xs font-bold text-neutral-900">Standard Express Courier</span>
+                        <span
+                          className={`text-xs font-semibold uppercase ${
+                            isStandardFree ? "text-emerald-600" : "text-neutral-900 font-mono"
+                          }`}
+                        >
+                          {isStandardFree ? "FREE" : formatPrice(activeStandardRate)}
+                        </span>
                       </div>
                       <p className="text-[11px] text-neutral-500 font-light">
-                        Standard express delivery with signature confirmation (3-5 business days).
+                        {isStandardFree
+                          ? `Complimentary insured delivery (Eligible over ₹${shippingConfig.standard_free_threshold}).`
+                          : `Fast express tracked dispatch (3-5 business days).`}
                       </p>
                     </div>
 
@@ -754,11 +822,13 @@ export default function CheckoutPage() {
                       }`}
                     >
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-xs font-bold text-neutral-900">VIP White-Glove</span>
-                        <span className="text-xs font-semibold text-neutral-900">₹150</span>
+                        <span className="text-xs font-bold text-neutral-900">VIP White-Glove Air</span>
+                        <span className="text-xs font-semibold text-neutral-900 font-mono">
+                          {formatPrice(activeExpressRate)}
+                        </span>
                       </div>
                       <p className="text-[11px] text-neutral-500 font-light">
-                        Priority handcrafted dispatch with dedicated courier handling & luxury gift box.
+                        Priority express air courier dispatch with dedicated white-glove luxury packaging.
                       </p>
                     </div>
                   </div>
@@ -879,15 +949,20 @@ export default function CheckoutPage() {
 
                   <button
                     type="button"
-                    onClick={() => setPaymentMethod("cod")}
-                    className={`py-3 px-3 rounded-lg border text-center transition-all cursor-pointer flex flex-col items-center gap-1 ${
-                      paymentMethod === "cod"
-                        ? "border-neutral-950 bg-neutral-50 ring-1 ring-neutral-950 text-neutral-950 font-semibold"
-                        : "border-neutral-200 text-neutral-600 hover:border-neutral-300"
+                    disabled={!shippingConfig.is_cod_allowed}
+                    onClick={() => shippingConfig.is_cod_allowed && setPaymentMethod("cod")}
+                    className={`py-3 px-3 rounded-lg border text-center transition-all flex flex-col items-center gap-1 ${
+                      !shippingConfig.is_cod_allowed
+                        ? "border-neutral-200 bg-neutral-100 text-neutral-400 cursor-not-allowed opacity-60"
+                        : paymentMethod === "cod"
+                        ? "border-neutral-950 bg-neutral-50 ring-1 ring-neutral-950 text-neutral-950 font-semibold cursor-pointer"
+                        : "border-neutral-200 text-neutral-600 hover:border-neutral-300 cursor-pointer"
                     }`}
                   >
                     <Banknote className="w-4 h-4" />
-                    <span className="text-xs font-bold text-emerald-800">COD</span>
+                    <span className="text-xs font-bold text-emerald-800">
+                      COD{shippingConfig.cod_fee > 0 ? ` (+₹${shippingConfig.cod_fee})` : ""}
+                    </span>
                   </button>
                 </div>
 
@@ -1020,12 +1095,21 @@ export default function CheckoutPage() {
                   {/* Cash On Delivery */}
                   {paymentMethod === "cod" && (
                     <div className="space-y-2">
-                      <div className="flex items-center gap-2 text-xs font-semibold text-neutral-900">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                        <span>Cash On Delivery (COD) Selected</span>
+                      <div className="flex items-center justify-between text-xs font-semibold text-neutral-900">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                          <span>Cash On Delivery (COD) Selected</span>
+                        </div>
+                        {shippingConfig.cod_fee > 0 && (
+                          <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+                            +₹{shippingConfig.cod_fee} Cash Handling Fee
+                          </span>
+                        )}
                       </div>
                       <p className="text-[11px] text-neutral-600 font-light leading-relaxed">
                         Pay in cash or digital UPI scan upon receiving your order from the courier agent.
+                        {shippingConfig.cod_fee > 0 &&
+                          ` An authorized courier fee of ₹${shippingConfig.cod_fee} has been added for cash handling.`}
                       </p>
                     </div>
                   )}
@@ -1145,6 +1229,71 @@ export default function CheckoutPage() {
           </div>
         </div>
       </div>
+
+      {/* Instant Celebratory Order Confirmed Modal */}
+      {confirmedOrder && (
+        <div className="fixed inset-0 z-60 bg-black/75 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="relative w-full max-w-lg bg-white rounded-3xl p-8 sm:p-10 shadow-2xl border border-neutral-200 text-center space-y-6 animate-in zoom-in-95 duration-200">
+            {/* Animated Celebration Icon with Pulse */}
+            <div className="relative mx-auto w-20 h-20">
+              <div className="absolute inset-0 rounded-full bg-emerald-200 animate-ping opacity-30" />
+              <div className="relative w-20 h-20 rounded-full bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center shadow-xl shadow-emerald-600/30">
+                <Check className="w-10 h-10 stroke-[3] animate-in zoom-in duration-300" />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <span className="inline-block px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-[10px] font-bold uppercase tracking-[0.25em]">
+                Order Confirmed
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-serif text-neutral-950 font-normal">
+                Thank You, {confirmedOrder.customerName}!
+              </h2>
+              <p className="text-xs text-neutral-600 font-light max-w-sm mx-auto leading-relaxed">
+                Your order has been officially allocated and registered with our Florentine atelier. We are generating your tax invoice.
+              </p>
+            </div>
+
+            {/* Order Snippet Box */}
+            <div className="bg-[#FAF9F6] rounded-2xl p-4 border border-neutral-200/80 text-left grid grid-cols-2 gap-3 text-xs">
+              <div>
+                <p className="text-[10px] uppercase tracking-wider text-neutral-400 font-semibold">Order Ref Number</p>
+                <p className="text-neutral-950 font-mono font-bold mt-0.5">{confirmedOrder.orderNumber}</p>
+              </div>
+              <div>
+                <p className="text-[10px] uppercase tracking-wider text-neutral-400 font-semibold">Delivery City</p>
+                <p className="text-neutral-950 font-medium mt-0.5 truncate">{confirmedOrder.city || "India"}</p>
+              </div>
+              <div className="col-span-2 pt-2 border-t border-neutral-200 flex items-center justify-between">
+                <span className="text-[11px] text-neutral-600">Total Order Value</span>
+                <span className="font-mono font-bold text-sm text-neutral-950">
+                  {formatPrice(confirmedOrder.totalAmount)}
+                </span>
+              </div>
+            </div>
+
+            {/* Smooth Progress / Redirect Indicator */}
+            <div className="space-y-3 pt-1">
+              <div className="w-full bg-neutral-100 rounded-full h-1.5 overflow-hidden">
+                <div className="bg-emerald-600 h-1.5 rounded-full animate-pulse w-full" />
+              </div>
+              <div className="flex items-center justify-center gap-2 text-[11px] text-neutral-500 font-light">
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-neutral-700" />
+                <span>Redirecting to your full tax invoice & order tracker...</span>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => router.push(`/order-success/${confirmedOrder.orderNumber}`)}
+              className="w-full py-3 px-5 bg-neutral-950 hover:bg-black text-white text-xs font-semibold uppercase tracking-[0.2em] rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99]"
+            >
+              <span>View Order Receipt Now</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

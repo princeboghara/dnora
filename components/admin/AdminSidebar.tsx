@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -26,6 +27,7 @@ import {
   Sliders,
   Boxes,
   BarChart3,
+  Truck,
 } from "lucide-react";
 
 interface AdminSidebarProps {
@@ -52,60 +54,107 @@ interface NavGroupItem {
 }
 
 const NAV_GROUPS: NavGroupItem[] = [
+  // 1. Dashboard
   {
     id: "dashboard",
     label: "Dashboard",
     href: "/admin",
     icon: LayoutDashboard,
   },
+
+  // 2. Items & Stock (/all item /new item /catogories /stock)
   {
-    id: "orders",
-    label: "Orders & Shipments",
-    href: "/admin/orders",
-    icon: Package,
-    badge: "Live",
-  },
-  {
-    id: "stock",
-    label: "Stock Management",
-    href: "/admin/stock",
-    icon: Boxes,
-    badge: "Inventory",
-  },
-  {
-    id: "products",
-    label: "Products & Catalog",
+    id: "items-stock",
+    label: "Items & Stock",
     icon: ShoppingBag,
     subitems: [
       {
-        label: "All Products",
+        label: "All Items",
         href: "/admin/items",
         icon: ShoppingBag,
         badge: "Catalog",
       },
       {
-        label: "Add New Product",
+        label: "Add New Item",
         href: "/admin/products/new",
         icon: PlusCircle,
         badge: "New",
       },
       {
-        label: "Categories / Collections",
+        label: "Categories",
         href: "/admin/categories",
         icon: Tag,
         badge: "Live",
       },
+      {
+        label: "Stock Management",
+        href: "/admin/stock",
+        icon: Boxes,
+        badge: "Inventory",
+      },
     ],
   },
+
+  // 3. Orders & Customers (/all orders /all customers /shipping charge)
+  {
+    id: "orders-customers",
+    label: "Orders & Customers",
+    icon: Package,
+    subitems: [
+      {
+        label: "All Orders",
+        href: "/admin/orders",
+        icon: Package,
+        badge: "Live",
+      },
+      {
+        label: "All Customers",
+        href: "/admin/customers",
+        icon: Users,
+        badge: "CRM",
+      },
+      {
+        label: "Shipping Charges",
+        href: "/admin/shipping",
+        icon: Truck,
+        badge: "Live",
+      },
+      {
+        label: "Sales Report",
+        href: "/admin/sales-report",
+        icon: BarChart3,
+        badge: "Report",
+      },
+    ],
+  },
+
+  // 4. Storefront Content (Sorted in top-to-bottom storefront sequence)
   {
     id: "storefront",
-    label: "Storefront & Content",
+    label: "Storefront Content",
     icon: Layers,
     subitems: [
+      {
+        label: "Announcement Bar",
+        href: "/admin/announcements",
+        icon: Megaphone,
+        badge: "Top",
+      },
+      {
+        label: "Header & Top Bar",
+        href: "/admin/topbar",
+        icon: Sliders,
+      },
+      {
+        label: "Navigation Menu",
+        href: "/admin/navigation",
+        icon: Compass,
+      },
       {
         label: "Hero Banners",
         href: "/admin/heroes",
         icon: ImageIcon,
+        badge: "Main",
       },
       {
         label: "Trending Now",
@@ -114,49 +163,20 @@ const NAV_GROUPS: NavGroupItem[] = [
         badge: "Lookbook",
       },
       {
-        label: "Campaign Banner",
-        href: "/admin/campaign-banner",
-        icon: Layers,
-      },
-      {
-        label: "Announcement Bar",
-        href: "/admin/announcements",
-        icon: Megaphone,
-        badge: "Live",
-      },
-      {
         label: "Home Sections",
         href: "/admin/sections",
         icon: LayoutList,
+      },
+      {
+        label: "Campaign Banner",
+        href: "/admin/campaign-banner",
+        icon: Layers,
       },
       {
         label: "Seen On You (Reels)",
         href: "/admin/seen-on-you",
         icon: Video,
         badge: "Video",
-      },
-      {
-        label: "Navigation Menu",
-        href: "/admin/navigation",
-        icon: Compass,
-      },
-      {
-        label: "Header & Top Bar",
-        href: "/admin/topbar",
-        icon: Sliders,
-      },
-    ],
-  },
-  {
-    id: "customers",
-    label: "Customers & CRM",
-    icon: Users,
-    subitems: [
-      {
-        label: "All Customers",
-        href: "/admin/customers",
-        icon: Users,
-        badge: "CRM",
       },
     ],
   },
@@ -173,6 +193,42 @@ export function AdminSidebar({
 
   // Submenus are CLOSED by default. Only open when user clicks on a parent menu!
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
+
+  // Real-time live customer / device count on storefront
+  const [liveVisitorCount, setLiveVisitorCount] = useState<number>(0);
+
+  const fetchLiveVisitors = async () => {
+    // Avoid server requests if tab/browser is minimized or hidden
+    if (typeof document !== "undefined" && document.visibilityState !== "visible") return;
+    try {
+      const res = await fetch("/api/admin/live-visitors");
+      if (res.ok) {
+        const data = await res.json();
+        if (typeof data.count === "number") {
+          setLiveVisitorCount(data.count);
+        }
+      }
+    } catch {
+      // network resilience
+    }
+  };
+
+  useEffect(() => {
+    fetchLiveVisitors();
+    const interval = setInterval(fetchLiveVisitors, 45000); // 45s interval (Safe for Vercel Free Plan)
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        fetchLiveVisitors();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, []);
 
   const toggleGroup = (groupId: string) => {
     setExpandedGroups((prev) => ({
@@ -195,10 +251,39 @@ export function AdminSidebar({
   const sidebarContent = (
     <div className="flex flex-col h-full bg-[#090D16] text-white border-r border-white/10 select-none">
       {/* Brand Header */}
-      <div className="flex items-center justify-between px-5 h-16 border-b border-white/10 shrink-0">
-        <Link href="/admin" className="flex items-center gap-2.5 overflow-hidden">
-          <div className="w-8 h-8 rounded-md bg-white text-black font-extrabold flex items-center justify-center text-sm tracking-wider shrink-0 shadow-md">
-            DN
+      <div
+        className={`flex items-center h-16 border-b border-white/10 shrink-0 ${
+          collapsed ? "justify-center px-0" : "justify-between px-4"
+        }`}
+      >
+        <Link
+          href="/admin"
+          onClick={() => {
+            if (collapsed) onToggleCollapse();
+          }}
+          className="flex items-center gap-2.5 overflow-hidden"
+          title="DNORA Dashboard"
+        >
+          {/* Brand "D" Icon with live count badge when collapsed */}
+          <div className="relative">
+            <div className="w-8 h-8 rounded-lg overflow-hidden shrink-0 shadow-md border border-white/10 bg-black flex items-center justify-center">
+              <Image
+                src="/images/logo/dnora-d-icon.png"
+                alt="DNORA"
+                width={32}
+                height={32}
+                className="w-full h-full object-cover"
+                priority
+              />
+            </div>
+            {collapsed && (
+              <span
+                className="absolute -top-1.5 -right-2 min-w-[17px] h-[17px] px-1 rounded-full bg-emerald-950 border border-emerald-400 text-white font-mono text-[9px] font-bold flex items-center justify-center shadow-xs z-10"
+                title={`${liveVisitorCount} Live Customers Online`}
+              >
+                {liveVisitorCount}
+              </span>
+            )}
           </div>
           {!collapsed && (
             <div className="flex flex-col">
@@ -212,19 +297,43 @@ export function AdminSidebar({
           )}
         </Link>
 
-        {/* Mobile close button */}
-        <button
-          type="button"
-          onClick={onCloseMobile}
-          className="md:hidden p-1.5 rounded-md text-white/60 hover:text-white hover:bg-white/10"
-          aria-label="Close sidebar"
-        >
-          <X className="w-5 h-5" />
-        </button>
+        {/* Top-Right Header Actions (Live Counter & Mobile Close) */}
+        {!collapsed && (
+          <div className="flex items-center gap-2">
+            {/* Top-Right Live Customer Round Badge */}
+            <div
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                fetchLiveVisitors();
+              }}
+              className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-500/60 shadow-xs cursor-pointer select-none hover:border-emerald-400 hover:bg-emerald-900/50 transition-all"
+              title={`${liveVisitorCount} Live Customer Device${liveVisitorCount === 1 ? "" : "s"} on Storefront (Click to refresh)`}
+            >
+              <span className="relative flex h-1.5 w-1.5 shrink-0">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-400"></span>
+              </span>
+              <span className="font-mono font-bold text-xs text-white leading-none">
+                {liveVisitorCount}
+              </span>
+            </div>
+
+            {/* Mobile close button */}
+            <button
+              type="button"
+              onClick={onCloseMobile}
+              className="md:hidden p-1.5 rounded-md text-white/60 hover:text-white hover:bg-white/10"
+              aria-label="Close sidebar"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Navigation Groups with Menus & Submenus */}
-      <div className="flex-1 overflow-y-auto px-3 py-4 space-y-2 scrollbar-none">
+      <div className={`flex-1 overflow-y-auto py-4 space-y-2 scrollbar-none ${collapsed ? "px-2" : "px-3"}`}>
         {NAV_GROUPS.map((group) => {
           const Icon = group.icon;
           const isGroupOpen = expandedGroups[group.id] ?? false;
@@ -234,35 +343,49 @@ export function AdminSidebar({
             const isActive = pathname === group.href;
 
             return (
-              <div key={group.id}>
-                <Link
-                  href={group.href || "/admin"}
-                  onClick={onCloseMobile}
-                  title={collapsed ? group.label : undefined}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold tracking-wider transition-all duration-150 ${
-                    isActive
-                      ? "bg-white text-black shadow-md font-bold"
-                      : "text-white/70 hover:text-white hover:bg-white/10"
-                  }`}
-                >
-                  <Icon className={`w-4 h-4 shrink-0 ${isActive ? "text-black" : "text-white/70"}`} />
-                  {!collapsed && (
-                    <>
-                      <span className="flex-1 truncate">{group.label}</span>
-                      {group.badge && (
-                        <span
-                          className={`text-[8.5px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider ${
-                            isActive
-                              ? "bg-black/10 text-black"
-                              : "bg-white/10 text-white/70"
-                          }`}
-                        >
-                          {group.badge}
-                        </span>
-                      )}
-                    </>
-                  )}
-                </Link>
+              <div key={group.id} className="flex justify-center">
+                {collapsed ? (
+                  <Link
+                    href={group.href || "/admin"}
+                    onClick={() => {
+                      onToggleCollapse();
+                      onCloseMobile();
+                    }}
+                    title={group.label}
+                    className={`w-11 h-11 flex items-center justify-center rounded-xl text-xs transition-all duration-150 cursor-pointer ${
+                      isActive
+                        ? "bg-white text-black shadow-md font-bold"
+                        : "text-white/70 hover:text-white hover:bg-white/10"
+                    }`}
+                  >
+                    <Icon className={`w-4 h-4 shrink-0 ${isActive ? "text-black" : "text-white/70"}`} />
+                  </Link>
+                ) : (
+                  <Link
+                    href={group.href || "/admin"}
+                    onClick={onCloseMobile}
+                    title={group.label}
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold tracking-wider transition-all duration-150 ${
+                      isActive
+                        ? "bg-white text-black shadow-md font-bold"
+                        : "text-white/70 hover:text-white hover:bg-white/10"
+                    }`}
+                  >
+                    <Icon className={`w-4 h-4 shrink-0 ${isActive ? "text-black" : "text-white/70"}`} />
+                    <span className="flex-1 truncate">{group.label}</span>
+                    {group.badge && (
+                      <span
+                        className={`text-[8.5px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider ${
+                          isActive
+                            ? "bg-black/10 text-black"
+                            : "bg-white/10 text-white/70"
+                        }`}
+                      >
+                        {group.badge}
+                      </span>
+                    )}
+                  </Link>
+                )}
               </div>
             );
           }
@@ -276,16 +399,23 @@ export function AdminSidebar({
             <div key={group.id} className="space-y-1">
               {/* Parent Group Header Button */}
               {collapsed ? (
-                <button
-                  type="button"
-                  onClick={() => toggleGroup(group.id)}
-                  title={group.label}
-                  className={`w-full flex items-center justify-center p-2.5 rounded-xl text-xs transition-colors ${
-                    isChildActive ? "bg-white/15 text-white" : "text-white/60 hover:text-white hover:bg-white/10"
-                  }`}
-                >
-                  <Icon className="w-4 h-4" />
-                </button>
+                <div className="flex justify-center">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onToggleCollapse();
+                      setExpandedGroups((prev) => ({ ...prev, [group.id]: true }));
+                    }}
+                    title={group.label}
+                    className={`w-11 h-11 flex items-center justify-center rounded-xl text-xs transition-colors cursor-pointer ${
+                      isChildActive
+                        ? "bg-white/20 text-white font-bold"
+                        : "text-white/60 hover:text-white hover:bg-white/10"
+                    }`}
+                  >
+                    <Icon className="w-4 h-4 shrink-0" />
+                  </button>
+                </div>
               ) : (
                 <button
                   type="button"
@@ -356,12 +486,14 @@ export function AdminSidebar({
       </div>
 
       {/* Bottom Footer Actions */}
-      <div className="p-3 border-t border-white/10 space-y-1.5 shrink-0">
+      <div className={`border-t border-white/10 space-y-1.5 shrink-0 ${collapsed ? "p-2" : "p-3"}`}>
         {/* Live Storefront Link */}
         <Link
           href="/"
           target="_blank"
-          className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+          className={`rounded-xl text-xs text-white/70 hover:text-white hover:bg-white/10 transition-colors flex items-center ${
+            collapsed ? "w-11 h-11 mx-auto justify-center" : "gap-2.5 px-3 py-2"
+          }`}
           title={collapsed ? "Live Storefront" : undefined}
         >
           <ExternalLink className="w-4 h-4 shrink-0 text-white/60" />
@@ -372,7 +504,9 @@ export function AdminSidebar({
         <button
           type="button"
           onClick={handleLogout}
-          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 transition-colors cursor-pointer"
+          className={`rounded-xl text-xs text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 transition-colors cursor-pointer flex items-center ${
+            collapsed ? "w-11 h-11 mx-auto justify-center" : "w-full gap-2.5 px-3 py-2"
+          }`}
           title={collapsed ? "Sign Out" : undefined}
         >
           <LogOut className="w-4 h-4 shrink-0" />
@@ -383,7 +517,9 @@ export function AdminSidebar({
         <button
           type="button"
           onClick={onToggleCollapse}
-          className="hidden md:flex w-full items-center justify-center p-1.5 rounded-lg text-white/40 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+          className={`hidden md:flex items-center justify-center rounded-lg text-white/40 hover:text-white hover:bg-white/10 transition-colors cursor-pointer ${
+            collapsed ? "w-11 h-11 mx-auto" : "w-full p-1.5"
+          }`}
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
           {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}

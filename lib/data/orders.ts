@@ -134,12 +134,20 @@ export async function createNewOrder(input: CreateOrderInput): Promise<Order> {
   }
 }
 
+export interface OrdersPaymentStats {
+  totalPaid: number;
+  codPaid: number;
+  gatewayPaid: number;
+  gatewayPending: number;
+  codPending: number;
+}
+
 export async function getAllOrdersAdmin(filters?: {
   status?: string;
   search?: string;
   limit?: number;
   offset?: number;
-}): Promise<{ orders: Order[]; total: number }> {
+}): Promise<{ orders: Order[]; total: number; paymentStats: OrdersPaymentStats }> {
   await ensureAccountTables();
 
   const conditions: string[] = [];
@@ -169,6 +177,26 @@ export async function getAllOrdersAdmin(filters?: {
   );
   const total = parseInt(countRes.rows[0]?.count || "0", 10);
 
+  // Lifetime Payment Stats across all valid orders
+  const statsRes = await db.query(`
+    SELECT
+      COALESCE(SUM(CASE WHEN status != 'cancelled' AND (payment_status = 'paid' OR (payment_method = 'cod' AND status = 'delivered')) THEN total_amount ELSE 0 END), 0) as total_paid,
+      COALESCE(SUM(CASE WHEN payment_method = 'cod' AND status != 'cancelled' AND (payment_status = 'paid' OR status = 'delivered') THEN total_amount ELSE 0 END), 0) as cod_paid,
+      COALESCE(SUM(CASE WHEN payment_method != 'cod' AND status != 'cancelled' AND payment_status = 'paid' THEN total_amount ELSE 0 END), 0) as gateway_paid,
+      COALESCE(SUM(CASE WHEN payment_method != 'cod' AND status != 'cancelled' AND payment_status != 'paid' THEN total_amount ELSE 0 END), 0) as gateway_pending,
+      COALESCE(SUM(CASE WHEN payment_method = 'cod' AND status != 'cancelled' AND status != 'delivered' AND payment_status != 'paid' THEN total_amount ELSE 0 END), 0) as cod_pending
+    FROM public.orders
+  `);
+
+  const sRow = statsRes.rows[0] || {};
+  const paymentStats: OrdersPaymentStats = {
+    totalPaid: Number(sRow.total_paid || 0),
+    codPaid: Number(sRow.cod_paid || 0),
+    gatewayPaid: Number(sRow.gateway_paid || 0),
+    gatewayPending: Number(sRow.gateway_pending || 0),
+    codPending: Number(sRow.cod_pending || 0),
+  };
+
   const limit = filters?.limit || 50;
   const offset = filters?.offset || 0;
 
@@ -178,7 +206,7 @@ export async function getAllOrdersAdmin(filters?: {
   );
 
   if (ordersRes.rows.length === 0) {
-    return { orders: [], total };
+    return { orders: [], total, paymentStats };
   }
 
   const orderIds = ordersRes.rows.map((r: { id: string }) => r.id);
@@ -203,7 +231,7 @@ export async function getAllOrdersAdmin(filters?: {
     items: itemsMap.get(row.id) || [],
   }));
 
-  return { orders, total };
+  return { orders, total, paymentStats };
 }
 
 export async function updateOrderAdmin(
@@ -303,3 +331,41 @@ export async function updateOrderTracking(
 ): Promise<boolean> {
   return updateOrderAdmin(orderId, { carrier, tracking_number: trackingNumber, status: "shipped" });
 }
+
+export async function deleteOrderAdmin(orderId: string): Promise<boolean> {
+  const client = await db.connect();
+  try {
+    await client.query("BEGIN");
+
+    const hasValidUuid = isValidUUID(orderId);
+    let resolvedId = orderId;
+
+    if (!hasValidUuid) {
+      const lookup = await client.query(
+        `SELECT id FROM public.orders WHERE order_number = $1 LIMIT 1`,
+        [orderId]
+      );
+      if (lookup.rows.length === 0) {
+        await client.query("ROLLBACK");
+        return false;
+      }
+      resolvedId = lookup.rows[0].id;
+    }
+
+    // 1. Delete order items
+    await client.query(`DELETE FROM public.order_items WHERE order_id = $1`, [resolvedId]);
+
+    // 2. Delete the order record
+    const delRes = await client.query(`DELETE FROM public.orders WHERE id = $1`, [resolvedId]);
+
+    await client.query("COMMIT");
+    return (delRes.rowCount ?? 0) > 0;
+  } catch (err) {
+    await client.query("ROLLBACK").catch(() => {});
+    console.error("Error in deleteOrderAdmin:", err);
+    throw err;
+  } finally {
+    client.release();
+  }
+}
+

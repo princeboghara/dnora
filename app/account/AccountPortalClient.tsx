@@ -216,7 +216,7 @@ export default function AccountPortalClient({
   };
 
   return (
-    <div className="max-w-[1440px] mx-auto px-4 sm:px-8 xl:px-12 pt-8 sm:pt-12">
+    <div className="max-w-[1440px] mx-auto px-4 sm:px-8 xl:px-12 pt-8 sm:pt-12 print:hidden">
       {/* Top Welcome Card */}
       <div className="bg-white border border-neutral-200/80 rounded-2xl p-6 sm:p-8 shadow-xs mb-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="flex items-center gap-4 sm:gap-6">

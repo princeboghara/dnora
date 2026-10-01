@@ -23,10 +23,20 @@ import {
   X,
   Check,
   Printer,
+  Trash2,
+  AlertTriangle,
 } from "lucide-react";
 import { Order, OrderItem } from "@/types";
 import { formatPrice } from "@/lib/utils";
 import InvoiceModal from "@/components/InvoiceModal";
+
+interface PaymentStats {
+  totalPaid: number;
+  codPaid: number;
+  gatewayPaid: number;
+  gatewayPending: number;
+  codPending: number;
+}
 
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -36,6 +46,19 @@ export default function AdminOrdersPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [viewingInvoiceOrder, setViewingInvoiceOrder] = useState<Order | null>(null);
+
+  // Financial Payment Breakdown stats
+  const [paymentStats, setPaymentStats] = useState<PaymentStats>({
+    totalPaid: 0,
+    codPaid: 0,
+    gatewayPaid: 0,
+    gatewayPending: 0,
+    codPending: 0,
+  });
+
+  // Order Deletion State
+  const [orderToDelete, setOrderToDelete] = useState<Order | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Status updating in modal
   const [updatingStatus, setUpdatingStatus] = useState(false);
@@ -58,11 +81,39 @@ export default function AdminOrdersPage() {
         const data = await res.json();
         setOrders(data.orders || []);
         setTotalCount(data.total || 0);
+        if (data.paymentStats) {
+          setPaymentStats(data.paymentStats);
+        }
       }
     } catch (err) {
       console.error("Failed to load orders:", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteOrder = async (orderId: string) => {
+    try {
+      setIsDeleting(true);
+      const res = await fetch(`/api/admin/orders/${orderId}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        setOrders((prev) => prev.filter((o) => o.id !== orderId));
+        if (selectedOrder?.id === orderId) {
+          setSelectedOrder(null);
+        }
+        setOrderToDelete(null);
+        fetchOrders();
+      } else {
+        const data = await res.json().catch(() => ({}));
+        alert(data.error || "Failed to delete order");
+      }
+    } catch (err) {
+      console.error("Failed to delete order:", err);
+      alert("An unexpected error occurred while deleting the order.");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -180,6 +231,93 @@ export default function AdminOrdersPage() {
         <div className="bg-white p-4 rounded-xl border border-neutral-200/80 shadow-2xs">
           <p className="text-[11px] font-medium text-emerald-600 uppercase tracking-wider">Total Volume</p>
           <p className="text-2xl font-bold text-neutral-900 mt-1 font-mono">{formatPrice(totalRevenue)}</p>
+        </div>
+      </div>
+
+      {/* Live Payment Breakdown & Settlement Card */}
+      <div className="bg-gradient-to-br from-neutral-900 via-neutral-950 to-neutral-900 text-white rounded-2xl p-5 sm:p-6 shadow-md border border-neutral-800 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-neutral-800 pb-3.5">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+              <CreditCard className="w-4 h-4" />
+            </div>
+            <div>
+              <h2 className="text-sm font-bold tracking-tight text-white">Payment Realization & Settlement Breakdown</h2>
+              <p className="text-[11px] text-neutral-400 font-light">
+                Live financial split: received revenue vs pending collections across Payment Gateway & COD.
+              </p>
+            </div>
+          </div>
+          <span className="text-[10px] font-mono uppercase px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 font-semibold self-start sm:self-auto">
+            Live Settlement
+          </span>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3.5 pt-1">
+          {/* 1. Total Paid Overall */}
+          <div className="bg-white/5 border border-white/10 rounded-xl p-3.5 backdrop-blur-xs flex flex-col justify-between">
+            <div>
+              <p className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Total Received</p>
+              <p className="text-xl sm:text-2xl font-bold font-mono text-emerald-400 mt-1">
+                {formatPrice(paymentStats.totalPaid)}
+              </p>
+            </div>
+            <p className="text-[10px] text-neutral-400 mt-2 flex items-center gap-1">
+              <CheckCircle2 className="w-3 h-3 text-emerald-400" /> All settled revenue
+            </p>
+          </div>
+
+          {/* 2. Gateway Received (Prepaid) */}
+          <div className="bg-white/5 border border-white/10 rounded-xl p-3.5 backdrop-blur-xs flex flex-col justify-between">
+            <div>
+              <p className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Gateway Received</p>
+              <p className="text-lg sm:text-xl font-bold font-mono text-white mt-1">
+                {formatPrice(paymentStats.gatewayPaid)}
+              </p>
+            </div>
+            <p className="text-[10px] text-neutral-400 mt-2 flex items-center gap-1 font-mono">
+              Prepaid / Online
+            </p>
+          </div>
+
+          {/* 3. COD Received (Collected) */}
+          <div className="bg-white/5 border border-white/10 rounded-xl p-3.5 backdrop-blur-xs flex flex-col justify-between">
+            <div>
+              <p className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">COD Collected</p>
+              <p className="text-lg sm:text-xl font-bold font-mono text-purple-300 mt-1">
+                {formatPrice(paymentStats.codPaid)}
+              </p>
+            </div>
+            <p className="text-[10px] text-neutral-400 mt-2 flex items-center gap-1">
+              Delivered Handover
+            </p>
+          </div>
+
+          {/* 4. Gateway Pending */}
+          <div className="bg-white/5 border border-white/10 rounded-xl p-3.5 backdrop-blur-xs flex flex-col justify-between">
+            <div>
+              <p className="text-[10px] font-semibold text-amber-400/90 uppercase tracking-wider">Gateway Pending</p>
+              <p className="text-lg sm:text-xl font-bold font-mono text-amber-300 mt-1">
+                {formatPrice(paymentStats.gatewayPending)}
+              </p>
+            </div>
+            <p className="text-[10px] text-neutral-400 mt-2 flex items-center gap-1">
+              Awaiting clearance
+            </p>
+          </div>
+
+          {/* 5. COD Pending */}
+          <div className="bg-white/5 border border-white/10 rounded-xl p-3.5 backdrop-blur-xs flex flex-col justify-between">
+            <div>
+              <p className="text-[10px] font-semibold text-rose-400/90 uppercase tracking-wider">COD Pending</p>
+              <p className="text-lg sm:text-xl font-bold font-mono text-rose-300 mt-1">
+                {formatPrice(paymentStats.codPending)}
+              </p>
+            </div>
+            <p className="text-[10px] text-neutral-400 mt-2 flex items-center gap-1">
+              Awaiting delivery
+            </p>
+          </div>
         </div>
       </div>
 
@@ -342,7 +480,6 @@ export default function AdminOrdersPage() {
                         </span>
                       </td>
 
-                      {/* Action */}
                       <td className="px-4 py-3.5 text-right">
                         <div className="flex items-center justify-end gap-1.5">
                           <button
@@ -361,6 +498,14 @@ export default function AdminOrdersPage() {
                           >
                             <Eye className="w-3 h-3" />
                             <span>Manage</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setOrderToDelete(order)}
+                            className="inline-flex items-center gap-1 px-2 py-1.5 rounded-md border border-neutral-200 bg-white hover:bg-rose-50 hover:border-rose-300 text-neutral-400 hover:text-rose-600 text-[11px] font-medium transition-colors cursor-pointer shadow-2xs"
+                            title="Permanently Delete Order"
+                          >
+                            <Trash2 className="w-3 h-3" />
                           </button>
                         </div>
                       </td>
@@ -607,6 +752,80 @@ export default function AdminOrdersPage() {
                   </span>
                 </div>
               </div>
+
+              {/* Danger Zone: Permanent Deletion */}
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={() => setOrderToDelete(selectedOrder)}
+                  className="w-full py-2.5 px-4 rounded-xl border border-rose-200 bg-rose-50/60 hover:bg-rose-100/80 text-rose-700 text-xs font-semibold uppercase tracking-wider transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-2xs"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Permanently Delete Order</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Permanent Order Deletion Confirmation Modal */}
+      {orderToDelete && (
+        <div className="fixed inset-0 z-60 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-neutral-200 p-6 space-y-4 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-start gap-3.5">
+              <div className="w-10 h-10 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center shrink-0">
+                <AlertTriangle className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-neutral-900">
+                  Permanently Delete Order?
+                </h3>
+                <p className="text-xs font-mono font-bold text-neutral-700 mt-0.5">
+                  {orderToDelete.order_number} • {formatPrice(orderToDelete.total_amount)}
+                </p>
+              </div>
+            </div>
+
+            <div className="text-xs text-neutral-600 space-y-2 bg-neutral-50 p-3.5 rounded-xl border border-neutral-200/80 leading-relaxed font-light">
+              <p>
+                This action will <strong className="font-semibold text-rose-700">permanently delete</strong> all records of this order from the database.
+              </p>
+              <ul className="list-disc list-inside space-y-1 text-neutral-500">
+                <li>Removed completely from client member order history</li>
+                <li>Permanently wiped from admin orders list</li>
+                <li>Excluded from all sales reports, revenue metrics & analytics</li>
+                <li>All purchased line items will be removed</li>
+              </ul>
+            </div>
+
+            <div className="flex items-center gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setOrderToDelete(null)}
+                disabled={isDeleting}
+                className="flex-1 py-2.5 px-4 rounded-lg border border-neutral-300 text-neutral-700 text-xs font-semibold uppercase tracking-wider hover:bg-neutral-100 transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDeleteOrder(orderToDelete.id)}
+                disabled={isDeleting}
+                className="flex-1 py-2.5 px-4 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-1.5 shadow-xs disabled:opacity-50"
+              >
+                {isDeleting ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Deleting...</span>
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Confirm Delete</span>
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </div>
