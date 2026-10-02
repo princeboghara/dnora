@@ -14,6 +14,7 @@ import {
   HomepageSection,
   TrendingNowItem,
   ShippingConfig,
+  StorefrontPageConfig,
 } from "@/types";
 import { db } from "@/lib/db";
 import { slugify } from "../utils";
@@ -372,6 +373,7 @@ class DataStore {
         ...row,
         price: Number(row.price),
         compare_at_price: row.compare_at_price ? Number(row.compare_at_price) : null,
+        cost_price: row.cost_price !== undefined && row.cost_price !== null ? Number(row.cost_price) : null,
         stock: Number(row.stock),
         color_variants:
           typeof row.color_variants === "string"
@@ -457,7 +459,7 @@ class DataStore {
         FROM public.products p
         LEFT JOIN public.product_flags pf ON pf.product_id = p.id
         LEFT JOIN public.product_images pi ON pi.product_id = p.id
-        WHERE p.slug = $1
+        WHERE p.slug = $1 OR p.id::text = $1
         GROUP BY p.id, pf.is_best_seller, pf.is_new_arrival, pf.sort_order
         LIMIT 1
       `;
@@ -468,6 +470,7 @@ class DataStore {
         ...row,
         price: Number(row.price),
         compare_at_price: row.compare_at_price ? Number(row.compare_at_price) : null,
+        cost_price: row.cost_price !== undefined && row.cost_price !== null ? Number(row.cost_price) : null,
         stock: Number(row.stock),
         color_variants:
           typeof row.color_variants === "string"
@@ -533,6 +536,7 @@ class DataStore {
         ...row,
         price: Number(row.price),
         compare_at_price: row.compare_at_price ? Number(row.compare_at_price) : null,
+        cost_price: row.cost_price !== undefined && row.cost_price !== null ? Number(row.cost_price) : null,
         stock: Number(row.stock),
         color_variants:
           typeof row.color_variants === "string"
@@ -550,13 +554,23 @@ class DataStore {
 
   async createProduct(data: Omit<Product, "id" | "created_at" | "updated_at">): Promise<Product> {
     const slug = data.slug || slugify(data.name);
-    // Ensure color_variants column exists
+    // Ensure color_variants, cost_price, and detail columns exist
     await db.query(`ALTER TABLE public.products ADD COLUMN IF NOT EXISTS color_variants JSONB DEFAULT '[]'::jsonb;`).catch(() => {});
+    await db.query(`ALTER TABLE public.products ADD COLUMN IF NOT EXISTS cost_price NUMERIC(10, 2) DEFAULT NULL;`).catch(() => {});
+    await db.query(`ALTER TABLE public.products ADD COLUMN IF NOT EXISTS craftsmanship_details TEXT DEFAULT NULL;`).catch(() => {});
+    await db.query(`ALTER TABLE public.products ADD COLUMN IF NOT EXISTS craftsmanship_heading TEXT DEFAULT NULL;`).catch(() => {});
+    await db.query(`ALTER TABLE public.products ADD COLUMN IF NOT EXISTS craftsmanship_mode TEXT DEFAULT 'bullets';`).catch(() => {});
+    await db.query(`ALTER TABLE public.products ADD COLUMN IF NOT EXISTS shipping_customs TEXT DEFAULT NULL;`).catch(() => {});
+    await db.query(`ALTER TABLE public.products ADD COLUMN IF NOT EXISTS shipping_heading TEXT DEFAULT NULL;`).catch(() => {});
+    await db.query(`ALTER TABLE public.products ADD COLUMN IF NOT EXISTS shipping_mode TEXT DEFAULT 'text';`).catch(() => {});
+    await db.query(`ALTER TABLE public.products ADD COLUMN IF NOT EXISTS leather_care TEXT DEFAULT NULL;`).catch(() => {});
+    await db.query(`ALTER TABLE public.products ADD COLUMN IF NOT EXISTS leather_heading TEXT DEFAULT NULL;`).catch(() => {});
+    await db.query(`ALTER TABLE public.products ADD COLUMN IF NOT EXISTS leather_mode TEXT DEFAULT 'text';`).catch(() => {});
 
     const res = await db.query(
       `INSERT INTO public.products 
-        (name, slug, short_description, description, price, compare_at_price, sku, stock, status, color_variants)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        (name, slug, short_description, description, price, compare_at_price, cost_price, sku, stock, status, color_variants, craftsmanship_heading, craftsmanship_details, craftsmanship_mode, shipping_heading, shipping_customs, shipping_mode, leather_heading, leather_care, leather_mode)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)
        RETURNING *`,
       [
         data.name,
@@ -565,10 +579,20 @@ class DataStore {
         data.description || "",
         data.price,
         data.compare_at_price || null,
+        data.cost_price !== undefined && data.cost_price !== null ? data.cost_price : null,
         data.sku,
         data.stock || 0,
         data.status || "draft",
         JSON.stringify(data.color_variants || []),
+        data.craftsmanship_heading || null,
+        data.craftsmanship_details || null,
+        data.craftsmanship_mode || "bullets",
+        data.shipping_heading || null,
+        data.shipping_customs || null,
+        data.shipping_mode || "text",
+        data.leather_heading || null,
+        data.leather_care || null,
+        data.leather_mode || "text",
       ]
     );
     const prod = res.rows[0];
@@ -576,7 +600,11 @@ class DataStore {
     // Flags
     await db.query(
       `INSERT INTO public.product_flags (product_id, is_best_seller, is_new_arrival, sort_order)
-       VALUES ($1, $2, $3, $4)`,
+       VALUES ($1, $2, $3, $4)
+       ON CONFLICT (product_id) DO UPDATE
+       SET is_best_seller = EXCLUDED.is_best_seller,
+           is_new_arrival = EXCLUDED.is_new_arrival,
+           sort_order = EXCLUDED.sort_order`,
       [prod.id, !!data.is_best_seller, !!data.is_new_arrival, data.sort_order || 0]
     );
 
@@ -610,6 +638,7 @@ class DataStore {
 
   async updateProduct(id: string, updates: Partial<Product>): Promise<Product | null> {
     await db.query(`ALTER TABLE public.products ADD COLUMN IF NOT EXISTS color_variants JSONB DEFAULT '[]'::jsonb;`).catch(() => {});
+    await db.query(`ALTER TABLE public.products ADD COLUMN IF NOT EXISTS cost_price NUMERIC(10, 2) DEFAULT NULL;`).catch(() => {});
 
     const fields: string[] = [];
     const values: (string | number | boolean | null)[] = [];
@@ -619,7 +648,13 @@ class DataStore {
       updates.slug = slugify(updates.name);
     }
 
-    const prodCols: (keyof Product)[] = ["name", "slug", "short_description", "description", "price", "compare_at_price", "sku", "stock", "status"];
+    const prodCols: (keyof Product)[] = [
+      "name", "slug", "short_description", "description",
+      "craftsmanship_heading", "craftsmanship_details", "craftsmanship_mode",
+      "shipping_heading", "shipping_customs", "shipping_mode",
+      "leather_heading", "leather_care", "leather_mode",
+      "price", "compare_at_price", "cost_price", "sku", "stock", "status"
+    ];
     for (const col of prodCols) {
       const val = updates[col];
       if (val !== undefined) {
@@ -660,7 +695,7 @@ class DataStore {
     if (updates.is_best_seller !== undefined || updates.is_new_arrival !== undefined || updates.sort_order !== undefined) {
       await db.query(
         `INSERT INTO public.product_flags (product_id, is_best_seller, is_new_arrival, sort_order)
-         VALUES ($1, $2, $3, $4)
+         VALUES ($1, COALESCE($2, false), COALESCE($3, false), COALESCE($4, 0))
          ON CONFLICT (product_id) DO UPDATE 
          SET is_best_seller = COALESCE($2, public.product_flags.is_best_seller),
              is_new_arrival = COALESCE($3, public.product_flags.is_new_arrival),
@@ -704,8 +739,8 @@ class DataStore {
 
     const newVal = !prod[flag];
     await db.query(
-      `INSERT INTO public.product_flags (product_id, ${flag})
-       VALUES ($1, $2)
+      `INSERT INTO public.product_flags (product_id, ${flag}, sort_order)
+       VALUES ($1, $2, 0)
        ON CONFLICT (product_id) DO UPDATE SET ${flag} = $2`,
       [id, newVal]
     );
@@ -2556,6 +2591,91 @@ class DataStore {
     }
 
     return this.getShippingConfig();
+  }
+
+  // STOREFRONT CUSTOMIZABLE PAGES (/bestseller, /new-in, /trending-now)
+  async getStorefrontPageConfig(pageKey: string): Promise<StorefrontPageConfig | null> {
+    try {
+      const res = await db.query(
+        `SELECT * FROM public.storefront_pages WHERE page_key = $1 LIMIT 1`,
+        [pageKey]
+      );
+      if (res.rows.length === 0) return null;
+      const row = res.rows[0];
+      return {
+        page_key: row.page_key,
+        title: row.title,
+        badge_label: row.badge_label,
+        subtitle: row.subtitle,
+        description: row.description,
+        banner_image_url: row.banner_image_url,
+        banner_headline: row.banner_headline,
+        banner_subheadline: row.banner_subheadline,
+        meta_title: row.meta_title,
+        meta_description: row.meta_description,
+        is_active: Boolean(row.is_active),
+        featured_product_ids: Array.isArray(row.featured_product_ids)
+          ? row.featured_product_ids
+          : typeof row.featured_product_ids === "string"
+          ? JSON.parse(row.featured_product_ids)
+          : [],
+        updated_at: row.updated_at,
+      };
+    } catch (err) {
+      console.error(`Error fetching storefront page ${pageKey}:`, err);
+      return null;
+    }
+  }
+
+  async saveStorefrontPageConfig(
+    config: Partial<StorefrontPageConfig> & { page_key: string }
+  ): Promise<StorefrontPageConfig | null> {
+    try {
+      const sql = `
+        INSERT INTO public.storefront_pages (
+          page_key, title, badge_label, subtitle, description,
+          banner_image_url, banner_headline, banner_subheadline,
+          meta_title, meta_description, is_active, featured_product_ids, updated_at
+        ) VALUES (
+          $1, $2, $3, $4, $5,
+          $6, $7, $8,
+          $9, $10, $11, $12, NOW()
+        )
+        ON CONFLICT (page_key) DO UPDATE SET
+          title = EXCLUDED.title,
+          badge_label = EXCLUDED.badge_label,
+          subtitle = EXCLUDED.subtitle,
+          description = EXCLUDED.description,
+          banner_image_url = EXCLUDED.banner_image_url,
+          banner_headline = EXCLUDED.banner_headline,
+          banner_subheadline = EXCLUDED.banner_subheadline,
+          meta_title = EXCLUDED.meta_title,
+          meta_description = EXCLUDED.meta_description,
+          is_active = EXCLUDED.is_active,
+          featured_product_ids = EXCLUDED.featured_product_ids,
+          updated_at = NOW()
+        RETURNING *;
+      `;
+      const values = [
+        config.page_key,
+        config.title || "PAGE TITLE",
+        config.badge_label || null,
+        config.subtitle || null,
+        config.description || null,
+        config.banner_image_url || null,
+        config.banner_headline || null,
+        config.banner_subheadline || null,
+        config.meta_title || null,
+        config.meta_description || null,
+        config.is_active !== undefined ? config.is_active : true,
+        JSON.stringify(config.featured_product_ids || []),
+      ];
+      await db.query(sql, values);
+      return this.getStorefrontPageConfig(config.page_key);
+    } catch (err) {
+      console.error(`Error saving storefront page ${config.page_key}:`, err);
+      throw err;
+    }
   }
 }
 

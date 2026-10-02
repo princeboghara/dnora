@@ -68,9 +68,19 @@ export interface Product {
   description: string;
   price: number;
   compare_at_price?: number | null;
+  cost_price?: number | null; // Cost / wholesale purchase price
   sku: string;
   stock: number;
   status: ProductStatus;
+  craftsmanship_heading?: string | null;
+  craftsmanship_details?: string | null;
+  craftsmanship_mode?: "bullets" | "text" | null;
+  shipping_heading?: string | null;
+  shipping_customs?: string | null;
+  shipping_mode?: "bullets" | "text" | null;
+  leather_heading?: string | null;
+  leather_care?: string | null;
+  leather_mode?: "bullets" | "text" | null;
   images: ProductImage[];
   color_variants?: ProductColorVariant[];
   categories?: ProductCategory[];
@@ -440,6 +450,22 @@ export interface ShippingConfig {
   express_estimated_days: string;
   is_cod_enabled: boolean;
   cod_charge: number;
+  updated_at?: string;
+}
+
+export interface StorefrontPageConfig {
+  page_key: string;
+  title: string;
+  badge_label?: string | null;
+  subtitle?: string | null;
+  description?: string | null;
+  banner_image_url?: string | null;
+  banner_headline?: string | null;
+  banner_subheadline?: string | null;
+  meta_title?: string | null;
+  meta_description?: string | null;
+  is_active: boolean;
+  featured_product_ids?: string[];
   updated_at?: string;
 }
 

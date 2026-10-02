@@ -32,6 +32,10 @@ const PAGE_TITLES: Record<string, string> = {
   "/admin/navigation": "Navigation Menu",
   "/admin/topbar": "Header & Top Bar",
   "/admin/seen-on-you": "Seen On You (Reels)",
+  "/admin/storefront-pages": "Storefront Pages",
+  "/admin/storefront-pages/bestseller": "Storefront Pages: Best Sellers",
+  "/admin/storefront-pages/new-in": "Storefront Pages: New In",
+  "/admin/storefront-pages/trending-now": "Storefront Pages: Trending Now",
 };
 
 export function AdminHeader({ onOpenMobileSidebar }: AdminHeaderProps) {

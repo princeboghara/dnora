@@ -35,6 +35,8 @@ export async function GET(req: NextRequest) {
 
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
 
+    await db.query(`ALTER TABLE public.products ADD COLUMN IF NOT EXISTS cost_price NUMERIC(10, 2) DEFAULT NULL;`).catch(() => {});
+
     const query = `
       SELECT 
         p.id,
@@ -43,6 +45,7 @@ export async function GET(req: NextRequest) {
         p.sku,
         p.stock,
         p.price,
+        p.cost_price,
         p.status,
         p.updated_at,
         (
@@ -66,10 +69,14 @@ export async function GET(req: NextRequest) {
 
     const res = await db.query(query, params);
 
-    // Calculate Summary Counts
+    // Calculate Summary Counts & Financial Valuations (Cost vs Retail Track)
     const countsRes = await db.query(`
       SELECT 
         COUNT(*) as total_skus,
+        COALESCE(SUM(stock), 0) as total_units,
+        COALESCE(SUM(stock * COALESCE(cost_price, 0)), 0) as total_cost_value,
+        COALESCE(SUM(stock * price), 0) as total_retail_value,
+        COALESCE(SUM(stock * (price - COALESCE(cost_price, 0))), 0) as total_profit_potential,
         COUNT(*) FILTER (WHERE stock > 5) as in_stock,
         COUNT(*) FILTER (WHERE stock > 0 AND stock <= 5) as low_stock,
         COUNT(*) FILTER (WHERE stock = 0) as out_of_stock
@@ -77,11 +84,16 @@ export async function GET(req: NextRequest) {
       WHERE status != 'archived'
     `);
 
+    const summaryRow = countsRes.rows[0] || {};
     const summary = {
-      totalSkus: parseInt(countsRes.rows[0]?.total_skus || "0", 10),
-      inStock: parseInt(countsRes.rows[0]?.in_stock || "0", 10),
-      lowStock: parseInt(countsRes.rows[0]?.low_stock || "0", 10),
-      outOfStock: parseInt(countsRes.rows[0]?.out_of_stock || "0", 10),
+      totalSkus: parseInt(summaryRow.total_skus || "0", 10),
+      totalUnits: parseInt(summaryRow.total_units || "0", 10),
+      totalCostValue: parseFloat(summaryRow.total_cost_value || "0"),
+      totalRetailValue: parseFloat(summaryRow.total_retail_value || "0"),
+      totalProfitPotential: parseFloat(summaryRow.total_profit_potential || "0"),
+      inStock: parseInt(summaryRow.in_stock || "0", 10),
+      lowStock: parseInt(summaryRow.low_stock || "0", 10),
+      outOfStock: parseInt(summaryRow.out_of_stock || "0", 10),
     };
 
     return NextResponse.json({
@@ -90,6 +102,7 @@ export async function GET(req: NextRequest) {
         ...r,
         stock: parseInt(r.stock, 10),
         price: parseFloat(r.price),
+        cost_price: r.cost_price !== null && r.cost_price !== undefined ? parseFloat(r.cost_price) : null,
       })),
       summary,
     });
@@ -106,50 +119,115 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    await db.query(`ALTER TABLE public.products ADD COLUMN IF NOT EXISTS cost_price NUMERIC(10, 2) DEFAULT NULL;`).catch(() => {});
+
     const body = await req.json();
-    const { productId, newStock, adjustment } = body;
+
+    // Support bulk batch update for all products at once
+    if (Array.isArray(body.items)) {
+      const items = body.items;
+      let updatedCount = 0;
+
+      for (const item of items) {
+        if (!item.productId) continue;
+        const updates: string[] = [];
+        const values: (string | number | null)[] = [];
+        let idx = 1;
+
+        if (item.newStock !== undefined) {
+          updates.push(`stock = $${idx++}`);
+          values.push(Math.max(0, parseInt(item.newStock, 10) || 0));
+        }
+
+        const resolvedCost = item.costPrice !== undefined ? item.costPrice : item.cost_price;
+        if (resolvedCost !== undefined) {
+          updates.push(`cost_price = $${idx++}`);
+          values.push(resolvedCost === null || resolvedCost === "" ? null : Math.max(0, parseFloat(resolvedCost)));
+        }
+
+        if (item.price !== undefined) {
+          const numP = parseFloat(item.price);
+          if (!isNaN(numP) && numP > 0) {
+            updates.push(`price = $${idx++}`);
+            values.push(numP);
+          }
+        }
+
+        if (updates.length > 0) {
+          updates.push("updated_at = NOW()");
+          values.push(item.productId);
+          await db.query(
+            `UPDATE public.products SET ${updates.join(", ")} WHERE id = $${idx}`,
+            values
+          );
+          updatedCount++;
+        }
+      }
+
+      return NextResponse.json({ success: true, updatedCount });
+    }
+
+    const { productId, newStock, adjustment, costPrice, cost_price, price } = body;
 
     if (!productId) {
       return NextResponse.json({ error: "Product ID is required" }, { status: 400 });
     }
 
-    let updatedStock: number;
+    const updates: string[] = [];
+    const values: (string | number | null)[] = [];
+    let idx = 1;
 
+    // Handle stock update (exact or incremental)
     if (adjustment !== undefined) {
-      // Incremental change (e.g. +5 or -1)
-      const res = await db.query(
-        `UPDATE public.products 
-         SET stock = GREATEST(0, stock + $1), updated_at = NOW() 
-         WHERE id = $2 
-         RETURNING stock`,
-        [Number(adjustment), productId]
-      );
-      if (res.rowCount === 0) {
-        return NextResponse.json({ error: "Product not found" }, { status: 404 });
-      }
-      updatedStock = parseInt(res.rows[0].stock, 10);
+      updates.push(`stock = GREATEST(0, stock + $${idx++})`);
+      values.push(Number(adjustment));
     } else if (newStock !== undefined) {
-      // Set exact stock
-      const val = Math.max(0, parseInt(newStock, 10) || 0);
-      const res = await db.query(
-        `UPDATE public.products 
-         SET stock = $1, updated_at = NOW() 
-         WHERE id = $2 
-         RETURNING stock`,
-        [val, productId]
-      );
-      if (res.rowCount === 0) {
-        return NextResponse.json({ error: "Product not found" }, { status: 404 });
-      }
-      updatedStock = parseInt(res.rows[0].stock, 10);
-    } else {
-      return NextResponse.json({ error: "Provide newStock or adjustment" }, { status: 400 });
+      updates.push(`stock = $${idx++}`);
+      values.push(Math.max(0, parseInt(newStock, 10) || 0));
     }
 
+    // Handle cost_price update
+    const resolvedCost = costPrice !== undefined ? costPrice : cost_price;
+    if (resolvedCost !== undefined) {
+      updates.push(`cost_price = $${idx++}`);
+      values.push(resolvedCost === null || resolvedCost === "" ? null : Math.max(0, parseFloat(resolvedCost)));
+    }
+
+    // Handle selling price update
+    if (price !== undefined) {
+      const numP = parseFloat(price);
+      if (!isNaN(numP) && numP > 0) {
+        updates.push(`price = $${idx++}`);
+        values.push(numP);
+      }
+    }
+
+    if (updates.length === 0) {
+      return NextResponse.json({ error: "No fields provided to update" }, { status: 400 });
+    }
+
+    updates.push("updated_at = NOW()");
+    values.push(productId);
+
+    const updateQuery = `
+      UPDATE public.products 
+      SET ${updates.join(", ")} 
+      WHERE id = $${idx} 
+      RETURNING id, name, sku, stock, price, cost_price
+    `;
+
+    const res = await db.query(updateQuery, values);
+    if (res.rowCount === 0) {
+      return NextResponse.json({ error: "Product not found" }, { status: 404 });
+    }
+
+    const updatedRow = res.rows[0];
     return NextResponse.json({
       success: true,
       productId,
-      stock: updatedStock,
+      stock: parseInt(updatedRow.stock, 10),
+      price: parseFloat(updatedRow.price),
+      cost_price: updatedRow.cost_price !== null ? parseFloat(updatedRow.cost_price) : null,
     });
   } catch (error) {
     console.error("Error updating stock:", error);

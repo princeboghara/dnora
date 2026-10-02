@@ -414,7 +414,7 @@ export function ProductDetailsClient({ product, relatedProducts }: ProductDetail
 
             {/* Accordion Tabs */}
             <div className="border-t border-neutral-200 divide-y divide-neutral-200 pt-2">
-              {/* Description & Craft */}
+              {/* Tab 1: Craftsmanship & Details */}
               <div>
                 <button
                   type="button"
@@ -422,7 +422,7 @@ export function ProductDetailsClient({ product, relatedProducts }: ProductDetail
                   className="w-full py-3.5 flex items-center justify-between text-left cursor-pointer group"
                 >
                   <span className="text-xs font-bold uppercase tracking-[0.16em] text-neutral-900 group-hover:text-neutral-600 transition-colors">
-                    Florentine Craftsmanship & Details
+                    {product.craftsmanship_heading || "Florentine Craftsmanship & Details"}
                   </span>
                   <ChevronDown
                     className={`w-4 h-4 text-neutral-500 transition-transform duration-200 ${
@@ -432,18 +432,50 @@ export function ProductDetailsClient({ product, relatedProducts }: ProductDetail
                 </button>
                 {openAccordion === "details" && (
                   <div className="pb-4 text-xs text-neutral-600 leading-relaxed font-light space-y-2">
-                    <p>{product.description || "Architectural silhouettes engineered with artisanal discipline. Every piece is hand-sculpted in Florence, Italy using sustainably-sourced Italian calfskin."}</p>
-                    <ul className="list-disc list-inside space-y-1 text-[11px] text-neutral-500 pt-1">
-                      <li>Origin: Handcrafted in Florence, Italy</li>
-                      <li>Material: 100% Certified Italian Calfskin</li>
-                      <li>Hardware: Palladium-finish reinforced architectural alloy</li>
-                      <li>Lining: Breathable natural suede interior</li>
-                    </ul>
+                    {product.craftsmanship_details ? (
+                      product.craftsmanship_mode === "text" ? (
+                        <div className="whitespace-pre-line leading-relaxed font-light text-neutral-700 text-xs">
+                          {product.craftsmanship_details}
+                        </div>
+                      ) : (
+                        <ul className="space-y-1.5 text-[11.5px] text-neutral-700 pt-1">
+                          {product.craftsmanship_details
+                            .split("\n")
+                            .map((l) => l.trim())
+                            .filter((l) => l.length > 0)
+                            .map((line, idx) => (
+                              <li key={idx} className="flex items-start gap-2">
+                                <span className="w-1.5 h-1.5 rounded-full bg-neutral-900 mt-1.5 shrink-0" />
+                                <span>{line.replace(/^[•\-\*]\s*/, "")}</span>
+                              </li>
+                            ))}
+                        </ul>
+                      )
+                    ) : (
+                      <ul className="space-y-1.5 text-[11.5px] text-neutral-700 pt-1">
+                        <li className="flex items-start gap-2">
+                          <span className="w-1.5 h-1.5 rounded-full bg-neutral-900 mt-1.5 shrink-0" />
+                          <span>Origin: Handcrafted in Florence, Italy</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="w-1.5 h-1.5 rounded-full bg-neutral-900 mt-1.5 shrink-0" />
+                          <span>Material: 100% Certified Italian Calfskin</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="w-1.5 h-1.5 rounded-full bg-neutral-900 mt-1.5 shrink-0" />
+                          <span>Hardware: Palladium-finish reinforced architectural alloy</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="w-1.5 h-1.5 rounded-full bg-neutral-900 mt-1.5 shrink-0" />
+                          <span>Lining: Breathable natural suede interior</span>
+                        </li>
+                      </ul>
+                    )}
                   </div>
                 )}
               </div>
 
-              {/* Delivery & Returns */}
+              {/* Tab 2: Shipping & Customs */}
               <div>
                 <button
                   type="button"
@@ -451,7 +483,7 @@ export function ProductDetailsClient({ product, relatedProducts }: ProductDetail
                   className="w-full py-3.5 flex items-center justify-between text-left cursor-pointer group"
                 >
                   <span className="text-xs font-bold uppercase tracking-[0.16em] text-neutral-900 group-hover:text-neutral-600 transition-colors">
-                    Shipping & Worldwide Customs
+                    {product.shipping_heading || "Shipping & Worldwide Customs"}
                   </span>
                   <ChevronDown
                     className={`w-4 h-4 text-neutral-500 transition-transform duration-200 ${
@@ -461,17 +493,40 @@ export function ProductDetailsClient({ product, relatedProducts }: ProductDetail
                 </button>
                 {openAccordion === "delivery" && (
                   <div className="pb-4 text-xs text-neutral-600 leading-relaxed font-light space-y-2">
-                    <p>
-                      All DNORA creations are dispatched under white-glove, insured courier transit directly to your doorstep. Complimentary express delivery is included across India.
-                    </p>
-                    <p className="text-[11px] text-neutral-500">
-                      Standard delivery: 3 – 5 business days. Signature required upon receipt.
-                    </p>
+                    {product.shipping_customs ? (
+                      product.shipping_mode === "bullets" ? (
+                        <ul className="space-y-1.5 text-[11.5px] text-neutral-700 pt-1">
+                          {product.shipping_customs
+                            .split("\n")
+                            .map((l) => l.trim())
+                            .filter((l) => l.length > 0)
+                            .map((line, idx) => (
+                              <li key={idx} className="flex items-start gap-2">
+                                <span className="w-1.5 h-1.5 rounded-full bg-neutral-900 mt-1.5 shrink-0" />
+                                <span>{line.replace(/^[•\-\*]\s*/, "")}</span>
+                              </li>
+                            ))}
+                        </ul>
+                      ) : (
+                        <div className="whitespace-pre-line leading-relaxed font-light text-neutral-700 text-xs">
+                          {product.shipping_customs}
+                        </div>
+                      )
+                    ) : (
+                      <>
+                        <p>
+                          All DNORA creations are dispatched under white-glove, insured courier transit directly to your doorstep. Complimentary express delivery is included across India.
+                        </p>
+                        <p className="text-[11px] text-neutral-500">
+                          Standard delivery: 3 – 5 business days. Signature required upon receipt.
+                        </p>
+                      </>
+                    )}
                   </div>
                 )}
               </div>
 
-              {/* Leather Care */}
+              {/* Tab 3: Leather Care */}
               <div>
                 <button
                   type="button"
@@ -479,7 +534,7 @@ export function ProductDetailsClient({ product, relatedProducts }: ProductDetail
                   className="w-full py-3.5 flex items-center justify-between text-left cursor-pointer group"
                 >
                   <span className="text-xs font-bold uppercase tracking-[0.16em] text-neutral-900 group-hover:text-neutral-600 transition-colors">
-                    Florentine Leather Care
+                    {product.leather_heading || "Florentine Leather Care"}
                   </span>
                   <ChevronDown
                     className={`w-4 h-4 text-neutral-500 transition-transform duration-200 ${
@@ -489,9 +544,30 @@ export function ProductDetailsClient({ product, relatedProducts }: ProductDetail
                 </button>
                 {openAccordion === "care" && (
                   <div className="pb-4 text-xs text-neutral-600 leading-relaxed font-light space-y-2">
-                    <p>
-                      Vegetable-tanned leather develops an exquisite natural patina over time. To maintain its supple texture, avoid prolonged exposure to direct sunlight and high humidity. Clean with a soft, dry cotton cloth.
-                    </p>
+                    {product.leather_care ? (
+                      product.leather_mode === "bullets" ? (
+                        <ul className="space-y-1.5 text-[11.5px] text-neutral-700 pt-1">
+                          {product.leather_care
+                            .split("\n")
+                            .map((l) => l.trim())
+                            .filter((l) => l.length > 0)
+                            .map((line, idx) => (
+                              <li key={idx} className="flex items-start gap-2">
+                                <span className="w-1.5 h-1.5 rounded-full bg-neutral-900 mt-1.5 shrink-0" />
+                                <span>{line.replace(/^[•\-\*]\s*/, "")}</span>
+                              </li>
+                            ))}
+                        </ul>
+                      ) : (
+                        <div className="whitespace-pre-line leading-relaxed font-light text-neutral-700 text-xs">
+                          {product.leather_care}
+                        </div>
+                      )
+                    ) : (
+                      <p>
+                        Vegetable-tanned leather develops an exquisite natural patina over time. To maintain its supple texture, avoid prolonged exposure to direct sunlight and high humidity. Clean with a soft, dry cotton cloth.
+                      </p>
+                    )}
                   </div>
                 )}
               </div>

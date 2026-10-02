@@ -43,6 +43,7 @@ export default function AdminAllItemsPage() {
   const [newProdCategoryId, setNewProdCategoryId] = useState("");
   const [newProdPrice, setNewProdPrice] = useState("");
   const [newProdComparePrice, setNewProdComparePrice] = useState("");
+  const [newProdCostPrice, setNewProdCostPrice] = useState("");
   const [newProdSku, setNewProdSku] = useState("");
   const [newProdStock, setNewProdStock] = useState("25");
   const [newProdShortDesc, setNewProdShortDesc] = useState("");
@@ -273,6 +274,7 @@ export default function AdminAllItemsPage() {
       description: newProdDesc.trim() || `Exquisite handcrafted luxury piece created in Florence atelier with vegetable-tanned Italian calfskin, archival edge painting, and bespoke golden hardware.`,
       price: priceNum,
       compare_at_price: newProdComparePrice ? parseFloat(newProdComparePrice) : null,
+      cost_price: newProdCostPrice ? parseFloat(newProdCostPrice) : null,
       sku: newProdSku.trim(),
       stock: parseInt(newProdStock) || 0,
       category_id: newProdCategoryId,
@@ -311,6 +313,7 @@ export default function AdminAllItemsPage() {
       setNewProdName("");
       setNewProdPrice("");
       setNewProdComparePrice("");
+      setNewProdCostPrice("");
       setNewProdSku("");
       setNewProdStock("25");
       setNewProdShortDesc("");
@@ -566,7 +569,9 @@ export default function AdminAllItemsPage() {
                   <th className="py-3.5 px-4 w-16">Item</th>
                   <th className="py-3.5 px-4">Product Details</th>
                   <th className="py-3.5 px-4">Category</th>
-                  <th className="py-3.5 px-4">Price</th>
+                  <th className="py-3.5 px-4">Cost Price / MRP</th>
+                  <th className="py-3.5 px-4">Selling Price</th>
+                  <th className="py-3.5 px-4">Unit Margin</th>
                   <th className="py-3.5 px-4">Stock</th>
                   <th className="py-3.5 px-4 text-center">Best Seller</th>
                   <th className="py-3.5 px-4 text-center">New In</th>
@@ -614,7 +619,18 @@ export default function AdminAllItemsPage() {
                         </span>
                       </td>
 
-                      {/* Price */}
+                      {/* Cost Price */}
+                      <td className="py-3.5 px-4 font-mono text-neutral-700 whitespace-nowrap">
+                        {p.cost_price !== undefined && p.cost_price !== null ? (
+                          <div className="font-bold text-neutral-800 bg-neutral-100 px-2 py-0.5 rounded border border-neutral-200 w-fit">
+                            {formatPrice(p.cost_price)}
+                          </div>
+                        ) : (
+                          <span className="text-[11px] text-neutral-400 italic">Not set</span>
+                        )}
+                      </td>
+
+                      {/* Selling Price */}
                       <td className="py-3.5 px-4 font-mono font-bold text-neutral-900 whitespace-nowrap">
                         {formatPrice(p.price)}
                         {p.compare_at_price && p.compare_at_price > p.price && (
@@ -624,18 +640,46 @@ export default function AdminAllItemsPage() {
                         )}
                       </td>
 
-                      {/* Stock */}
+                      {/* Unit Margin / Profit */}
+                      <td className="py-3.5 px-4 font-mono whitespace-nowrap">
+                        {p.cost_price !== undefined && p.cost_price !== null ? (
+                          (() => {
+                            const profit = p.price - p.cost_price;
+                            const margin = p.price > 0 ? Math.round((profit / p.price) * 100) : 0;
+                            return (
+                              <div className="flex flex-col">
+                                <span className={`text-[11px] font-bold ${profit >= 0 ? "text-emerald-700" : "text-rose-700"}`}>
+                                  {profit >= 0 ? `+${formatPrice(profit)}` : `-${formatPrice(Math.abs(profit))}`}
+                                </span>
+                                <span className="text-[10px] text-neutral-400">
+                                  {margin}% margin
+                                </span>
+                              </div>
+                            );
+                          })()
+                        ) : (
+                          <span className="text-[10px] text-neutral-400">-</span>
+                        )}
+                      </td>
+
+                      {/* Stock Status Badge */}
                       <td className="py-3.5 px-4 whitespace-nowrap">
-                        <span
-                          className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-bold ${
-                            p.stock > 10
-                              ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                              : "bg-rose-50 text-rose-700 border border-rose-200"
-                          }`}
-                        >
-                          <span className={`w-1.5 h-1.5 rounded-full ${p.stock > 10 ? "bg-emerald-500" : "bg-rose-500"}`} />
-                          {p.stock} in stock
-                        </span>
+                        {p.stock === 0 ? (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                            <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+                            0 • Out of Stock
+                          </span>
+                        ) : p.stock <= 5 ? (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                            {p.stock} • Low Stock
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                            {p.stock} • In Stock
+                          </span>
+                        )}
                       </td>
 
                       {/* Best Seller 1-Click Toggle */}
@@ -813,8 +857,23 @@ export default function AdminAllItemsPage() {
                 </div>
               </div>
 
-              {/* Price, Compare Price, Stock */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {/* Price, Cost Price, Compare Price, Stock */}
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                <div className="p-2.5 rounded-xl bg-neutral-50 border border-neutral-200">
+                  <label className="block text-[10.5px] font-bold uppercase tracking-wider text-neutral-800 mb-1">
+                    Cost Price / MRP (₹)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    placeholder="e.g. 12000"
+                    value={newProdCostPrice}
+                    onChange={(e) => setNewProdCostPrice(e.target.value)}
+                    className="w-full px-3 py-2 bg-white border border-neutral-300 rounded-lg text-xs font-mono font-bold text-neutral-900 focus:outline-hidden focus:border-black transition-all"
+                  />
+                  <span className="text-[9.5px] text-neutral-500 mt-0.5 block">Purchase/cost</span>
+                </div>
+
                 <div>
                   <label className="block text-[10.5px] font-bold uppercase tracking-wider text-neutral-700 mb-1">
                     Selling Price (₹) *
@@ -826,8 +885,9 @@ export default function AdminAllItemsPage() {
                     placeholder="e.g. 24900"
                     value={newProdPrice}
                     onChange={(e) => setNewProdPrice(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl text-xs font-mono text-neutral-900 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-black/10 focus:border-neutral-900 transition-all"
+                    className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-lg text-xs font-mono text-neutral-900 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-black/10 focus:border-neutral-900 transition-all font-bold"
                   />
+                  <span className="text-[9.5px] text-neutral-400 mt-0.5 block">Customer price</span>
                 </div>
 
                 <div>
@@ -840,8 +900,9 @@ export default function AdminAllItemsPage() {
                     placeholder="e.g. 29900"
                     value={newProdComparePrice}
                     onChange={(e) => setNewProdComparePrice(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl text-xs font-mono text-neutral-900 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-black/10 focus:border-neutral-900 transition-all"
+                    className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-lg text-xs font-mono text-neutral-900 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-black/10 focus:border-neutral-900 transition-all"
                   />
+                  <span className="text-[9.5px] text-neutral-400 mt-0.5 block">MRP strikethrough</span>
                 </div>
 
                 <div>
@@ -854,8 +915,9 @@ export default function AdminAllItemsPage() {
                     min={0}
                     value={newProdStock}
                     onChange={(e) => setNewProdStock(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl text-xs font-mono text-neutral-900 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-black/10 focus:border-neutral-900 transition-all"
+                    className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-lg text-xs font-mono text-neutral-900 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-black/10 focus:border-neutral-900 transition-all font-bold"
                   />
+                  <span className="text-[9.5px] text-neutral-400 mt-0.5 block">Units available</span>
                 </div>
               </div>
 

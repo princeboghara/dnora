@@ -24,13 +24,18 @@ export function TrendingNowSection({ items }: TrendingNowSectionProps) {
       aria-label="Trending Now"
       className="w-full bg-[#FAF9F6] pt-8 pb-10 sm:pt-10 sm:pb-12 md:pt-12 md:pb-14 border-b border-neutral-200/70 overflow-hidden"
     >
-      <div className="max-w-[1820px] 2xl:max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 mb-4 sm:mb-6">
-        {/* Section Heading linking directly to /trending-now */}
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+      <div className="max-w-[1820px] 2xl:max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 mb-5 sm:mb-7 relative">
+        {/* Section Heading centered in the middle of the page */}
+        <div className="text-center">
           <SectionHeading
             title="TRENDING NOW"
             subtitle="Curated visual edits and architectural silhouettes."
+            className="mb-0"
           />
+        </div>
+
+        {/* Explore Collection Link positioned gracefully without offsetting the centered heading */}
+        <div className="flex justify-center sm:absolute sm:right-6 lg:right-8 xl:right-12 sm:bottom-1 mt-3 sm:mt-0">
           <Link
             href="/trending-now"
             className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-neutral-800 hover:text-black group shrink-0"
@@ -44,16 +49,26 @@ export function TrendingNowSection({ items }: TrendingNowSectionProps) {
       {/* Continuous Slow Left-to-Right Moving Track with Tight Spacing */}
       <div className="relative w-full overflow-hidden select-none group/marquee">
         <div className="flex items-center gap-2.5 sm:gap-3 md:gap-3.5 w-max animate-trending-l2r">
-          {marqueeItems.map((item, idx) => (
-            <div
-              key={`${item.id}-${idx}`}
-              className="w-[170px] sm:w-[210px] md:w-[240px] lg:w-[260px] shrink-0"
-            >
-              {/* Clicking ANY product in the section opens the /trending-now page */}
-              <Link
-                href="/trending-now"
-                className="group/card block relative aspect-3/4 rounded-xl overflow-hidden bg-neutral-100 shadow-2xs hover:shadow-xl transition-all duration-300 cursor-pointer border border-neutral-200/60"
+          {marqueeItems.map((item, idx) => {
+            const productHref =
+              item.target_link && item.target_link.startsWith("/product")
+                ? item.target_link
+                : item.product_slug
+                ? `/product/${item.product_slug}`
+                : item.product_id
+                ? `/product/${item.product_id}`
+                : item.target_link || "/trending-now";
+
+            return (
+              <div
+                key={`${item.id}-${idx}`}
+                className="w-[170px] sm:w-[210px] md:w-[240px] lg:w-[260px] shrink-0"
               >
+                {/* Clicking product card opens the product details page */}
+                <Link
+                  href={productHref}
+                  className="group/card block relative aspect-3/4 rounded-xl overflow-hidden bg-neutral-100 shadow-2xs hover:shadow-xl transition-all duration-300 cursor-pointer border border-neutral-200/60"
+                >
                 <Image
                   src={item.image_url}
                   alt={item.alt_text || item.title || "DNORA Trending Silhouette"}
@@ -104,7 +119,8 @@ export function TrendingNowSection({ items }: TrendingNowSectionProps) {
                 </div>
               </Link>
             </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 

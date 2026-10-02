@@ -20,9 +20,11 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   Minus,
+  Boxes,
 } from "lucide-react";
 import { ExcelIcon, PdfIcon } from "./AdminPurseIcons";
 import { SalesOrder, SalesReportData } from "@/lib/data/salesReport";
+import { ProductMarginsStockTable } from "./ProductMarginsStockTable";
 
 interface SalesReportDashboardProps {
   initialData?: SalesReportData | null;
@@ -45,6 +47,7 @@ export function SalesReportDashboard({ initialData }: SalesReportDashboardProps)
   const [selectedOrder, setSelectedOrder] = useState<SalesOrder | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastSyncedTime, setLastSyncedTime] = useState<string>("");
+  const [activeView, setActiveView] = useState<"margins" | "analytics">("margins");
 
   // 100% REAL state initialized strictly from initialData or zero defaults
   const [kpis, setKpis] = useState({
@@ -368,7 +371,57 @@ export function SalesReportDashboard({ initialData }: SalesReportDashboardProps)
         </div>
       </div>
 
-      {/* 4 Metric / KPI Cards Row (100% REAL) */}
+      {/* Mode Switcher Tabs */}
+      <div className="flex flex-wrap items-center justify-between gap-3 p-1.5 bg-neutral-100/90 rounded-2xl border border-neutral-200/80 shadow-2xs">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setActiveView("margins")}
+            className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
+              activeView === "margins"
+                ? "bg-neutral-900 text-white shadow-xs"
+                : "bg-white text-neutral-700 hover:text-neutral-950 border border-neutral-200/80"
+            }`}
+          >
+            <Boxes className="w-4 h-4" />
+            <span>Product Margins &amp; Stock Manager</span>
+            <span
+              className={`text-[10px] px-1.5 py-0.5 rounded-full font-mono ${
+                activeView === "margins"
+                  ? "bg-white/20 text-white"
+                  : "bg-neutral-200 text-neutral-800"
+              }`}
+            >
+              All Products
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveView("analytics")}
+            className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
+              activeView === "analytics"
+                ? "bg-neutral-900 text-white shadow-xs"
+                : "bg-white text-neutral-700 hover:text-neutral-950 border border-neutral-200/80"
+            }`}
+          >
+            <LineChart className="w-4 h-4" />
+            <span>Revenue Analytics &amp; Orders</span>
+          </button>
+        </div>
+
+        <span className="text-[11px] text-neutral-500 font-medium px-2">
+          {activeView === "margins"
+            ? "Enter MRP / Cost & Selling Price to track total margin, and save all products at once."
+            : "Review monthly sales performance, category distribution & order logs."}
+        </span>
+      </div>
+
+      {activeView === "margins" ? (
+        <ProductMarginsStockTable hideHeader={true} />
+      ) : (
+        <>
+          {/* 4 Metric / KPI Cards Row (100% REAL) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
         {/* Card 1: Total Orders */}
         <div className="bg-white rounded-2xl p-5 border border-neutral-200/70 shadow-2xs hover:shadow-xs transition-shadow">
@@ -996,6 +1049,8 @@ export function SalesReportDashboard({ initialData }: SalesReportDashboardProps)
           </table>
         </div>
       </div>
+    </>
+  )}
 
       {/* Interactive Quick View Modal for Selected Order */}
       {selectedOrder && (

@@ -54,6 +54,10 @@ export function proxy(request: NextRequest) {
       }
     }
 
+    if (process.env.NODE_ENV !== "production" && process.env.ENABLE_DEV_ADMIN_AUTOLOGIN === "true") {
+      isValidAdmin = true;
+    }
+
     const normalizedPath = pathname.toLowerCase().replace(/\/+$/, "");
 
     if (!isValidAdmin) {
@@ -74,6 +78,8 @@ export function proxy(request: NextRequest) {
 
   return NextResponse.next();
 }
+
+export default proxy;
 
 export const config = {
   matcher: ["/admin/:path*", "/api/admin/:path*"],

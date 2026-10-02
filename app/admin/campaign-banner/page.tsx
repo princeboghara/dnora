@@ -107,17 +107,13 @@ export default function AdminCampaignBannerPage() {
   // Open modal for new slide
   const openAddSlideModal = () => {
     setEditingIndex(null);
-    setFormHeading("THE ARCHITECTURE OF LUXURY");
-    setFormTagline("THE FLORENTINE ATELIER");
-    setFormDescription(
-      "Cut from full-grain vegetable-tanned Italian calfskin with hand-painted beveled edges and signature champagne hardware."
-    );
-    setFormButtonText("EXPLORE THE CAMPAIGN");
+    setFormHeading("");
+    setFormTagline("");
+    setFormDescription("");
+    setFormButtonText("");
     setFormButtonLink("/shop");
     setFormMediaType("image");
-    setFormMediaUrl(
-      "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=2000&q=85"
-    );
+    setFormMediaUrl("");
     setFormDuration(6);
     setModalOpen(true);
   };
@@ -130,7 +126,7 @@ export default function AdminCampaignBannerPage() {
     setFormHeading(s.heading || "");
     setFormTagline(s.tagline || "");
     setFormDescription(s.description || "");
-    setFormButtonText(s.button_text || "EXPLORE THE CAMPAIGN");
+    setFormButtonText(s.button_text || "");
     setFormButtonLink(s.button_link || "/shop");
     setFormMediaType(s.media_type || "image");
     setFormMediaUrl(s.media_url || "");
@@ -367,7 +363,7 @@ export default function AdminCampaignBannerPage() {
           </div>
         </div>
 
-        <div className="relative w-full min-h-[360px] sm:min-h-[420px] rounded-2xl overflow-hidden shadow-xl bg-black border border-neutral-800 flex items-center justify-center">
+        <div className="relative w-full min-h-[360px] sm:min-h-[420px] rounded-2xl overflow-hidden shadow-xl bg-neutral-100 border border-neutral-200 flex items-center justify-center">
           {/* Background Video or Photo */}
           {activeSlide?.media_url && (
             <div className="absolute inset-0 z-0">
@@ -379,47 +375,56 @@ export default function AdminCampaignBannerPage() {
                   loop
                   muted
                   playsInline
-                  className="w-full h-full object-cover scale-105 filter brightness-70 contrast-105"
+                  className="w-full h-full object-cover"
                 />
               ) : (
                 <Image
                   src={activeSlide.media_url}
                   alt={activeSlide.heading || "Preview"}
                   fill
-                  className="object-cover object-center scale-105 filter brightness-70 contrast-105"
+                  className="object-cover object-center"
                   unoptimized
                 />
               )}
-              <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/50 to-black/80" />
-              <div className="absolute inset-0 bg-radial-[circle_at_center,_transparent_20%,_rgba(0,0,0,0.6)_100%]" />
             </div>
           )}
 
-          {/* Slide Text Content */}
-          <div className="relative z-10 max-w-2xl mx-auto px-6 text-center py-10 space-y-4 text-white">
-            <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-[#E5C378] text-[10px] font-bold uppercase tracking-[0.25em]">
-              <Sparkles className="w-3 h-3 text-[#E5C378]" />
-              <span>{activeSlide?.tagline || "THE FLORENTINE ATELIER"}</span>
+          {/* Slide Text Content - only render if at least one text or button is provided */}
+          {(activeSlide?.heading || activeSlide?.tagline || activeSlide?.description || activeSlide?.button_text) && (
+            <div className="relative z-10 max-w-2xl mx-auto px-6 text-center py-10 space-y-4 text-white">
+              {activeSlide?.tagline && (
+                <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-black/40 backdrop-blur-md border border-white/20 text-[#E5C378] text-[10px] font-bold uppercase tracking-[0.25em]">
+                  <Sparkles className="w-3 h-3 text-[#E5C378]" />
+                  <span>{activeSlide.tagline}</span>
+                </div>
+              )}
+
+              {activeSlide?.heading && (
+                <h2 className="text-xl sm:text-2xl md:text-3xl font-light tracking-[0.18em] uppercase text-white leading-tight drop-shadow-md">
+                  {activeSlide.heading}
+                </h2>
+              )}
+
+              {(activeSlide?.heading || activeSlide?.description) && (
+                <div className="w-10 h-[1.5px] bg-[#D4AF37] mx-auto drop-shadow-sm" />
+              )}
+
+              {activeSlide?.description && (
+                <p className="text-xs sm:text-sm text-neutral-100 font-light leading-relaxed line-clamp-3 drop-shadow-sm">
+                  {activeSlide.description}
+                </p>
+              )}
+
+              {activeSlide?.button_text && (
+                <div>
+                  <span className="inline-flex items-center gap-2 px-6 py-2.5 bg-white text-black font-semibold text-[11px] uppercase tracking-[0.2em] rounded-xs shadow-lg">
+                    <span>{activeSlide.button_text}</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </span>
+                </div>
+              )}
             </div>
-
-            <h2 className="text-xl sm:text-2xl md:text-3xl font-light tracking-[0.18em] uppercase text-white leading-tight">
-              {activeSlide?.heading || "THE ARCHITECTURE OF LUXURY"}
-            </h2>
-
-            <div className="w-10 h-[1.5px] bg-[#D4AF37] mx-auto" />
-
-            <p className="text-xs sm:text-sm text-neutral-200 font-light leading-relaxed line-clamp-3">
-              {activeSlide?.description ||
-                "Cut from full-grain vegetable-tanned Italian calfskin with hand-painted beveled edges."}
-            </p>
-
-            <div>
-              <span className="inline-flex items-center gap-2 px-6 py-2.5 bg-white text-black font-semibold text-[11px] uppercase tracking-[0.2em] rounded-xs shadow-lg">
-                <span>{activeSlide?.button_text || "EXPLORE THE CAMPAIGN"}</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </span>
-            </div>
-          </div>
+          )}
 
           {/* Prev / Next controls in preview */}
           {slides.length > 1 && (
@@ -704,7 +709,7 @@ export default function AdminCampaignBannerPage() {
 
                 {/* Media Preview inside modal */}
                 {formMediaUrl && (
-                  <div className="relative w-full h-32 rounded-lg overflow-hidden border border-neutral-300 bg-black flex items-center justify-center">
+                  <div className="relative w-full h-36 rounded-lg overflow-hidden border border-neutral-300 bg-neutral-100 flex items-center justify-center">
                     {formMediaType === "video" ? (
                       <video
                         src={formMediaUrl}
@@ -712,47 +717,51 @@ export default function AdminCampaignBannerPage() {
                         loop
                         muted
                         playsInline
-                        className="w-full h-full object-cover opacity-70"
+                        className="w-full h-full object-cover"
                       />
                     ) : (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
                         src={formMediaUrl}
                         alt="Preview"
-                        className="w-full h-full object-cover opacity-70"
+                        className="w-full h-full object-cover"
                       />
                     )}
-                    <span className="absolute bottom-2 left-2 text-[10px] text-white/80 font-mono bg-black/60 px-2 py-0.5 rounded">
-                      Previewing {formMediaType}
+                    <span className="absolute bottom-2 left-2 text-[10px] text-white font-mono bg-black/70 px-2 py-0.5 rounded shadow">
+                      Previewing {formMediaType} (Natural Colors)
                     </span>
                   </div>
                 )}
+              </div>
+
+              {/* Informational tip for optional text overlay */}
+              <div className="p-3 bg-amber-50/70 border border-amber-200/60 rounded-lg text-xs text-amber-900 leading-relaxed">
+                💡 <span className="font-semibold">Text overlay is completely optional:</span> You can leave Headline, Story, and Button Label empty for a clean, full-screen image/video banner. If Button Label is empty, the entire banner becomes a clickable link to the Button Link.
               </div>
 
               {/* Heading & Tagline */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-neutral-700 mb-1">
-                    Banner Headline *
+                    Banner Headline (Optional)
                   </label>
                   <input
                     type="text"
-                    required
                     value={formHeading}
                     onChange={(e) => setFormHeading(e.target.value)}
-                    placeholder="e.g. THE ARCHITECTURE OF LUXURY"
+                    placeholder="e.g. THE ARCHITECTURE OF LUXURY (or leave blank)"
                     className="w-full px-3 py-2 text-xs bg-white border border-neutral-300 rounded-lg focus:outline-none focus:border-black uppercase font-medium"
                   />
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-neutral-700 mb-1">
-                    Tagline / Subtitle Badge
+                    Tagline / Subtitle Badge (Optional)
                   </label>
                   <input
                     type="text"
                     value={formTagline}
                     onChange={(e) => setFormTagline(e.target.value)}
-                    placeholder="e.g. THE FLORENTINE ATELIER"
+                    placeholder="e.g. THE FLORENTINE ATELIER (or leave blank)"
                     className="w-full px-3 py-2 text-xs bg-white border border-neutral-300 rounded-lg focus:outline-none focus:border-black"
                   />
                 </div>
@@ -761,13 +770,13 @@ export default function AdminCampaignBannerPage() {
               {/* Narrative Description */}
               <div>
                 <label className="block text-xs font-semibold text-neutral-700 mb-1">
-                  Editorial Narrative / Story
+                  Editorial Narrative / Story (Optional)
                 </label>
                 <textarea
                   rows={2}
                   value={formDescription}
                   onChange={(e) => setFormDescription(e.target.value)}
-                  placeholder="Luxury craftsmanship narrative..."
+                  placeholder="Luxury craftsmanship narrative (or leave blank)..."
                   className="w-full px-3 py-2 text-xs bg-white border border-neutral-300 rounded-lg focus:outline-none focus:border-black"
                 />
               </div>
@@ -776,19 +785,19 @@ export default function AdminCampaignBannerPage() {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-neutral-700 mb-1">
-                    Button Label
+                    Button Label (Optional)
                   </label>
                   <input
                     type="text"
                     value={formButtonText}
                     onChange={(e) => setFormButtonText(e.target.value)}
-                    placeholder="EXPLORE THE CAMPAIGN"
+                    placeholder="e.g. EXPLORE (or leave blank for image link)"
                     className="w-full px-3 py-2 text-xs bg-white border border-neutral-300 rounded-lg focus:outline-none focus:border-black"
                   />
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-neutral-700 mb-1">
-                    Button Link
+                    Banner Link Target
                   </label>
                   <input
                     type="text"

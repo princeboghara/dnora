@@ -2,7 +2,7 @@ import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Metadata } from "next";
-import { Sparkles, ChevronRight, SlidersHorizontal, ArrowLeft } from "lucide-react";
+import { Clock, ChevronRight, SlidersHorizontal, ArrowLeft } from "lucide-react";
 import { store } from "@/lib/data/store";
 import { ProductCard } from "@/components/ProductCard";
 import { Product } from "@/types";
@@ -10,60 +10,44 @@ import { Product } from "@/types";
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const pageConfig = await store.getStorefrontPageConfig("trending-now");
+  const pageConfig = await store.getStorefrontPageConfig("new-in");
   return {
-    title: pageConfig?.meta_title || `${pageConfig?.title || "Trending Now"} | Handcrafted Luxury Handbags | DNORA`,
+    title: pageConfig?.meta_title || `${pageConfig?.title || "New In"} | Handcrafted Luxury Handbags | DNORA`,
     description:
       pageConfig?.meta_description ||
       pageConfig?.subtitle ||
-      "Shop the most sought-after architectural luxury handbags, totes, and clutches trending this season.",
+      "Discover the latest seasonal arrivals and handcrafted luxury Italian leather silhouettes from DNORA.",
   };
 }
 
-interface TrendingNowPageProps {
+interface NewInPageProps {
   searchParams: Promise<{ sort?: string }>;
 }
 
-export default async function TrendingNowPage({ searchParams }: TrendingNowPageProps) {
+export default async function NewInPage({ searchParams }: NewInPageProps) {
   const { sort } = await searchParams;
 
-  // 1. Fetch Dynamic Page Config, Trending Items, & All Active Products
-  const [pageConfig, trendingItems, allProducts] = await Promise.all([
-    store.getStorefrontPageConfig("trending-now"),
-    store.getTrendingNowItems(true),
+  // 1. Fetch Dynamic Page Config & All Active Products
+  const [pageConfig, allProducts] = await Promise.all([
+    store.getStorefrontPageConfig("new-in"),
     store.getProducts({ status: "active" }),
   ]);
 
-  // 2. Identify products marked as trending or featured by admin
+  // 2. Identify products marked as new arrivals or curated by admin
   let featuredProducts: Product[] = [];
 
   if (pageConfig?.featured_product_ids && pageConfig.featured_product_ids.length > 0) {
-    // Custom curated products chosen by admin in Storefront Pages Editor
     const featuredSet = new Set(pageConfig.featured_product_ids);
     featuredProducts = allProducts.filter((p) => featuredSet.has(p.id));
   } else {
-    // Default to items in trending_now_items
-    const trendingProductIds = new Set(
-      trendingItems.map((it) => it.product_id).filter(Boolean) as string[]
-    );
-    const trendingProductSlugs = new Set(
-      trendingItems.map((it) => it.product_slug).filter(Boolean) as string[]
-    );
-
-    featuredProducts = allProducts.filter(
-      (p) =>
-        trendingProductIds.has(p.id) ||
-        trendingProductSlugs.has(p.slug) ||
-        trendingItems.some((it) => it.target_link && it.target_link.includes(p.slug))
-    );
-  }
-
-  // If fewer than 4 items are in trending, augment with active catalog items
-  if (featuredProducts.length < 4) {
-    const additional = allProducts
-      .filter((p) => !featuredProducts.some((fp) => fp.id === p.id))
-      .sort((a, b) => (b.is_best_seller ? 1 : 0) - (a.is_best_seller ? 1 : 0));
-    featuredProducts = [...featuredProducts, ...additional.slice(0, 12 - featuredProducts.length)];
+    // Default to is_new_arrival flag
+    featuredProducts = allProducts.filter((p) => p.is_new_arrival);
+    if (featuredProducts.length < 4) {
+      const additional = allProducts
+        .filter((p) => !featuredProducts.some((fp) => fp.id === p.id))
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      featuredProducts = [...featuredProducts, ...additional.slice(0, 12 - featuredProducts.length)];
+    }
   }
 
   // 3. Sort Products
@@ -71,18 +55,18 @@ export default async function TrendingNowPage({ searchParams }: TrendingNowPageP
     featuredProducts.sort((a, b) => a.price - b.price);
   } else if (sort === "price-desc") {
     featuredProducts.sort((a, b) => b.price - a.price);
-  } else if (sort === "newest") {
+  } else if (sort === "newest" || !sort) {
     featuredProducts.sort(
       (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     );
   }
 
-  const title = pageConfig?.title || "TRENDING NOW";
-  const badgeLabel = pageConfig?.badge_label || "Trending Now Collection";
-  const subtitle = pageConfig?.subtitle || "Curated visual edits and architectural silhouettes.";
+  const title = pageConfig?.title || "NEW IN";
+  const badgeLabel = pageConfig?.badge_label || "Seasonal Arrivals";
+  const subtitle = pageConfig?.subtitle || "Latest drops and architectural silhouettes fresh from the atelier.";
   const description =
     pageConfig?.description ||
-    "Curated visual edits and architectural silhouettes capturing this season's most sought-after luxury handbag aesthetics. Each piece is handcrafted in limited runs from full-grain Italian leather.";
+    "Discover the newest seasonal drops from the DNORA Florence atelier. Contemporary silhouettes engineered with precision craftsmanship and sustainably-sourced Italian calfskin.";
 
   return (
     <div className="min-h-screen bg-[#FDFCFB] text-neutral-900 pb-24">
@@ -136,7 +120,7 @@ export default async function TrendingNowPage({ searchParams }: TrendingNowPageP
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div className="space-y-3">
               <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-800 text-[11px] font-bold uppercase tracking-wider">
-                <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                <Clock className="w-3.5 h-3.5 text-amber-600" />
                 <span>{badgeLabel}</span>
               </div>
               <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-neutral-950 font-serif uppercase">
@@ -165,28 +149,27 @@ export default async function TrendingNowPage({ searchParams }: TrendingNowPageP
             </div>
           </div>
 
-          {/* Sort Controls (Category Filter Tabs Completely Removed as Requested) */}
+          {/* Sort Controls */}
           <div className="mt-8 pt-6 border-t border-neutral-100 flex items-center justify-between gap-4">
             <p className="text-xs text-neutral-500 font-medium uppercase tracking-wider">
               Showing <span className="font-bold text-neutral-900 font-mono">{featuredProducts.length}</span> curated silhouettes
             </p>
 
-            {/* Sort Dropdown */}
             <div className="flex items-center gap-2 text-xs">
               <SlidersHorizontal className="w-3.5 h-3.5 text-neutral-500" />
               <span className="text-neutral-500 font-medium">Sort by:</span>
               <div className="flex items-center gap-1.5">
                 {[
+                  { id: "newest", label: "Newest" },
                   { id: "featured", label: "Featured" },
                   { id: "price-asc", label: "Price: Low to High" },
                   { id: "price-desc", label: "Price: High to Low" },
-                  { id: "newest", label: "Newest" },
                 ].map((s) => (
                   <Link
                     key={s.id}
-                    href={`/trending-now?sort=${s.id}`}
+                    href={`/new-in?sort=${s.id}`}
                     className={`px-2.5 py-1 rounded-md text-[11.5px] transition-colors ${
-                      (sort || "featured") === s.id
+                      (sort || "newest") === s.id
                         ? "bg-neutral-200/80 text-neutral-900 font-bold"
                         : "text-neutral-600 hover:text-black hover:bg-neutral-100"
                     }`}

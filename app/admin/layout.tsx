@@ -19,39 +19,36 @@ export default function AdminLayout({
 
   // If on login page, render standalone clean view without sidebar or layout restrictions
   const isLoginPage = pathname?.startsWith("/admin/login") ?? false;
-  const [isVerifying, setIsVerifying] = useState(!isLoginPage);
 
   useEffect(() => {
     if (isLoginPage) {
       return;
     }
 
+    let isMounted = true;
+
     async function checkAuth() {
       try {
         const res = await fetch("/api/auth/admin-check");
-        if (!res.ok) {
+        if (!res.ok && isMounted) {
           router.replace("/admin/login");
-        } else {
-          setIsVerifying(false);
         }
       } catch {
-        router.replace("/admin/login");
+        if (isMounted) {
+          router.replace("/admin/login");
+        }
       }
     }
 
     checkAuth();
+
+    return () => {
+      isMounted = false;
+    };
   }, [isLoginPage, router, pathname]);
 
   if (isLoginPage) {
     return <>{children}</>;
-  }
-
-  if (isVerifying) {
-    return (
-      <div className="min-h-screen bg-[#090D16] flex items-center justify-center text-white text-xs font-mono tracking-widest uppercase">
-        Verifying Administrative Access...
-      </div>
-    );
   }
 
   return (

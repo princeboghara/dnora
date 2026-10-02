@@ -28,6 +28,9 @@ import {
   Boxes,
   BarChart3,
   Truck,
+  Globe,
+  Flame,
+  Clock,
 } from "lucide-react";
 
 interface AdminSidebarProps {
@@ -62,7 +65,7 @@ const NAV_GROUPS: NavGroupItem[] = [
     icon: LayoutDashboard,
   },
 
-  // 2. Items & Stock (/all item /new item /catogories /stock)
+  // 2. Items & Stock (/all item /new item /categories /stock)
   {
     id: "items-stock",
     label: "Items & Stock",
@@ -95,7 +98,7 @@ const NAV_GROUPS: NavGroupItem[] = [
     ],
   },
 
-  // 3. Orders & Customers (/all orders /all customers /shipping charge)
+  // 3. Orders & Customers (/all orders /all customers /shipping charge /sales report)
   {
     id: "orders-customers",
     label: "Orders & Customers",
@@ -180,6 +183,33 @@ const NAV_GROUPS: NavGroupItem[] = [
       },
     ],
   },
+
+  // 5. Storefront Pages (/bestseller /new in /trending now with full edit options)
+  {
+    id: "storefront-pages",
+    label: "Storefront Pages",
+    icon: Globe,
+    subitems: [
+      {
+        label: "Best Sellers",
+        href: "/admin/storefront-pages/bestseller",
+        icon: Flame,
+        badge: "Hot",
+      },
+      {
+        label: "New In",
+        href: "/admin/storefront-pages/new-in",
+        icon: Clock,
+        badge: "New",
+      },
+      {
+        label: "Trending Now",
+        href: "/admin/storefront-pages/trending-now",
+        icon: Sparkles,
+        badge: "Lookbook",
+      },
+    ],
+  },
 ];
 
 export function AdminSidebar({
@@ -194,11 +224,10 @@ export function AdminSidebar({
   // Submenus are CLOSED by default. Only open when user clicks on a parent menu!
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
 
-  // Real-time live customer / device count on storefront
+  // Real-time live customer count on storefront
   const [liveVisitorCount, setLiveVisitorCount] = useState<number>(0);
 
   const fetchLiveVisitors = async () => {
-    // Avoid server requests if tab/browser is minimized or hidden
     if (typeof document !== "undefined" && document.visibilityState !== "visible") return;
     try {
       const res = await fetch("/api/admin/live-visitors");
@@ -215,7 +244,7 @@ export function AdminSidebar({
 
   useEffect(() => {
     fetchLiveVisitors();
-    const interval = setInterval(fetchLiveVisitors, 45000); // 45s interval (Safe for Vercel Free Plan)
+    const interval = setInterval(fetchLiveVisitors, 45000);
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") {
@@ -255,7 +284,6 @@ export function AdminSidebar({
   };
 
   const renderSidebarContent = (isMobile: boolean = false) => {
-    // Mobile sidebar MUST always be normal (expanded) with full labels and menus
     const isCollapsed = isMobile ? false : collapsed;
 
     return (
