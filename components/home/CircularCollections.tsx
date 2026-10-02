@@ -146,29 +146,6 @@ export function CircularCollections({
 
         {/* Relative Slider Container */}
         <div className="relative">
-          {/* Desktop Left Scroll Button */}
-          {canScrollLeft && (
-            <button
-              type="button"
-              onClick={() => handleScroll("left")}
-              aria-label="Scroll collections left"
-              className="hidden md:flex absolute left-1 sm:left-2 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white/95 border border-neutral-200/90 shadow-md items-center justify-center text-neutral-700 hover:text-black hover:border-black hover:scale-105 active:scale-95 transition-all duration-200"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-          )}
-
-          {/* Desktop Right Scroll Button */}
-          {canScrollRight && (
-            <button
-              type="button"
-              onClick={() => handleScroll("right")}
-              aria-label="Scroll collections right"
-              className="hidden md:flex absolute right-1 sm:right-2 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white/95 border border-neutral-200/90 shadow-md items-center justify-center text-neutral-700 hover:text-black hover:border-black hover:scale-105 active:scale-95 transition-all duration-200"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          )}
 
           {/* Horizontal Scroll Track */}
           <div

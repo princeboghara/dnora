@@ -158,17 +158,17 @@ export function ProductCard({ product, priority = false, showBuyNow = false }: P
           <button
             type="button"
             onClick={handleAddToCart}
-            className="w-full py-2.5 px-3 bg-black/95 text-white hover:bg-black text-[11px] font-bold uppercase tracking-widest rounded-lg flex items-center justify-center gap-2 shadow-lg transition-all active:scale-[0.98] cursor-pointer"
+            className="w-full py-2.5 px-3 bg-black/95 text-white hover:bg-black text-[11px] font-bold uppercase tracking-widest rounded-lg flex items-center justify-center gap-2 shadow-lg transition-all active:scale-[0.98] cursor-pointer no-underline whitespace-nowrap select-none"
           >
             {added ? (
               <>
                 <Check className="w-3.5 h-3.5 text-emerald-400" />
-                <span>Added to Bag</span>
+                <span className="no-underline whitespace-nowrap">Added to Bag</span>
               </>
             ) : (
               <>
                 <ShoppingBag className="w-3.5 h-3.5 text-white" />
-                <span>Add to Bag</span>
+                <span className="no-underline whitespace-nowrap">Add to Bag</span>
               </>
             )}
           </button>
@@ -244,17 +244,17 @@ export function ProductCard({ product, priority = false, showBuyNow = false }: P
             <button
               type="button"
               onClick={handleAddToCart}
-              className="flex-1 py-2 px-2 rounded-lg border border-neutral-300 hover:border-black bg-white text-neutral-900 text-[11px] font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
+              className="flex-1 py-2 px-2 rounded-lg border border-neutral-300 hover:border-black bg-white text-neutral-900 text-[11px] font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors cursor-pointer shadow-2xs no-underline whitespace-nowrap select-none"
             >
               {added ? (
                 <>
                   <Check className="w-3.5 h-3.5 text-emerald-600" />
-                  <span>Added</span>
+                  <span className="no-underline">Added</span>
                 </>
               ) : (
                 <>
                   <ShoppingBag className="w-3.5 h-3.5" />
-                  <span>Add to Bag</span>
+                  <span className="no-underline">Add to Bag</span>
                 </>
               )}
             </button>
@@ -262,9 +262,9 @@ export function ProductCard({ product, priority = false, showBuyNow = false }: P
             <button
               type="button"
               onClick={handleBuyNow}
-              className="flex-1 py-2 px-2 rounded-lg bg-neutral-900 hover:bg-black text-white text-[11px] font-bold uppercase tracking-wider flex items-center justify-center gap-1 transition-all cursor-pointer shadow-xs"
+              className="flex-1 py-2 px-2 rounded-lg bg-neutral-900 hover:bg-black text-white text-[11px] font-bold uppercase tracking-wider flex items-center justify-center gap-1 transition-all cursor-pointer shadow-xs no-underline whitespace-nowrap select-none"
             >
-              <span>Buy Now</span>
+              <span className="no-underline">Buy Now</span>
             </button>
           </div>
         ) : (
@@ -272,17 +272,17 @@ export function ProductCard({ product, priority = false, showBuyNow = false }: P
           <button
             type="button"
             onClick={handleAddToCart}
-            className="md:hidden mt-2 w-full py-1.5 sm:py-2 bg-neutral-900 text-white text-[10px] font-bold uppercase tracking-wider rounded-md flex items-center justify-center gap-1.5 active:bg-black cursor-pointer shadow-xs"
+            className="md:hidden mt-2 w-full py-1.5 sm:py-2 bg-neutral-900 text-white text-[10px] font-bold uppercase tracking-wider rounded-md flex items-center justify-center gap-1.5 active:bg-black cursor-pointer shadow-xs no-underline whitespace-nowrap select-none"
           >
             {added ? (
               <>
                 <Check className="w-3 h-3 text-emerald-400" />
-                <span>Added</span>
+                <span className="no-underline">Added</span>
               </>
             ) : (
               <>
                 <ShoppingBag className="w-3 h-3" />
-                <span>Add to Bag</span>
+                <span className="no-underline">Add to Bag</span>
               </>
             )}
           </button>

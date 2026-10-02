@@ -63,7 +63,7 @@ export default function AdminLayout({
 
       {/* Main Content Area */}
       <div
-        className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ease-in-out ${
+        className={`flex-1 flex flex-col min-w-0 transition-[padding-left] duration-300 ease-[cubic-bezier(0.2,0,0,1)] will-change-[padding-left] ${
           sidebarCollapsed ? "md:pl-20" : "md:pl-64"
         }`}
       >

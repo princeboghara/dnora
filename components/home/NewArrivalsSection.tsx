@@ -39,28 +39,6 @@ export function NewArrivalsSection({ products }: NewArrivalsSectionProps) {
 
         {/* Swipeable Carousel */}
         <div className="relative group/carousel">
-          {/* Scroll Navigation Buttons for Desktop */}
-          {!isFew && (
-            <>
-              <button
-                type="button"
-                onClick={() => handleScroll("left")}
-                aria-label="Scroll new arrivals left"
-                className="hidden md:flex absolute -left-3 lg:-left-5 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white/95 border border-neutral-200/90 shadow-md items-center justify-center text-neutral-800 hover:text-black hover:border-black hover:scale-105 active:scale-95 transition-all cursor-pointer"
-              >
-                <ChevronLeft className="w-5 h-5" />
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleScroll("right")}
-                aria-label="Scroll new arrivals right"
-                className="hidden md:flex absolute -right-3 lg:-right-5 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white/95 border border-neutral-200/90 shadow-md items-center justify-center text-neutral-800 hover:text-black hover:border-black hover:scale-105 active:scale-95 transition-all cursor-pointer"
-              >
-                <ChevronRight className="w-5 h-5" />
-              </button>
-            </>
-          )}
 
           {/* Horizontal Swipeable Track */}
           <div

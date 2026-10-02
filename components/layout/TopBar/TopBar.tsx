@@ -458,9 +458,9 @@ export function TopBar({ initialNavCategories }: TopBarProps = {}) {
                 </Link>
               )}
 
-              {/* User Account / Sign In Dropdown */}
+              {/* User Account / Sign In Dropdown (Hidden on mobile topbar; available in mobile sidebar) */}
               {topbarConfig.show_account && (
-                <div className="relative">
+                <div className="relative hidden md:block">
                   {user ? (
                     <div>
                       <button
@@ -666,6 +666,8 @@ export function TopBar({ initialNavCategories }: TopBarProps = {}) {
         setMobileAccordion={setMobileAccordion}
         conciergePhone={topbarConfig.concierge_phone}
         conciergeEmail={topbarConfig.concierge_email}
+        user={user}
+        onSignOut={handleSignOut}
       />
     </>
   );

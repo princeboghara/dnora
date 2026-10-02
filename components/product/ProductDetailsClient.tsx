@@ -369,17 +369,17 @@ export function ProductDetailsClient({ product, relatedProducts }: ProductDetail
                   type="button"
                   onClick={handleAddToCart}
                   disabled={isAdding}
-                  className="flex-1 py-3.5 px-6 bg-neutral-950 text-white text-xs font-semibold uppercase tracking-[0.2em] hover:bg-black transition-all rounded-xs flex items-center justify-center gap-2 cursor-pointer shadow-sm active:scale-[0.99] disabled:opacity-75"
+                  className="flex-1 py-3.5 px-6 bg-neutral-950 text-white text-xs font-semibold uppercase tracking-[0.2em] hover:bg-black transition-all rounded-xs flex items-center justify-center gap-2 cursor-pointer shadow-sm active:scale-[0.99] disabled:opacity-75 no-underline whitespace-nowrap select-none"
                 >
                   {isAdding ? (
                     <>
                       <Check className="w-4 h-4 text-emerald-400" />
-                      <span>Added to Bag</span>
+                      <span className="no-underline whitespace-nowrap">Added to Bag</span>
                     </>
                   ) : (
                     <>
                       <ShoppingBag className="w-4 h-4" />
-                      <span>Add to Bag</span>
+                      <span className="no-underline whitespace-nowrap">Add to Bag</span>
                     </>
                   )}
                 </button>
